@@ -14,6 +14,14 @@
   --text-primary: #1e3a5f;
   --text-secondary: #6b7280;
   --border: #e8e2da;
+
+  /* Navbar — tema claro */
+  --nav-bg: rgba(253, 253, 253, 0.92);
+  --nav-border: rgba(232, 226, 218, 0.8);
+  --nav-link-color: #1e3a5f;
+  --nav-link-hover-bg: rgba(78, 196, 196, 0.12);
+  --nav-link-hover-color: #4ec4c4;
+  --nav-link-active-color: #c47a9e;
 }
 
 .dark {
@@ -23,6 +31,14 @@
   --text-primary: #f0ede8;
   --text-secondary: #94a3b8;
   --border: #1e3a5f;
+
+  /* Navbar — tema oscuro */
+  --nav-bg: rgba(15, 26, 42, 0.92);
+  --nav-border: rgba(30, 58, 95, 0.8);
+  --nav-link-color: #f0ede8;
+  --nav-link-hover-bg: rgba(78, 196, 196, 0.15);
+  --nav-link-hover-color: #4ec4c4;
+  --nav-link-active-color: #c47a9e;
 }
 
 /* ── Base ─────────────────────────────────────────────────────── */

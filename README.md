@@ -13,6 +13,8 @@ Este repositorio contiene la plataforma web oficial de Coragem: un catálogo dig
 - Incluye páginas de contacto y política de garantía
 - Cuenta con un panel administrativo privado para que la propietaria gestione productos, imágenes e inventario sin necesidad de conocimientos técnicos
 
+---
+
 <div align= "center">
 
 ## Stack tecnológico
@@ -26,8 +28,12 @@ Este repositorio contiene la plataforma web oficial de Coragem: un catálogo dig
 | Imágenes | Cloudinary |
 | Deploy | Vercel (frontend) + AWS EC2 (backend) |
 
+</div>
+
+---
+
 ## Estado del proyecto
 
 🚧 En desarrollo activo — Fase 1: Setup e interfaz pública.
 
-</div>
+---

@@ -35,7 +35,7 @@ export function Navbar() {
       <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
          <span
           style={{
-            fontFamily: "var(--font-jost), sans-serif",
+            fontFamily: "var(--font-cormorant), serif",
             fontSize: "1.6rem",
             fontWeight: 600,
             color: "var(--nav-link-color)",

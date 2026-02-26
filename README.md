@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coragem ✦ Bisutería en Rodio
 
-## Getting Started
+Coragem es una marca de bisutería elaborada en rodio, dirigida por una joven emprendedora colombiana que busca expandir su negocio más allá de los canales informales y llevar sus productos a un público masivo a través de internet.
 
-First, run the development server:
+Este repositorio contiene la plataforma web oficial de Coragem: un catálogo digital donde la propietaria puede gestionar sus productos de forma autónoma y los clientes pueden explorar el inventario disponible, conocer los precios y contactar directamente con la marca.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ¿Qué hace esta plataforma?
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Muestra el catálogo de productos con stock disponible en tiempo real
+- Permite buscar y filtrar por categorías (collares, anillos, aretes, manillas)
+- Incluye páginas de contacto y política de garantía
+- Cuenta con un panel administrativo privado para que la propietaria gestione productos, imágenes e inventario sin necesidad de conocimientos técnicos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Stack tecnológico
 
-To learn more about Next.js, take a look at the following resources:
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | Next.js 16 + TypeScript |
+| Estilos | Tailwind CSS + shadcn/ui |
+| Backend | Node.js + Fastify |
+| Base de datos | PostgreSQL (Neon) + Prisma |
+| Imágenes | Cloudinary |
+| Deploy | Vercel (frontend) + AWS EC2 (backend) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estado del proyecto
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+🚧 En desarrollo activo — Fase 1: Setup e interfaz pública.

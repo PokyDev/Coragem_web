@@ -154,7 +154,7 @@ export function Footer() {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
-              gap: "0.125rem",
+              gap: "0.2rem",
               flexWrap: "wrap",
               justifyContent: "center",
             }}

@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "name": "Earcuff de cadena",
+    "price": 8000,
+    "image": "producto_1.jpeg",
+    "stock": 2,
+    "category": "EARRING"
+  },
+  {
+    "id": 2,
+    "name": "Anillo de corazón",
+    "price": 12000,
+    "image": "producto_2.jpeg",
+    "stock": 3,
+    "category": "RING"
+  },
+  {
+    "id": 3,
+    "name": "Dije sol",
+    "price": 10000,
+    "image": "producto_3.jpeg",
+    "stock": 5,
+    "category": "COLLAR"
+  },
+  {
+    "id": 4,
+    "name": "Cadena Singapur",
+    "price": 9000,
+    "image": "producto_4.jpeg",
+    "stock": 8,
+    "category": "COLLAR"
+  },
+  {
+    "id": 5,
+    "name": "Topos girasol",
+    "price": 15000,
+    "image": "producto_5.jpeg",
+    "stock": 0,
+    "category": "EARRING"
+  },
+  {
+    "id": 6,
+    "name": "Candongas doble cara",
+    "price": 15000,
+    "image": "producto_6.jpeg",
+    "stock": 10,
+    "category": "EARRING"
+  },
+  {
+    "id": 7,
+    "name": "Cadena trébol corta",
+    "price": 30000,
+    "image": "producto_7.jpeg",
+    "stock": 0,
+    "category": "COLLAR"
+  },
+  {
+    "id": 8,
+    "name": "Conjunto rosa roja",
+    "price": 24000,
+    "image": "producto_8.jpeg",
+    "stock": 2,
+    "category": "BRACELET"
+  }
+]

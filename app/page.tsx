@@ -1,5 +1,6 @@
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LandingHeader } from "@/components/landing/LandingHeader";
+import { ProductsGrid } from "@/components/landing/ProductsGrid";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
     >
       <ThemeToggle />
       <LandingHeader />
+      <ProductsGrid />
 
       {/* Resto de secciones de la landing — próximamente */}
     </main>

@@ -62,9 +62,9 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           backgroundColor: "var(--bg-card)",
           borderLeft: "1px solid",
           borderColor: "var(--border)",
-          boxShadow: "-12px 0 40px rgba(15, 26, 42, 0.22)",
+          boxShadow: isOpen ? "-12px 0 40px rgba(15, 26, 42, 0.22)" : "none",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
-          transition: "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         {/* Header del panel */}

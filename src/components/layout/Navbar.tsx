@@ -1,7 +1,9 @@
-import Image from "next/image";
-import { NavLink } from "@/components/layout/NavLink";
+"use client";
 
-/* Rutas de navegación — agrega o quita aquí según crezca el proyecto */
+import { useState } from "react";
+import { NavLink } from "@/components/layout/NavLink";
+import { MobileMenu } from "@/components/layout/MobileMenu";
+
 const NAV_LINKS = [
   { href: "/",         label: "Inicio"    },
   { href: "/products", label: "Productos" },
@@ -10,56 +12,117 @@ const NAV_LINKS = [
 ] as const;
 
 export function Navbar() {
-  return (
-    <header
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        height: "72px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingLeft: "1.75rem",
-        paddingRight: "2rem",
-        backgroundColor: "var(--nav-bg)",
-        borderBottom: "1px solid var(--nav-border)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        transition: "background-color 0.3s ease, border-color 0.3s ease",
-      }}
-    >
-      {/* Nombre de la empresa */}
-      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-         <span
-          style={{
-            fontFamily: "var(--font-cormorant), serif",
-            fontSize: "1.6rem",
-            fontWeight: 600,
-            color: "var(--nav-link-color)",
-            letterSpacing: "0.02em",
-            transition: "color 0.3s ease",
-          }}
-        >
-          Coragem
-        </span>
-      </div>
+  const [menuOpen, setMenuOpen] = useState(false);
 
-      {/* ── Links de navegación ── */}
-      <nav
-        aria-label="Navegación principal"
+  return (
+    <>
+      <header
         style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          height: "72px",
           display: "flex",
           alignItems: "center",
-          gap: "0.25rem",
+          justifyContent: "space-between",
+          paddingLeft: "1.75rem",
+          paddingRight: "2rem",
+          backgroundColor: "var(--nav-bg)",
+          borderBottom: "1px solid var(--nav-border)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          transition: "background-color 0.3s ease, border-color 0.3s ease",
         }}
       >
-        {NAV_LINKS.map((link) => (
-          <NavLink key={link.href} href={link.href} label={link.label} />
-        ))}
-      </nav>
-    </header>
+        {/* ── Logo / Nombre ── */}
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span
+            style={{
+              fontFamily: "var(--font-cormorant), serif",
+              fontSize: "1.6rem",
+              fontWeight: 600,
+              color: "var(--nav-link-color)",
+              letterSpacing: "0.02em",
+              transition: "color 0.3s ease",
+            }}
+          >
+            Coragem
+          </span>
+        </div>
+
+        {/* ── Desktop nav (> 700px) ── */}
+        <nav
+          aria-label="Navegación principal"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+          }}
+          className="desktop-nav"
+        >
+          {NAV_LINKS.map((link) => (
+            <NavLink key={link.href} href={link.href} label={link.label} />
+          ))}
+        </nav>
+
+        {/* ── Hamburger button (≤ 700px) ── */}
+        <button
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menú"
+          aria-expanded={menuOpen}
+          className="hamburger-btn"
+          style={{
+            width: "2.5rem",
+            height: "2.5rem",
+            borderRadius: "8px",
+            border: "1.5px solid var(--nav-border)",
+            background: "transparent",
+            cursor: "pointer",
+            display: "none", /* controlado por CSS media query */
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--nav-link-color)",
+            transition: "all 0.2s ease",
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--coragem-teal)";
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--coragem-teal)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(78, 196, 196, 0.1)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--nav-border)";
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--nav-link-color)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+          }}
+        >
+          {/* Icono hamburguesa con gradiente */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6"  x2="21" y2="6"  />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </header>
+
+      {/* ── Mobile sidebar ── */}
+      <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      {/* ── Responsive styles via <style> tag ── */}
+      <style>{`
+        @media (max-width: 700px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          .hamburger-btn {
+            display: flex !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }

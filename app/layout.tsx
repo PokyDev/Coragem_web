@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
+
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -30,12 +32,11 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={`${cormorant.variable} ${jost.variable} antialiased`}>
         <Providers>
-          {/* Navbar aparece en todas las páginas automáticamente */}
           <Navbar />
-          {/* Padding-top para que el contenido no quede tapado por el navbar fijo */}
           <div style={{ paddingTop: "72px" }}>
             {children}
           </div>
+          <Footer />   {/* ← aquí */}
         </Providers>
       </body>
     </html>

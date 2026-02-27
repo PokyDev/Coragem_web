@@ -22,6 +22,11 @@
   --nav-link-hover-bg: rgba(78, 196, 196, 0.12);
   --nav-link-hover-color: #4ec4c4;
   --nav-link-active-color: #c47a9e;
+
+  /* Scrollbar — tema claro */
+  --scrollbar-track: #f0ece6;
+  --scrollbar-thumb: #c9b8cc;
+  --scrollbar-thumb-hover: #c47a9e;
 }
 
 .dark {
@@ -39,10 +44,45 @@
   --nav-link-hover-bg: rgba(78, 196, 196, 0.15);
   --nav-link-hover-color: #4ec4c4;
   --nav-link-active-color: #c47a9e;
+
+  /* Scrollbar — tema oscuro */
+  --scrollbar-track: #0f1a2a;
+  --scrollbar-thumb: #1e3a5f;
+  --scrollbar-thumb-hover: #4ec4c4;
+}
+
+/* ── Custom Scrollbar (Webkit) ────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  transition: background 0.25s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* ── Base ─────────────────────────────────────────────────────── */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;

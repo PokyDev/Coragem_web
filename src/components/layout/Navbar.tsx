@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "@/components/layout/NavLink";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 
@@ -13,6 +13,35 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [atTop, setAtTop] = useState(true);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      /* Consideramos "en el top" si el scroll es menor a 10px */
+      const isAtTop = currentScrollY < 10;
+      setAtTop(isAtTop);
+
+      if (isAtTop) {
+        /* Siempre visible en el top */
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        /* Scrolling hacia abajo → ocultar */
+        setVisible(false);
+      }
+      /* Scrolling hacia arriba → no hacer nada; el botón scroll-to-top
+         lleva al usuario al top donde el navbar reaparece automáticamente */
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -33,7 +62,11 @@ export function Navbar() {
           borderBottom: "1px solid var(--nav-border)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          transition: "background-color 0.3s ease, border-color 0.3s ease",
+          /* Animación de entrada/salida */
+          transform: visible ? "translateY(0)" : "translateY(-100%)",
+          opacity: visible ? 1 : 0,
+          transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease",
+          pointerEvents: visible ? "auto" : "none",
         }}
       >
         {/* ── Logo / Nombre ── */}
@@ -80,7 +113,7 @@ export function Navbar() {
             border: "1.5px solid var(--nav-border)",
             background: "transparent",
             cursor: "pointer",
-            display: "none", /* controlado por CSS media query */
+            display: "none",
             alignItems: "center",
             justifyContent: "center",
             color: "var(--nav-link-color)",
@@ -98,7 +131,6 @@ export function Navbar() {
             (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
           }}
         >
-          {/* Icono hamburguesa con gradiente */}
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2"
             strokeLinecap="round" strokeLinejoin="round">
@@ -112,7 +144,7 @@ export function Navbar() {
       {/* ── Mobile sidebar ── */}
       <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      {/* ── Responsive styles via <style> tag ── */}
+      {/* ── Responsive styles ── */}
       <style>{`
         @media (max-width: 700px) {
           .desktop-nav {

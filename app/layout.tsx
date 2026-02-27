@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Jost } from "next/font/google";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import "./globals.css";
 
 
@@ -36,7 +37,8 @@ export default function RootLayout({
           <div style={{ paddingTop: "72px" }}>
             {children}
           </div>
-          <Footer />   {/* ← aquí */}
+          <ThemeToggle />
+          <Footer />
         </Providers>
       </body>
     </html>

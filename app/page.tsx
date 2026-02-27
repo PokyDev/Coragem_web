@@ -1,4 +1,3 @@
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { ProductsGrid } from "@/components/landing/ProductsGrid";
 
@@ -12,7 +11,6 @@ export default function Home() {
         paddingBottom: "4rem",
       }}
     >
-      <ThemeToggle />
       <LandingHeader />
       <ProductsGrid />
 

@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { BrandIcon } from "@/components/ui/BrandIcon";
+import { BrandIcon } from "@/components/layout/BrandIcon";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();

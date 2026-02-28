@@ -92,7 +92,7 @@ export function Footer() {
         style={{
           maxWidth: "1100px",
           margin: "0 auto",
-          padding: "3rem 1.5rem 3rem",
+          padding: "3rem 1.5rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -102,7 +102,7 @@ export function Footer() {
         className="footer-top"
       >
         {/* ── Left: Social block ── */}
-        <div>
+        <div className="footer-col">
           <SectionLabel>Síguenos</SectionLabel>
           <a
             href="https://www.instagram.com/coragem_accesorios"
@@ -146,7 +146,7 @@ export function Footer() {
         </div>
 
         {/* ── Center: Navigation (horizontal) ── */}
-        <div style={{ textAlign: "center" }}>
+        <div className="footer-col" style={{ textAlign: "center" }}>
           <SectionLabel>Navegación</SectionLabel>
           <nav
             aria-label="Navegación del footer"
@@ -166,7 +166,7 @@ export function Footer() {
         </div>
 
         {/* ── Right: Brand wordmark ── */}
-        <div style={{ textAlign: "right" }}>
+        <div className="footer-col footer-col--right">
           <SectionLabel>Marca</SectionLabel>
           <span
             className="footer-brand-text"
@@ -255,7 +255,7 @@ export function Footer() {
 
       {/* ── Theme-aware + Responsive styles ── */}
       <style>{`
-        /* Brand text: navy con opacidad en claro, sand en oscuro */
+        /* Brand text: navy con opacidad en claro, teal en oscuro */
         :root .footer-brand-text {
           color: var(--coragem-navy);
           opacity: 0.45;
@@ -265,19 +265,26 @@ export function Footer() {
           opacity: 0.8;
         }
 
-        /* Mobile */
-        @media (max-width: 640px) {
+        /* ── Responsive: columna vertical centrada ≤ 750px ── */
+        @media (max-width: 750px) {
           .footer-top {
             flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 1.5rem !important;
+            align-items: center !important;
+            text-align: center !important;
+            gap: 2rem !important;
           }
-          .footer-top > div:last-child {
-            text-align: left !important;
+          .footer-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .footer-col--right {
+            text-align: center !important;
           }
           .footer-bottom {
             flex-direction: column !important;
-            align-items: flex-start !important;
+            align-items: center !important;
+            text-align: center !important;
             gap: 0.375rem !important;
           }
         }

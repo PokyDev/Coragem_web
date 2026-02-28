@@ -8,7 +8,7 @@ const NAV_LINKS = [
   { href: "/",         label: "Inicio"    },
   { href: "/products", label: "Productos" },
   { href: "/contact",  label: "Contacto"  },
-  /* { href: "/warranty", label: "Garantía"  },*/ // Por ahora no hay una garantia definida.
+  /* { href: "/warranty", label: "Garantía"  }, */ // Por ahora no hay una garantia definida.
 ] as const;
 
 export function Navbar() {
@@ -22,19 +22,14 @@ export function Navbar() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      /* Consideramos "en el top" si el scroll es menor a 10px */
       const isAtTop = currentScrollY < 10;
       setAtTop(isAtTop);
 
       if (isAtTop) {
-        /* Siempre visible en el top */
         setVisible(true);
       } else if (currentScrollY > lastScrollY) {
-        /* Scrolling hacia abajo → ocultar */
         setVisible(false);
       }
-      /* Scrolling hacia arriba → no hacer nada; el botón scroll-to-top
-         lleva al usuario al top donde el navbar reaparece automáticamente */
 
       lastScrollY = currentScrollY;
     };
@@ -62,10 +57,10 @@ export function Navbar() {
           borderBottom: "1px solid var(--nav-border)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          /* Animación de entrada/salida */
           transform: visible ? "translateY(0)" : "translateY(-100%)",
           opacity: visible ? 1 : 0,
-          transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease",
+          transition:
+            "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease",
           pointerEvents: visible ? "auto" : "none",
         }}
       >
@@ -85,7 +80,7 @@ export function Navbar() {
           </span>
         </div>
 
-        {/* ── Desktop nav (> 700px) ── */}
+        {/* ── Desktop nav (> 1250px) ── */}
         <nav
           aria-label="Navegación principal"
           style={{
@@ -100,7 +95,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* ── Hamburger button (≤ 700px) ── */}
+        {/* ── Hamburger button (≤ 1250px) ── */}
         <button
           onClick={() => setMenuOpen(true)}
           aria-label="Abrir menú"
@@ -121,19 +116,32 @@ export function Navbar() {
             flexShrink: 0,
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--coragem-teal)";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--coragem-teal)";
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(78, 196, 196, 0.1)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "var(--coragem-teal)";
+            (e.currentTarget as HTMLButtonElement).style.color =
+              "var(--coragem-teal)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "rgba(78, 196, 196, 0.1)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--nav-border)";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--nav-link-color)";
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.borderColor =
+              "var(--nav-border)";
+            (e.currentTarget as HTMLButtonElement).style.color =
+              "var(--nav-link-color)";
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "transparent";
           }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="3" y1="6"  x2="21" y2="6"  />
             <line x1="3" y1="12" x2="21" y2="12" />
             <line x1="3" y1="18" x2="21" y2="18" />
@@ -146,7 +154,7 @@ export function Navbar() {
 
       {/* ── Responsive styles ── */}
       <style>{`
-        @media (max-width: 700px) {
+        @media (max-width: 1250px) {
           .desktop-nav {
             display: none !important;
           }

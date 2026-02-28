@@ -3,9 +3,8 @@ import { Cormorant_Garamond, Jost } from "next/font/google";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { FloatingControls } from "@/components/layout/FloatingControls";
 import "./globals.css";
-
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -37,7 +36,7 @@ export default function RootLayout({
           <div style={{ paddingTop: "72px" }}>
             {children}
           </div>
-          <ThemeToggle />
+          <FloatingControls />
           <Footer />
         </Providers>
       </body>

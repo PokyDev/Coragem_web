@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { NavLink } from "@/components/layout/NavLink";
+import { BrandIcon } from "@/components/layout/ui/BrandIcon";
+import { ThemeToggle } from "@/components/layout/ui/ThemeToggle";
 
 const NAV_LINKS = [
   { href: "/",         label: "Inicio"    },
@@ -39,7 +41,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? "auto" : "none",
           visibility: isOpen ? "visible" : "hidden",
-          transition: "opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s",
+          transition:
+            "opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s",
         }}
         aria-hidden="true"
       />
@@ -64,10 +67,11 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           borderColor: "var(--border)",
           boxShadow: isOpen ? "-12px 0 40px rgba(15, 26, 42, 0.22)" : "none",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
-          transition: "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
+          transition:
+            "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
-        {/* Header del panel */}
+        {/* ── Header del panel ── */}
         <div
           style={{
             height: "72px",
@@ -83,7 +87,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               fontFamily: "var(--font-cormorant), serif",
               fontSize: "1.3rem",
               fontWeight: 600,
-              background: "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+              background:
+                "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -110,24 +115,35 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--coragem-pink)";
-              (e.currentTarget as HTMLButtonElement).style.color = "var(--coragem-pink)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "var(--coragem-pink)";
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "var(--coragem-pink)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
-              (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "var(--border)";
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "var(--text-secondary)";
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
 
-        {/* Links */}
+        {/* ── Links ── */}
         <nav
           style={{
             flex: 1,
@@ -152,24 +168,30 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           ))}
         </nav>
 
-        {/* Decoración inferior */}
+        {/* ── Footer del panel: decoración + BrandIcon + ThemeToggle ── */}
         <div
           style={{
-            padding: "1.5rem",
+            padding: "1.25rem 1.5rem 1.5rem",
             borderTop: "1px solid var(--border)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
           }}
         >
+          {/* Línea decorativa */}
           <div
             style={{
               height: "2px",
               borderRadius: "2px",
-              background: "linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+              background:
+                "linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
               opacity: 0.6,
             }}
           />
+
+          {/* Label */}
           <p
             style={{
-              marginTop: "0.875rem",
               fontFamily: "var(--font-jost), sans-serif",
               fontSize: "0.72rem",
               letterSpacing: "0.1em",
@@ -179,6 +201,18 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           >
             Bisutería en Rodio
           </p>
+
+          {/* BrandIcon + ThemeToggle en fila */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <BrandIcon size={44} />
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
     </>

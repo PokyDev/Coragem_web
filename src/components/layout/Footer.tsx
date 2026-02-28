@@ -7,7 +7,7 @@ const NAV_LINKS = [
   { href: "/",         label: "Inicio"    },
   { href: "/products", label: "Productos" },
   { href: "/contact",  label: "Contacto"  },
-  /* { href: "/warranty", label: "Garantía"  }, */ // Por ahora no hay una garantia definida.
+  /* { href: "/warranty", label: "Garantía" }, */ // Por ahora no hay una garantia definida.
 ] as const;
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -109,6 +109,7 @@ export function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram de Coragem Accesorios"
+            className="footer-ig-link"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -124,20 +125,6 @@ export function Footer() {
               border: "1px solid var(--border)",
               transition:
                 "color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.color = "var(--text-primary)";
-              el.style.borderColor = "rgba(220, 39, 67, 0.4)";
-              el.style.backgroundColor = "rgba(220, 39, 67, 0.05)";
-              el.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.color = "var(--text-secondary)";
-              el.style.borderColor = "var(--border)";
-              el.style.backgroundColor = "transparent";
-              el.style.transform = "translateY(0)";
             }}
           >
             <InstagramIcon size={17} />
@@ -155,7 +142,7 @@ export function Footer() {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
-              gap: "0.2rem",
+              gap: "0.8rem",
               flexWrap: "wrap",
               justifyContent: "center",
             }}
@@ -221,6 +208,7 @@ export function Footer() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Perfil de GitHub del desarrollador PokyDev"
+          className="footer-dev-link"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -231,14 +219,6 @@ export function Footer() {
             textDecoration: "none",
             letterSpacing: "0.04em",
             transition: "color 0.25s ease",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.color =
-              "var(--coragem-teal)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLAnchorElement).style.color =
-              "var(--text-secondary)";
           }}
         >
           <svg
@@ -254,7 +234,7 @@ export function Footer() {
         </a>
       </div>
 
-      {/* ── Theme-aware + Responsive styles ── */}
+      {/* ── All CSS: theme-aware + hover + responsive ── */}
       <style>{`
         /* Brand text: navy con opacidad en claro, teal en oscuro */
         :root .footer-brand-text {
@@ -264,6 +244,19 @@ export function Footer() {
         .dark .footer-brand-text {
           color: var(--coragem-teal);
           opacity: 0.8;
+        }
+
+        /* Instagram link hover — CSS puro, sin JS */
+        .footer-ig-link:hover {
+          color: var(--text-primary) !important;
+          border-color: rgba(220, 39, 67, 0.4) !important;
+          background-color: rgba(220, 39, 67, 0.05) !important;
+          transform: translateY(-2px);
+        }
+
+        /* Developer link hover */
+        .footer-dev-link:hover {
+          color: var(--coragem-teal) !important;
         }
 
         /* ── Responsive: columna vertical centrada ≤ 750px ── */

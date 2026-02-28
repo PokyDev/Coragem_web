@@ -86,7 +86,7 @@ export function Navbar() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "0.25rem",
+            gap: "0.8rem",
           }}
           className="desktop-nav"
         >

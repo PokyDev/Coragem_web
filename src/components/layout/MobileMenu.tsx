@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { href: "/",         label: "Inicio"    },
   { href: "/products", label: "Productos" },
   { href: "/contact",  label: "Contacto"  },
-  { href: "/warranty", label: "Garantía"  },
+  /* { href: "/warranty", label: "Garantía"  }, */ // Por ahora no hay una garantia definida.
 ] as const;
 
 interface MobileMenuProps {

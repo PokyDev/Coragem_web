@@ -150,6 +150,7 @@ export function Footer() {
           <SectionLabel>Navegación</SectionLabel>
           <nav
             aria-label="Navegación del footer"
+            className="footer-nav"
             style={{
               display: "flex",
               flexDirection: "row",
@@ -286,6 +287,14 @@ export function Footer() {
             align-items: center !important;
             text-align: center !important;
             gap: 0.375rem !important;
+          }
+        }
+
+        /* ── Nav en columna centrada ≤ 400px ── */
+        @media (max-width: 400px) {
+          .footer-nav {
+            flex-direction: column !important;
+            gap: 1rem !important;
           }
         }
       `}</style>

@@ -178,6 +178,18 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             gap: "1rem",
           }}
         >
+          {/* BrandIcon + ThemeToggle en fila */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <BrandIcon size={44} />
+            <ThemeToggle />
+          </div>
+
           {/* Línea decorativa */}
           <div
             style={{
@@ -201,18 +213,6 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           >
             Bisutería en Rodio
           </p>
-
-          {/* BrandIcon + ThemeToggle en fila */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <BrandIcon size={44} />
-            <ThemeToggle />
-          </div>
         </div>
       </aside>
     </>

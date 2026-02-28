@@ -5,7 +5,9 @@
     "price": 8000,
     "image": "producto_1.jpeg",
     "stock": 2,
-    "category": "EARRING"
+    "category": "EARCUFF",
+    "color": "SILVER",
+    "ventas": 34
   },
   {
     "id": 2,
@@ -13,7 +15,9 @@
     "price": 12000,
     "image": "producto_2.jpeg",
     "stock": 3,
-    "category": "RING"
+    "category": "ANILLO",
+    "color": "ROSADO",
+    "ventas": 58
   },
   {
     "id": 3,
@@ -21,7 +25,9 @@
     "price": 10000,
     "image": "producto_3.jpeg",
     "stock": 5,
-    "category": "COLLAR"
+    "category": "DIJE",
+    "color": "BLANCO",
+    "ventas": 21
   },
   {
     "id": 4,
@@ -29,7 +35,9 @@
     "price": 9000,
     "image": "producto_4.jpeg",
     "stock": 8,
-    "category": "COLLAR"
+    "category": "CADENA",
+    "color": "SILVER",
+    "ventas": 76
   },
   {
     "id": 5,
@@ -37,7 +45,9 @@
     "price": 15000,
     "image": "producto_5.jpeg",
     "stock": 0,
-    "category": "EARRING"
+    "category": "TOPOS",
+    "color": "BLANCO",
+    "ventas": 12
   },
   {
     "id": 6,
@@ -45,7 +55,9 @@
     "price": 15000,
     "image": "producto_6.jpeg",
     "stock": 10,
-    "category": "EARRING"
+    "category": "CANDONGAS",
+    "color": "NEGRO",
+    "ventas": 43
   },
   {
     "id": 7,
@@ -53,7 +65,9 @@
     "price": 30000,
     "image": "producto_7.jpeg",
     "stock": 0,
-    "category": "COLLAR"
+    "category": "CADENA",
+    "color": "SILVER",
+    "ventas": 89
   },
   {
     "id": 8,
@@ -61,6 +75,8 @@
     "price": 24000,
     "image": "producto_8.jpeg",
     "stock": 2,
-    "category": "BRACELET"
+    "category": "CONJUNTOS",
+    "color": "ROJO",
+    "ventas": 67
   }
 ]

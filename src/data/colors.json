@@ -1,0 +1,7 @@
+[
+  { "id": "ROJO",   "label": "Rojo",   "hex": "#C0392B" },
+  { "id": "NEGRO",  "label": "Negro",  "hex": "#1a1a1a" },
+  { "id": "BLANCO", "label": "Blanco", "hex": "#F5F0EB" },
+  { "id": "ROSADO", "label": "Rosado", "hex": "#E8A0B4" },
+  { "id": "SILVER", "label": "Silver", "hex": "#B0B8C1" }
+]

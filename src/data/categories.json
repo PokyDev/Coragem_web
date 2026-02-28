@@ -1,0 +1,9 @@
+[
+  { "id": "EARCUFF",  "label": "Earcuff"   },
+  { "id": "ANILLO",   "label": "Anillo"    },
+  { "id": "DIJE",     "label": "Dije"      },
+  { "id": "CADENA",   "label": "Cadena"    },
+  { "id": "TOPOS",    "label": "Topos"     },
+  { "id": "CANDONGAS","label": "Candongas" },
+  { "id": "CONJUNTOS","label": "Conjuntos" }
+]

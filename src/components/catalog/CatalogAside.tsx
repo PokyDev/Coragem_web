@@ -167,7 +167,7 @@ function PriceRange({
       </div>
 
       {/* Min slider */}
-      <div style={{ marginBottom: "0.5rem" }}>
+      <div style={{ marginBottom: "1.5rem" }}>
         <input
           type="range"
           min={min}

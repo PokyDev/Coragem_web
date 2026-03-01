@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { CatalogAside } from "@/components/catalog/CatalogAside";
 import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
 import { CatalogGrid } from "@/components/catalog/CatalogGrid";
+import { MobileFilterDrawer } from "@/components/catalog/MobileFilterDrawer";
 import {
   Product,
   Category,
@@ -30,67 +31,30 @@ const DEFAULT_FILTERS: ActiveFilters = {
   sort: "most_sold",
 };
 
-/* ─── Sorting logic ──────────────────────────────────────────────── */
+/* ─── Sorting ────────────────────────────────────────────────────── */
 function sortProducts(products: Product[], sort: SortKey): Product[] {
   const sorted = [...products];
   switch (sort) {
-    case "price_asc":
-      return sorted.sort((a, b) => a.price - b.price);
-    case "price_desc":
-      return sorted.sort((a, b) => b.price - a.price);
-    case "name_asc":
-      return sorted.sort((a, b) => a.name.localeCompare(b.name, "es"));
-    case "name_desc":
-      return sorted.sort((a, b) => b.name.localeCompare(a.name, "es"));
-    case "most_sold":
-      return sorted.sort((a, b) => b.ventas - a.ventas);
-    default:
-      return sorted;
+    case "price_asc":  return sorted.sort((a, b) => a.price - b.price);
+    case "price_desc": return sorted.sort((a, b) => b.price - a.price);
+    case "name_asc":   return sorted.sort((a, b) => a.name.localeCompare(b.name, "es"));
+    case "name_desc":  return sorted.sort((a, b) => b.name.localeCompare(a.name, "es"));
+    case "most_sold":  return sorted.sort((a, b) => b.ventas - a.ventas);
+    default:           return sorted;
   }
 }
 
-/* ─── Load More Button ───────────────────────────────────────────── */
+/* ─── Load More ──────────────────────────────────────────────────── */
 function LoadMoreButton() {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        marginTop: "2.5rem",
-      }}
-    >
+    <div style={{ display: "flex", justifyContent: "center", marginTop: "2.5rem" }}>
       <button
         disabled
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
-          padding: "0.7rem 2rem",
-          borderRadius: "999px",
-          border: "1px solid var(--border)",
-          background: "transparent",
-          color: "var(--text-secondary)",
-          fontFamily: "var(--font-jost), sans-serif",
-          fontSize: "0.78rem",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          cursor: "not-allowed",
-          opacity: 0.6,
-          transition: "all 0.3s ease",
-        }}
         title="Próximamente"
+        style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.7rem 2rem", borderRadius: "999px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "not-allowed", opacity: 0.6 }}
       >
         <span>Ver más productos</span>
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
@@ -98,46 +62,15 @@ function LoadMoreButton() {
   );
 }
 
-/* ─── Mobile filter toggle ───────────────────────────────────────── */
-function MobileFilterToggle({
-  onClick,
-  hasActive,
-}: {
-  onClick: () => void;
-  hasActive: boolean;
-}) {
+/* ─── Mobile toggle ──────────────────────────────────────────────── */
+function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasActive: boolean }) {
   return (
     <button
       onClick={onClick}
       className="mobile-filter-toggle"
-      style={{
-        display: "none",
-        alignItems: "center",
-        gap: "0.5rem",
-        padding: "0.5rem 1rem",
-        borderRadius: "999px",
-        border: "1px solid",
-        borderColor: hasActive ? "var(--coragem-teal)" : "var(--border)",
-        background: hasActive ? "rgba(78,196,196,0.08)" : "var(--bg-card)",
-        color: hasActive ? "var(--coragem-teal)" : "var(--text-secondary)",
-        fontFamily: "var(--font-jost), sans-serif",
-        fontSize: "0.72rem",
-        letterSpacing: "0.08em",
-        textTransform: "uppercase",
-        cursor: "pointer",
-        marginBottom: "1rem",
-        transition: "all 0.25s ease",
-      }}
+      style={{ display: "none", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "999px", border: "1px solid", borderColor: hasActive ? "var(--coragem-teal)" : "var(--border)", background: hasActive ? "rgba(78,196,196,0.08)" : "var(--bg-card)", color: hasActive ? "var(--coragem-teal)" : "var(--text-secondary)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", marginBottom: "1rem", transition: "all 0.25s ease" }}
     >
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <line x1="4" y1="6" x2="20" y2="6" />
         <line x1="8" y1="12" x2="20" y2="12" />
         <line x1="12" y1="18" x2="20" y2="18" />
@@ -148,16 +81,21 @@ function MobileFilterToggle({
 }
 
 /* ─── Main Component ─────────────────────────────────────────────── */
-export function CatalogClient({
-  products,
-  categories,
-  colors,
-}: CatalogClientProps) {
+export function CatalogClient({ products, categories, colors }: CatalogClientProps) {
   const [filters, setFilters] = useState<ActiveFilters>(DEFAULT_FILTERS);
-  const [mobileAsideOpen, setMobileAsideOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const updateFilters = (next: Partial<ActiveFilters>) =>
-    setFilters((prev) => ({ ...prev, ...next }));
+  /*
+   * Referencias estables: imprescindible para que React.memo en
+   * MobileFilterDrawer pueda hacer su trabajo. Si updateFilters o
+   * closeDrawer se recrearan en cada render, el memo siempre fallaría.
+   */
+  const updateFilters = useCallback(
+    (next: Partial<ActiveFilters>) => setFilters((prev) => ({ ...prev, ...next })),
+    []
+  );
+
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const hasActiveFilters =
     filters.categories.length > 0 ||
@@ -165,20 +103,13 @@ export function CatalogClient({
     filters.priceMin > PRICE_MIN ||
     filters.priceMax < PRICE_MAX;
 
-  /* Derived: apply filters then sort */
   const filteredProducts = useMemo(() => {
     const query = filters.search.toLowerCase().trim();
     const filtered = products.filter((p) => {
       if (query && !p.name.toLowerCase().includes(query)) return false;
-      if (
-        filters.categories.length > 0 &&
-        !filters.categories.includes(p.category)
-      )
-        return false;
-      if (filters.colors.length > 0 && !filters.colors.includes(p.color))
-        return false;
-      if (p.price < filters.priceMin || p.price > filters.priceMax)
-        return false;
+      if (filters.categories.length > 0 && !filters.categories.includes(p.category)) return false;
+      if (filters.colors.length > 0 && !filters.colors.includes(p.color)) return false;
+      if (p.price < filters.priceMin || p.price > filters.priceMax) return false;
       return true;
     });
     return sortProducts(filtered, filters.sort);
@@ -186,21 +117,23 @@ export function CatalogClient({
 
   return (
     <>
-      {/* Mobile filter toggle */}
+      <MobileFilterDrawer
+        isOpen={drawerOpen}
+        onClose={closeDrawer}
+        categories={categories}
+        colors={colors}
+        filters={filters}
+        priceRange={{ min: PRICE_MIN, max: PRICE_MAX }}
+        onChange={updateFilters}
+      />
+
       <MobileFilterToggle
-        onClick={() => setMobileAsideOpen((o) => !o)}
+        onClick={() => setDrawerOpen(true)}
         hasActive={hasActiveFilters}
       />
 
-      <div
-        style={{
-          display: "flex",
-          gap: "1.75rem",
-          alignItems: "flex-start",
-        }}
-      >
-        {/* ── Aside ── */}
-        <div className={`aside-wrapper ${mobileAsideOpen ? "aside-open" : ""}`}>
+      <div style={{ display: "flex", gap: "1.75rem", alignItems: "flex-start" }}>
+        <div className="desktop-aside">
           <CatalogAside
             categories={categories}
             colors={colors}
@@ -210,40 +143,18 @@ export function CatalogClient({
           />
         </div>
 
-        {/* ── Content area ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <CatalogToolbar
-            filters={filters}
-            total={filteredProducts.length}
-            onChange={updateFilters}
-          />
+          <CatalogToolbar filters={filters} total={filteredProducts.length} onChange={updateFilters} />
           <CatalogGrid products={filteredProducts} />
           <LoadMoreButton />
         </div>
       </div>
 
       <style>{`
-        .aside-wrapper {
-          flex-shrink: 0;
-        }
-
-        /* Mobile: hide aside by default, show when toggled */
+        .desktop-aside { flex-shrink: 0; }
         @media (max-width: 860px) {
-          .mobile-filter-toggle {
-            display: flex !important;
-          }
-          .aside-wrapper {
-            display: none;
-          }
-          .aside-wrapper.aside-open {
-            display: block;
-            width: 100%;
-            margin-bottom: 1rem;
-          }
-          .aside-wrapper.aside-open .catalog-aside {
-            width: 100% !important;
-            position: static !important;
-          }
+          .desktop-aside { display: none; }
+          .mobile-filter-toggle { display: flex !important; }
         }
       `}</style>
     </>

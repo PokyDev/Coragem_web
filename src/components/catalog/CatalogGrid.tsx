@@ -76,10 +76,16 @@ function ProductCard({
   const outOfStock = product.stock === 0;
 
   return (
+    /*
+     * display: flex + height: 100% en el Link garantiza que la tarjeta
+     * ocupe toda la altura de su celda en el grid, permitiendo que
+     * CSS Grid iguale automáticamente las alturas de cada fila.
+     */
     <Link
       href={`/products/${product.id}`}
       style={{
-        display: "block",
+        display: "flex",
+        height: "100%",
         textDecoration: "none",
         opacity: 0,
         animation: `fadeInCard 0.45s ease forwards`,
@@ -89,6 +95,9 @@ function ProductCard({
       <article
         className="catalog-card"
         style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
           borderRadius: "16px",
           border: "1px solid var(--border)",
           backgroundColor: "var(--bg-card)",
@@ -107,13 +116,14 @@ function ProductCard({
             aspectRatio: "1 / 1",
             backgroundColor: "var(--bg)",
             overflow: "hidden",
+            flexShrink: 0,
           }}
         >
           <Image
             src={`/images/products/${product.image}`}
             alt={product.name}
             fill
-            sizes="(max-width: 600px) 50vw, 33vw"
+            sizes="(max-width: 400px) 50vw, (max-width: 600px) 50vw, 33vw"
             style={{
               objectFit: "cover",
               transition: "transform 0.45s cubic-bezier(0.4,0,0.2,1)",
@@ -123,13 +133,18 @@ function ProductCard({
           {outOfStock && <NoStockRibbon />}
         </div>
 
-        {/* Info */}
+        {/* Info
+            flex: 1 hace que esta sección crezca para llenar el espacio
+            disponible, manteniendo el precio alineado al fondo en todas
+            las tarjetas de la misma fila. */}
         <div
+          className="catalog-card-info"
           style={{
             padding: "0.9rem 1rem 1rem",
             display: "flex",
             flexDirection: "column",
             gap: "0.35rem",
+            flex: 1,
           }}
         >
           <h3
@@ -142,6 +157,7 @@ function ProductCard({
               lineHeight: 1.25,
               letterSpacing: "0.02em",
               transition: "color 0.2s ease",
+              flex: 1,
             }}
           >
             {product.name}
@@ -153,9 +169,12 @@ function ProductCard({
               alignItems: "center",
               justifyContent: "space-between",
               marginTop: "0.15rem",
+              flexWrap: "wrap",
+              gap: "0.2rem",
             }}
           >
             <span
+              className="catalog-card-price"
               style={{
                 fontFamily: "var(--font-jost), sans-serif",
                 fontSize: "0.92rem",
@@ -172,6 +191,7 @@ function ProductCard({
 
             {!outOfStock ? (
               <span
+                className="catalog-card-stock"
                 style={{
                   fontFamily: "var(--font-jost), sans-serif",
                   fontSize: "0.62rem",
@@ -185,6 +205,7 @@ function ProductCard({
               </span>
             ) : (
               <span
+                className="catalog-card-stock"
                 style={{
                   fontFamily: "var(--font-jost), sans-serif",
                   fontSize: "0.62rem",
@@ -254,6 +275,7 @@ export function CatalogGrid({ products }: { products: Product[] }) {
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
           gap: "1.25rem",
+          alignItems: "stretch",
         }}
         className="catalog-grid"
       >
@@ -290,10 +312,35 @@ export function CatalogGrid({ products }: { products: Product[] }) {
             grid-template-columns: repeat(2, 1fr) !important;
           }
         }
-        @media (max-width: 480px) {
+
+        /* Responsive: ≤ 400px — tarjetas compactas */
+        @media (max-width: 400px) {
           .catalog-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.625rem !important;
+            gap: 0.5rem !important;
+          }
+
+          .catalog-card {
+            border-radius: 10px !important;
+          }
+
+          .catalog-card-info {
+            padding: 0.55rem 0.65rem 0.65rem !important;
+            gap: 0.25rem !important;
+          }
+
+          .catalog-card-name {
+            font-size: 0.82rem !important;
+            line-height: 1.2 !important;
+          }
+
+          .catalog-card-price {
+            font-size: 0.75rem !important;
+          }
+
+          .catalog-card-stock {
+            font-size: 0.52rem !important;
+            letter-spacing: 0.06em !important;
           }
         }
       `}</style>

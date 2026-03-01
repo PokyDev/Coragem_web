@@ -77,10 +77,15 @@ function ProductCard({
   const outOfStock = product.stock === 0;
 
   return (
+    /*
+     * height: 100% en el Link asegura que ocupe toda la altura de su celda
+     * en el grid, lo que permite que CSS Grid iguale las alturas de la fila.
+     */
     <Link
       href={`/products/${product.id}`}
       style={{
-        display: "block",
+        display: "flex",
+        height: "100%",
         textDecoration: "none",
         animationDelay: `${index * 0.07}s`,
       }}
@@ -89,6 +94,9 @@ function ProductCard({
       <article
         className="product-card"
         style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
           borderRadius: "16px",
           border: "1px solid var(--border)",
           backgroundColor: "var(--bg-card)",
@@ -107,13 +115,14 @@ function ProductCard({
             aspectRatio: "1 / 1",
             backgroundColor: "var(--bg)",
             overflow: "hidden",
+            flexShrink: 0,
           }}
         >
           <Image
             src={`/images/products/${product.image}`}
             alt={product.name}
             fill
-            sizes="(max-width: 600px) 50vw, 25vw"
+            sizes="(max-width: 400px) 50vw, (max-width: 600px) 50vw, 25vw"
             style={{
               objectFit: "cover",
               transition: "transform 0.45s cubic-bezier(0.4,0,0.2,1)",
@@ -127,15 +136,20 @@ function ProductCard({
 
         {/* ── Info ── */}
         <div
+          className="product-info"
           style={{
             padding: "0.9rem 1rem 1rem",
             display: "flex",
             flexDirection: "column",
             gap: "0.35rem",
+            /* flex: 1 hace que esta sección crezca y mantenga alineados
+               los precios al fondo cuando los títulos tienen distinta longitud */
+            flex: 1,
           }}
         >
           {/* Name */}
           <h3
+            className="product-name"
             style={{
               fontFamily: "var(--font-cormorant), serif",
               fontSize: "1.05rem",
@@ -144,8 +158,9 @@ function ProductCard({
               lineHeight: 1.25,
               letterSpacing: "0.02em",
               transition: "color 0.2s ease",
+              /* Permite que el título crezca sin romper el layout */
+              flex: 1,
             }}
-            className="product-name"
           >
             {product.name}
           </h3>
@@ -157,9 +172,12 @@ function ProductCard({
               alignItems: "center",
               justifyContent: "space-between",
               marginTop: "0.15rem",
+              flexWrap: "wrap",
+              gap: "0.2rem",
             }}
           >
             <span
+              className="product-price"
               style={{
                 fontFamily: "var(--font-jost), sans-serif",
                 fontSize: "0.92rem",
@@ -177,6 +195,7 @@ function ProductCard({
             {/* Stock indicator */}
             {!outOfStock ? (
               <span
+                className="product-stock"
                 style={{
                   fontFamily: "var(--font-jost), sans-serif",
                   fontSize: "0.62rem",
@@ -190,6 +209,7 @@ function ProductCard({
               </span>
             ) : (
               <span
+                className="product-stock"
                 style={{
                   fontFamily: "var(--font-jost), sans-serif",
                   fontSize: "0.62rem",
@@ -219,12 +239,16 @@ export function ProductsGrid() {
         padding: "0 1.5rem 4rem",
       }}
     >
-      {/* Grid */}
+      {/* Grid
+          align-items: stretch (default) + height:100% en los hijos
+          garantiza que todas las tarjetas de una misma fila tengan
+          la misma altura, independiente de la longitud del título. */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
           gap: "1.25rem",
+          alignItems: "stretch",
         }}
         className="products-grid"
       >
@@ -257,11 +281,35 @@ export function ProductsGrid() {
             gap: 0.875rem !important;
           }
         }
-        /* Responsive: 2 cols on mobile too */
-        @media (max-width: 480px) {
+
+        /* Responsive: ≤ 400px — tarjetas compactas */
+        @media (max-width: 400px) {
           .products-grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0.625rem !important;
+            gap: 0.5rem !important;
+          }
+
+          .product-card {
+            border-radius: 10px !important;
+          }
+
+          .product-info {
+            padding: 0.55rem 0.65rem 0.65rem !important;
+            gap: 0.25rem !important;
+          }
+
+          .product-name {
+            font-size: 0.82rem !important;
+            line-height: 1.2 !important;
+          }
+
+          .product-price {
+            font-size: 0.75rem !important;
+          }
+
+          .product-stock {
+            font-size: 0.52rem !important;
+            letter-spacing: 0.06em !important;
           }
         }
       `}</style>

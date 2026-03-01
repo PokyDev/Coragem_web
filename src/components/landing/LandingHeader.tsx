@@ -21,34 +21,31 @@ function RhodiumAtomIcon() {
   );
 }
 
-/* ─── Property pill ──────────────────────────────────────────────────── */
 function Pill({ label, icon }: { label: string; icon: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.45rem",
-        padding: "0.35rem 0.85rem 0.35rem 0.6rem",
-        borderRadius: "999px",
-        border: "1px solid var(--border)",
-        backgroundColor: "transparent",
-        transition: "border-color 0.3s ease",
-      }}
-    >
-      <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{icon}</span>
-      <span
-        style={{
-          fontFamily: "var(--font-jost), sans-serif",
-          fontSize: "0.7rem",
-          fontWeight: 500,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: "var(--text-secondary)",
-        }}
-      >
-        {label}
-      </span>
+    <div className="pill-item">
+      {/* Versión normal (> 460px): icon + texto en cápsula */}
+      <div className="pill-default">
+        <span style={{ fontSize: "0.85rem", lineHeight: 1 }}>{icon}</span>
+        <span
+          style={{
+            fontFamily: "var(--font-jost), sans-serif",
+            fontSize: "0.7rem",
+            fontWeight: 500,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {label}
+        </span>
+      </div>
+
+      {/* Versión mobile (≤ 460px): texto + línea decorativa */}
+      <div className="pill-mobile">
+        <span className="pill-mobile-text">{label}</span>
+        <span className="pill-mobile-line" aria-hidden="true" />
+      </div>
     </div>
   );
 }
@@ -223,6 +220,7 @@ export function LandingHeader() {
               color: "var(--text-secondary)",
               maxWidth: "680px",
               marginBottom: "1.5rem",
+              textAlign: "justify",
             }}
           >
             El <strong style={{ color: "var(--text-primary)", fontWeight: 500 }}>Rodio</strong> es
@@ -236,7 +234,7 @@ export function LandingHeader() {
           </p>
 
           {/* ── Pills ──────────────────────────────────────────────────── */}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div className="pills-container">
             <Pill label="Hipoalergénico" icon="✦" />
             <Pill label="Anti-oxidante" icon="✦" />
             <Pill label="Alta durabilidad" icon="✦" />
@@ -284,6 +282,74 @@ export function LandingHeader() {
 
       {/* ── Styles ──────────────────────────────────────────────────── */}
       <style>{`
+        /* Pills container */
+        .pills-container {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+
+        /* Pill item: oculta la versión mobile por defecto */
+        .pill-item {
+          display: contents;
+        }
+
+        .pill-default {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          padding: 0.35rem 0.85rem 0.35rem 0.6rem;
+          border-radius: 999px;
+          border: 1px solid var(--border);
+          background-color: transparent;
+          transition: border-color 0.3s ease;
+        }
+
+        .pill-mobile {
+          display: none;
+        }
+
+        /* Breakpoint ≤ 460px */
+        @media (max-width: 460px) {
+          .pills-container {
+            flex-direction: column;
+            gap: 0;
+          }
+
+          .pill-default {
+            display: none;
+          }
+
+          .pill-mobile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.55rem 0;
+          }
+
+          .pill-mobile-text {
+            font-family: var(--font-jost), sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+
+          .pill-mobile-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(
+              90deg,
+              var(--coragem-teal) 0%,
+              rgba(196, 122, 158, 0.3) 60%,
+              transparent 100%
+            );
+          }
+        }
+
         @media (max-width: 480px) {
           .material-card-header {
             flex-direction: column;

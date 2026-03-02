@@ -639,11 +639,79 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           /* left: 50% ya está en el style inline */
         }
 
-        /* Touch devices — ocultar zoom completamente */
-        @media (hover: none) {
-          .zoom-overlay,
-          .zoom-hint {
-            display: none !important;
+        /* ─── Responsive: layout vertical ≤ 850px ─── */
+        @media (max-width: 850px) {
+          .modal-body {
+            grid-template-columns: 1fr !important;
+            min-height: auto !important;
+          }
+          .modal-left,
+          .modal-right {
+            max-width: min(360px, 60vw) !important;
+            width: 100% !important;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .modal-left {
+            position: relative;
+            overflow: hidden;
+            border-right: none !important;
+            border-bottom: 1px solid var(--border);
+          }
+          .modal-right {
+            border-right: none !important;
+            padding: 1.75rem 1.25rem !important;
+          }
+
+          /* Reducir tipografía y espaciado en modal-right */
+          .modal-right h2 {
+            font-size: 1.1rem !important;
+            margin-bottom: 0.25rem !important;
+          }
+          .modal-right p {
+            font-size: 0.7rem !important;
+          }
+          .modal-right span {
+            font-size: 0.6rem !important;
+          }
+          .modal-right .modal-cta {
+            padding: 0.65rem 1.25rem !important;
+            font-size: 0.72rem !important;
+          }
+
+          /* ZoomOverlay: se reposiciona debajo de modal-right
+            en vez de cubrir la mitad derecha */
+          .zoom-overlay {
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            max-width: min(360px, 60vw) !important;
+            width: 100% !important;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 0 0 20px 20px !important;
+            transform: translateY(20px) !important;
+          }
+          .zoom-overlay--visible {
+            transform: translateY(0) !important;
+          }
+        }
+        @media (max-width: 400px) {
+          /* Reducir tipografía y espaciado en modal-right */
+          .modal-right h2 {
+            font-size: 0.9rem !important;
+            margin-bottom: 0.1rem !important;
+          }
+          .modal-right p {
+            font-size: 0.5rem !important;
+          }
+          .modal-right span {
+            font-size: 0.5rem !important;
+          }
+          .modal-right .modal-cta {
+            padding: 0.6rem 1.25rem !important;
+            font-size: 0.5rem !important;
           }
         }
       `}</style>

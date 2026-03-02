@@ -133,6 +133,7 @@ function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
             <line x1="8" y1="11" x2="14" y2="11" />
           </svg>
           <span
+            className="vista-ampliada-span"
             style={{
               fontFamily: "var(--font-jost), sans-serif",
               fontSize: "0.6rem",
@@ -672,16 +673,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           justify-content: center;
         }
 
-        /*
-         * ZoomOverlay: posición absoluta sobre la mitad derecha del modal.
-         * left: 50% lo ancla exactamente donde empieza modal-right.
-         * El padding interno replica el de modal-left para que el div
-         * de zoom tenga el mismo tamaño que el contenedor de la imagen.
-         */
-        .zoom-overlay {
-          /* left: 50% ya está en el style inline */
-        }
-
         /* ─── Responsive: layout vertical ≤ 850px ─── */
         @media (max-width: 850px) {
           .modal-body {
@@ -703,6 +694,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           }
           .zoom-hint span {
             font-size: 0.5rem !important;
+          }
+          .vista-ampliada-span {
+          font-size: 0.5rem !important;
           }
           .modal-right {
             border-right: none !important;
@@ -744,6 +738,13 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           }
         }
         @media (max-width: 500px) {
+          .zoom-hint span {
+            font-size: 0.3rem !important;
+          }
+          .vista-ampliada-span {
+          font-size: 0.4rem !important;
+          }
+
           /* Reducir tipografía y espaciado en modal-right */
           .modal-right h2 {
             font-size: 0.9rem !important;
@@ -757,7 +758,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           }
           .modal-right .modal-cta {
             padding: 0.6rem 1.25rem !important;
-            font-size: 0.5rem !important;
+            font-size: 0.4rem !important;
           }
         }
       `}</style>

@@ -88,6 +88,7 @@ export default function ContactPage() {
           <p
             style={{
               fontFamily: "var(--font-jost), sans-serif",
+              textAlign: "justify",
               fontSize: "0.85rem",
               color: "var(--text-secondary)",
               letterSpacing: "0.04em",

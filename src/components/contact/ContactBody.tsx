@@ -10,7 +10,7 @@ function InstagramCard() {
   const highlights = [
     { label: "✨ Conjuntos .",     image: "conjuntos.jpg"     },
     { label: "✨ Anillos .",       image: "anillos.jpg"       },
-    { label: "✨ Cadenas y dijes .", image: "cadenas_dijes.jpg" },
+    { label: "✨ Cadenas .",       image: "cadenas_dijes.jpg" },
     { label: "✨ Aretes .",        image: "aretes.jpg"        },
   ];
 
@@ -32,6 +32,7 @@ function InstagramCard() {
     >
       {/* ── Profile row ── */}
       <div
+        className="profile-row"
         style={{
           display: "flex",
           alignItems: "center",
@@ -251,6 +252,7 @@ function InstagramCard() {
 
       {/* ── Highlights ── */}
       <div
+        className="highlights-card"
         style={{
           display: "flex",
           gap: "1rem",
@@ -381,6 +383,7 @@ function SocialPanel() {
           style={{
             fontFamily: "var(--font-jost), sans-serif",
             fontSize: "0.6rem",
+            textAlign: "center",
             fontWeight: 600,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
@@ -658,13 +661,36 @@ export function ContactBody() {
           to   { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 860px) {
+        /* ── Breakpoint: layout en columna ≤ 1000px ── */
+        @media (max-width: 1000px) {
           .contact-layout {
             flex-direction: column !important;
-            align-items: stretch !important;
+            align-items: center !important;
+            gap: 3rem !important;
           }
           .contact-layout > * {
             max-width: 100% !important;
+            width: 100% !important;
+          }
+        }
+
+        /* ── Breakpoint: ig-card profile-row centrado ≤ 500px ── */
+        @media (max-width: 500px) {
+          .profile-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+          }
+          .profile-row > div {
+            align-items: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .profile-row > div > div {
+            justify-content: center !important;
+          }
+          .highlights-card {
+            justify-content: center !important;
           }
         }
       `}</style>

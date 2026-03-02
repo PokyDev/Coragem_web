@@ -5,6 +5,7 @@ import { CatalogAside } from "@/components/catalog/CatalogAside";
 import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
 import { CatalogGrid } from "@/components/catalog/CatalogGrid";
 import { MobileFilterDrawer } from "@/components/catalog/MobileFilterDrawer";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import {
   Product,
   Category,
@@ -44,31 +45,30 @@ function sortProducts(products: Product[], sort: SortKey): Product[] {
   }
 }
 
-/* ─── Load More ──────────────────────────────────────────────────── */
-function LoadMoreButton() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", marginTop: "2.5rem" }}>
-      <button
-        disabled
-        title="Próximamente"
-        style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.7rem 2rem", borderRadius: "999px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-secondary)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "not-allowed", opacity: 0.6 }}
-      >
-        <span>Ver más productos</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 /* ─── Mobile toggle ──────────────────────────────────────────────── */
 function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasActive: boolean }) {
   return (
     <button
       onClick={onClick}
       className="mobile-filter-toggle"
-      style={{ display: "none", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "999px", border: "1px solid", borderColor: hasActive ? "var(--coragem-teal)" : "var(--border)", background: hasActive ? "rgba(78,196,196,0.08)" : "var(--bg-card)", color: hasActive ? "var(--coragem-teal)" : "var(--text-secondary)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.72rem", letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer", marginBottom: "1rem", transition: "all 0.25s ease" }}
+      style={{
+        display: "none",
+        alignItems: "center",
+        gap: "0.5rem",
+        padding: "0.5rem 1rem",
+        borderRadius: "999px",
+        border: "1px solid",
+        borderColor: hasActive ? "var(--coragem-teal)" : "var(--border)",
+        background: hasActive ? "rgba(78,196,196,0.08)" : "var(--bg-card)",
+        color: hasActive ? "var(--coragem-teal)" : "var(--text-secondary)",
+        fontFamily: "var(--font-jost), sans-serif",
+        fontSize: "0.72rem",
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        cursor: "pointer",
+        marginBottom: "1rem",
+        transition: "all 0.25s ease",
+      }}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <line x1="4" y1="6" x2="20" y2="6" />
@@ -146,7 +146,7 @@ export function CatalogClient({ products, categories, colors }: CatalogClientPro
         <div style={{ flex: 1, minWidth: 0 }}>
           <CatalogToolbar filters={filters} total={filteredProducts.length} onChange={updateFilters} />
           <CatalogGrid products={filteredProducts} />
-          <LoadMoreButton />
+          <LoadMoreButton variant="catalog" />
         </div>
       </div>
 

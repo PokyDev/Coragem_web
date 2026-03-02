@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import products from "@/data/products.json";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 
 /* ─── Format price ──────────────────────────────────────────────── */
 function formatPrice(price: number) {
@@ -231,6 +233,8 @@ function ProductCard({
 
 /* ─── Main Grid Component ───────────────────────────────────────── */
 export function ProductsGrid() {
+  const router = useRouter();
+
   return (
     <section
       style={{
@@ -256,6 +260,11 @@ export function ProductsGrid() {
           <ProductCard key={product.id} product={product} index={i} />
         ))}
       </div>
+
+      <LoadMoreButton
+        variant="landing"
+        onClick={() => router.push("/products")}
+      />
 
       {/* ── Styles ── */}
       <style>{`

@@ -167,6 +167,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     bgY: 50,
   });
 
+  // Estado para distinguir touch
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
   const outOfStock = product?.stock === 0;
 
   /* ── Montar con animación de entrada ── */
@@ -231,6 +234,40 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     },
     [outOfStock]
   );
+
+  /* ── Touch: iniciar zoom al tocar la imagen ── */
+  const handleImageTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (outOfStock) return;
+      setIsTouchDevice(true);
+      const touch = e.touches[0];
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width) * 100;
+      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+      setZoomState({ visible: true, bgX: x, bgY: y });
+    },
+    [outOfStock]
+  );
+
+  /* ── Touch: mover el dedo actualiza la posición del zoom ── */
+  const handleImageTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (outOfStock) return;
+      // Prevenir scroll mientras se hace zoom
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width) * 100;
+      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+      setZoomState({ visible: true, bgX: x, bgY: y });
+    },
+    [outOfStock]
+  );
+
+  /* ── Touch: soltar el dedo cierra el zoom ── */
+  const handleImageTouchEnd = useCallback(() => {
+    setZoomState((prev) => ({ ...prev, visible: false }));
+  }, []);
 
   const handleImageMouseLeave = useCallback(() => {
     setZoomState((prev) => ({ ...prev, visible: false }));
@@ -329,6 +366,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 ref={imageContainerRef}
                 onMouseMove={handleImageMouseMove}
                 onMouseLeave={handleImageMouseLeave}
+                onTouchStart={handleImageTouchStart}
+                onTouchMove={handleImageTouchMove}
+                onTouchEnd={handleImageTouchEnd}
                 style={{
                   position: "relative",
                   width: "100%",
@@ -337,6 +377,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                   overflow: "hidden",
                   backgroundColor: "var(--bg)",
                   cursor: outOfStock ? "default" : "crosshair",
+                  touchAction: outOfStock ? "auto" : "none",
                 }}
               >
                 <Image
@@ -378,13 +419,15 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                     <span
                       style={{
                         fontFamily: "var(--font-jost), sans-serif",
-                        fontSize: "0.58rem",
+                        fontSize: "0.7rem",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         color: "rgba(255,255,255,0.75)",
                       }}
                     >
-                      Pasa el cursor para hacer zoom
+                      {isTouchDevice
+                        ? "Mantén presionado para zoom"
+                        : "Pasa el cursor para hacer zoom"}
                     </span>
                   </div>
                 )}
@@ -658,6 +701,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             border-right: none !important;
             border-bottom: 1px solid var(--border);
           }
+          .zoom-hint span {
+            font-size: 0.5rem !important;
+          }
           .modal-right {
             border-right: none !important;
             padding: 1.75rem 1.25rem !important;
@@ -697,7 +743,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             transform: translateY(0) !important;
           }
         }
-        @media (max-width: 400px) {
+        @media (max-width: 500px) {
           /* Reducir tipografía y espaciado en modal-right */
           .modal-right h2 {
             font-size: 0.9rem !important;

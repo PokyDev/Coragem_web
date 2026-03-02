@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
+import { ProductModal } from "@/components/ui/ProductModal";
 import { Product } from "@/types/catalog";
 
 /* ─── Format price ──────────────────────────────────────────────── */
@@ -14,54 +16,44 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/* ─── No-Stock ribbon ───────────────────────────────────────────── */
-function NoStockRibbon() {
+/* ─── Empty State ────────────────────────────────────────────────── */
+function EmptyState() {
   return (
-    <>
-      <div
-        aria-hidden="true"
+    <div
+      style={{
+        gridColumn: "1 / -1",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "4rem 1rem",
+        gap: "1rem",
+        opacity: 0,
+        animation: "fadeInCard 0.4s ease forwards",
+      }}
+    >
+      <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>✦</span>
+      <p
         style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "rgba(15, 26, 42, 0.42)",
-          zIndex: 1,
-          borderRadius: "inherit",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: "22px",
-          left: "-34px",
-          width: "140px",
-          padding: "5px 0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background:
-            "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
-          transform: "rotate(-38deg)",
-          zIndex: 2,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-          pointerEvents: "none",
+          fontFamily: "var(--font-cormorant), serif",
+          fontSize: "1.4rem",
+          fontWeight: 500,
+          color: "var(--text-primary)",
         }}
       >
-        <span
-          style={{
-            fontFamily: "var(--font-jost), sans-serif",
-            fontSize: "0.6rem",
-            fontWeight: 600,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#ffffff",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Sin Stock
-        </span>
-      </div>
-    </>
+        Sin resultados
+      </p>
+      <p
+        style={{
+          fontFamily: "var(--font-jost), sans-serif",
+          fontSize: "0.8rem",
+          color: "var(--text-secondary)",
+          letterSpacing: "0.06em",
+        }}
+      >
+        Intenta con otros filtros o un término diferente
+      </p>
+    </div>
   );
 }
 
@@ -69,24 +61,28 @@ function NoStockRibbon() {
 function ProductCard({
   product,
   index,
+  onClick,
 }: {
   product: Product;
   index: number;
+  onClick: (p: Product) => void;
 }) {
   const outOfStock = product.stock === 0;
 
   return (
-    /*
-     * display: flex + height: 100% en el Link garantiza que la tarjeta
-     * ocupe toda la altura de su celda en el grid, permitiendo que
-     * CSS Grid iguale automáticamente las alturas de cada fila.
-     */
-    <Link
-      href={`/products/${product.id}`}
+    <button
+      onClick={() => onClick(product)}
+      aria-label={`Ver ${product.name}`}
+      className="catalog-card-btn"
       style={{
         display: "flex",
         height: "100%",
-        textDecoration: "none",
+        width: "100%",
+        textAlign: "left",
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
         opacity: 0,
         animation: `fadeInCard 0.45s ease forwards`,
         animationDelay: `${index * 0.06}s`,
@@ -133,10 +129,7 @@ function ProductCard({
           {outOfStock && <NoStockRibbon />}
         </div>
 
-        {/* Info
-            flex: 1 hace que esta sección crezca para llenar el espacio
-            disponible, manteniendo el precio alineado al fondo en todas
-            las tarjetas de la misma fila. */}
+        {/* Info */}
         <div
           className="catalog-card-info"
           style={{
@@ -221,53 +214,14 @@ function ProductCard({
           </div>
         </div>
       </article>
-    </Link>
-  );
-}
-
-/* ─── Empty State ────────────────────────────────────────────────── */
-function EmptyState() {
-  return (
-    <div
-      style={{
-        gridColumn: "1 / -1",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "4rem 1rem",
-        gap: "1rem",
-        opacity: 0,
-        animation: "fadeInCard 0.4s ease forwards",
-      }}
-    >
-      <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>✦</span>
-      <p
-        style={{
-          fontFamily: "var(--font-cormorant), serif",
-          fontSize: "1.4rem",
-          fontWeight: 500,
-          color: "var(--text-primary)",
-        }}
-      >
-        Sin resultados
-      </p>
-      <p
-        style={{
-          fontFamily: "var(--font-jost), sans-serif",
-          fontSize: "0.8rem",
-          color: "var(--text-secondary)",
-          letterSpacing: "0.06em",
-        }}
-      >
-        Intenta con otros filtros o un término diferente
-      </p>
-    </div>
+    </button>
   );
 }
 
 /* ─── Main Grid ──────────────────────────────────────────────────── */
 export function CatalogGrid({ products }: { products: Product[] }) {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   return (
     <>
       <div
@@ -281,24 +235,34 @@ export function CatalogGrid({ products }: { products: Product[] }) {
       >
         {products.length > 0 ? (
           products.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              index={i}
+              onClick={setSelectedProduct}
+            />
           ))
         ) : (
           <EmptyState />
         )}
       </div>
 
+      {/* ── Modal ── */}
+      <ProductModal
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
+
       <style>{`
-        /* Card hover */
-        .catalog-card:hover {
+        .catalog-card-btn:hover .catalog-card {
           transform: translateY(-4px);
           box-shadow: 0 12px 32px rgba(78, 196, 196, 0.12), 0 2px 8px rgba(0,0,0,0.06);
           border-color: rgba(78, 196, 196, 0.3) !important;
         }
-        .catalog-card:hover .catalog-card-img {
+        .catalog-card-btn:hover .catalog-card-img {
           transform: scale(1.05);
         }
-        .catalog-card:hover .catalog-card-name {
+        .catalog-card-btn:hover .catalog-card-name {
           color: var(--coragem-teal);
         }
 
@@ -313,31 +277,25 @@ export function CatalogGrid({ products }: { products: Product[] }) {
           }
         }
 
-        /* Responsive: ≤ 400px — tarjetas compactas */
         @media (max-width: 400px) {
           .catalog-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 0.5rem !important;
           }
-
           .catalog-card {
             border-radius: 10px !important;
           }
-
           .catalog-card-info {
             padding: 0.55rem 0.65rem 0.65rem !important;
             gap: 0.25rem !important;
           }
-
           .catalog-card-name {
             font-size: 0.82rem !important;
             line-height: 1.2 !important;
           }
-
           .catalog-card-price {
             font-size: 0.75rem !important;
           }
-
           .catalog-card-stock {
             font-size: 0.52rem !important;
             letter-spacing: 0.06em !important;

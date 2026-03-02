@@ -1,0 +1,635 @@
+"use client";
+
+/* ─── ProductModal ───────────────────────────────────────────────────
+ * Modal de visualización de producto con:
+ *  - Animación de entrada/salida (slide-up + fade)
+ *  - Cierre con botón X o click fuera del panel
+ *  - NoStockRibbon reutilizado desde /ui
+ *  - Zoom mágico: cursor sobre imagen original → preview ampliada
+ *    con animación de desplazamiento (solo desktop, sin stock excluido)
+ * ──────────────────────────────────────────────────────────────────── */
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
+import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
+import { Product } from "@/types/catalog";
+
+/* ─── Helpers ────────────────────────────────────────────────────── */
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+const ZOOM_SCALE = 2.5; // cuántas veces amplía el zoom
+
+/* ─── ZoomPanel ──────────────────────────────────────────────────── */
+interface ZoomState {
+  visible: boolean;
+  bgX: number; // porcentaje background-position-x
+  bgY: number; // porcentaje background-position-y
+}
+
+interface ZoomPanelProps {
+  src: string;
+  alt: string;
+  zoomState: ZoomState;
+}
+
+function ZoomPanel({ src, alt, zoomState }: ZoomPanelProps) {
+  return (
+    <div
+      className="zoom-panel-wrapper"
+      style={{
+        overflow: "hidden",
+        borderRadius: "12px",
+        border: "1px solid var(--border)",
+        background: "var(--bg)",
+        /*
+         * La animación de desplazamiento se maneja con CSS:
+         *  - visible  → max-width: tamaño completo
+         *  - oculto   → max-width: 0  (colapsa empujando nada)
+         * Se añade la clase `is-visible` para activar el estado expandido.
+         */
+      }}
+      aria-hidden="true"
+    >
+      {/* Etiqueta de zoom */}
+      <div
+        style={{
+          padding: "0.45rem 0.85rem",
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.4rem",
+        }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
+        </svg>
+        <span
+          style={{
+            fontFamily: "var(--font-jost), sans-serif",
+            fontSize: "0.6rem",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--text-secondary)",
+          }}
+        >
+          Zoom
+        </span>
+      </div>
+
+      {/* Contenedor de imagen con zoom via background */}
+      <div
+        style={{
+          width: "100%",
+          aspectRatio: "1 / 1",
+          backgroundImage: `url(${src})`,
+          backgroundSize: `${ZOOM_SCALE * 100}%`,
+          backgroundPosition: `${zoomState.bgX}% ${zoomState.bgY}%`,
+          backgroundRepeat: "no-repeat",
+          transition: "background-position 0.05s linear",
+        }}
+        role="img"
+        aria-label={`Vista ampliada: ${alt}`}
+      />
+    </div>
+  );
+}
+
+/* ─── Props ──────────────────────────────────────────────────────── */
+interface ProductModalProps {
+  product: Product | null;
+  onClose: () => void;
+}
+
+/* ─── Main Component ─────────────────────────────────────────────── */
+export function ProductModal({ product, onClose }: ProductModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);     // controla animación de entrada
+  const [closing, setClosing] = useState(false);     // controla animación de salida
+  const [zoomState, setZoomState] = useState<ZoomState>({
+    visible: false,
+    bgX: 50,
+    bgY: 50,
+  });
+
+  const outOfStock = product?.stock === 0;
+
+  /* ── Montar con animación de entrada ── */
+  useEffect(() => {
+    if (product) {
+      setClosing(false);
+      // pequeño delay para que el navegador pinte primero el estado inicial
+      requestAnimationFrame(() => setMounted(true));
+    } else {
+      setMounted(false);
+    }
+  }, [product]);
+
+  /* ── Bloquear scroll del body mientras el modal está abierto ── */
+  useEffect(() => {
+    if (product) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [product]);
+
+  /* ── Cerrar con Escape ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ── Animación de salida antes de desmontar ── */
+  const handleClose = useCallback(() => {
+    setClosing(true);
+    setTimeout(() => {
+      setMounted(false);
+      setClosing(false);
+      onClose();
+    }, 320);
+  }, [onClose]);
+
+  /* ── Click fuera del panel ── */
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        handleClose();
+      }
+    },
+    [handleClose]
+  );
+
+  /* ── Calcular posición del zoom ── */
+  const handleImageMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (outOfStock) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      setZoomState({ visible: true, bgX: x, bgY: y });
+    },
+    [outOfStock]
+  );
+
+  const handleImageMouseLeave = useCallback(() => {
+    setZoomState((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  if (!product) return null;
+
+  const imageSrc = `/images/products/${product.image}`;
+
+  return (
+    <>
+      {/* ── Backdrop ── */}
+      <div
+        className={`modal-backdrop ${mounted && !closing ? "is-visible" : ""}`}
+        onClick={handleBackdropClick}
+        aria-modal="true"
+        role="dialog"
+        aria-label={`Detalle: ${product.name}`}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1.5rem",
+          backgroundColor: "rgba(0, 0, 0, 0)",
+          backdropFilter: "blur(0px)",
+          transition:
+            "background-color 0.32s ease, backdrop-filter 0.32s ease",
+          overflowY: "auto",
+        }}
+      >
+        {/* ── Panel ── */}
+        <div
+          ref={panelRef}
+          className={`modal-panel ${mounted && !closing ? "is-visible" : ""}`}
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "860px",
+            backgroundColor: "var(--bg-card)",
+            border: "1px solid var(--border)",
+            borderRadius: "20px",
+            overflow: "hidden",
+            opacity: 0,
+            transform: "translateY(32px) scale(0.97)",
+            transition:
+              "opacity 0.32s cubic-bezier(0.4,0,0.2,1), transform 0.32s cubic-bezier(0.4,0,0.2,1)",
+            boxShadow:
+              "0 32px 80px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08)",
+          }}
+        >
+          {/* ── Close button ── */}
+          <button
+            onClick={handleClose}
+            aria-label="Cerrar"
+            className="modal-close-btn"
+            style={{
+              position: "absolute",
+              top: "1rem",
+              right: "1rem",
+              zIndex: 10,
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              border: "1px solid var(--border)",
+              background: "var(--bg)",
+              color: "var(--text-secondary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease",
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+
+          {/* ── Body ── */}
+          <div className="modal-body">
+            {/* ── LEFT: image + zoom ── */}
+            <div className="modal-left">
+              {/* Fila: imagen original + panel zoom (slide desde la derecha) */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.75rem",
+                  alignItems: "flex-start",
+                }}
+              >
+                {/* Imagen original */}
+                <div
+                  ref={imageContainerRef}
+                  onMouseMove={handleImageMouseMove}
+                  onMouseLeave={handleImageMouseLeave}
+                  style={{
+                    position: "relative",
+                    flex: "0 0 auto",
+                    width: "100%",
+                    maxWidth: zoomState.visible ? "calc(50% - 0.375rem)" : "100%",
+                    aspectRatio: "1 / 1",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    backgroundColor: "var(--bg)",
+                    cursor: outOfStock ? "default" : "crosshair",
+                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Image
+                    src={imageSrc}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 860px) 80vw, 430px"
+                    style={{
+                      objectFit: "cover",
+                      opacity: outOfStock ? 0.55 : 1,
+                    }}
+                    priority
+                  />
+                  {outOfStock && <NoStockRibbon />}
+
+                  {/* Hint de zoom — solo si hay stock */}
+                  {!outOfStock && (
+                    <div
+                      className={`zoom-hint ${zoomState.visible ? "is-hidden" : ""}`}
+                      style={{
+                        position: "absolute",
+                        bottom: "0.75rem",
+                        right: "0.75rem",
+                        zIndex: 3,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                        padding: "0.3rem 0.65rem",
+                        borderRadius: "999px",
+                        background: "rgba(0,0,0,0.45)",
+                        backdropFilter: "blur(6px)",
+                        transition: "opacity 0.2s ease",
+                      }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-jost), sans-serif",
+                          fontSize: "0.58rem",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          color: "rgba(255,255,255,0.75)",
+                        }}
+                      >
+                        Pasa el cursor para hacer zoom
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Panel de zoom — colapsa/expande con max-width */}
+                <div
+                  style={{
+                    flex: "0 0 auto",
+                    width: "calc(50% - 0.375rem)",
+                    maxWidth: zoomState.visible ? "calc(50% - 0.375rem)" : "0px",
+                    overflow: "hidden",
+                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1)",
+                    opacity: zoomState.visible ? 1 : 0,
+                  }}
+                >
+                  <ZoomPanel
+                    src={imageSrc}
+                    alt={product.name}
+                    zoomState={zoomState}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* ── RIGHT: info ── */}
+            <div className="modal-right">
+              {/* Name */}
+              <h2
+                style={{
+                  fontFamily: "var(--font-cormorant), serif",
+                  fontSize: "clamp(1.6rem, 3vw, 2.1rem)",
+                  fontWeight: 600,
+                  lineHeight: 1.1,
+                  letterSpacing: "0.02em",
+                  color: "var(--text-primary)",
+                  marginBottom: "0.6rem",
+                }}
+              >
+                {product.name}
+              </h2>
+
+              {/* Price */}
+              <p
+                style={{
+                  fontFamily: "var(--font-jost), sans-serif",
+                  fontSize: "1.35rem",
+                  fontWeight: 500,
+                  background:
+                    "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  marginBottom: "1.2rem",
+                }}
+              >
+                {formatPrice(product.price)}
+              </p>
+
+              {/* Divider */}
+              <div
+                style={{
+                  height: "1px",
+                  background:
+                    "linear-gradient(90deg, var(--coragem-teal) 0%, transparent 80%)",
+                  opacity: 0.25,
+                  marginBottom: "1.2rem",
+                }}
+              />
+
+              {/* Details grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.85rem 1rem",
+                  marginBottom: "1.4rem",
+                }}
+              >
+                <DetailItem label="Categoría" value={product.category} />
+                <DetailItem label="Color" value={product.color} />
+                <DetailItem label="Ventas" value={`${product.ventas} unidades`} />
+                <DetailItem
+                  label="Disponibilidad"
+                  value={outOfStock ? "Sin stock" : "Disponible"}
+                  accent={outOfStock ? "var(--coragem-pink)" : "var(--coragem-teal)"}
+                />
+              </div>
+
+              {/* Stock indicator bar */}
+              {!outOfStock && (
+                <div style={{ marginBottom: "1.6rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: "0.4rem",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-jost), sans-serif",
+                        fontSize: "0.62rem",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
+                      Stock
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-jost), sans-serif",
+                        fontSize: "0.68rem",
+                        color: "var(--coragem-teal)",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {product.stock} uds.
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: "3px",
+                      borderRadius: "999px",
+                      background: "var(--border)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${Math.min((product.stock / 15) * 100, 100)}%`,
+                        borderRadius: "999px",
+                        background:
+                          "linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+                        transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* CTA — WhatsApp */}
+              <a
+                href={`https://wa.me/573001234567?text=Hola, me interesa el producto: ${encodeURIComponent(product.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`modal-cta ${outOfStock ? "modal-cta--disabled" : ""}`}
+                onClick={outOfStock ? (e) => e.preventDefault() : undefined}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.6rem",
+                  width: "100%",
+                  padding: "0.85rem 1.5rem",
+                  borderRadius: "999px",
+                  border: "none",
+                  fontFamily: "var(--font-jost), sans-serif",
+                  fontSize: "0.78rem",
+                  fontWeight: 500,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  textDecoration: "none",
+                  cursor: outOfStock ? "not-allowed" : "pointer",
+                  background: outOfStock
+                    ? "var(--border)"
+                    : "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+                  color: outOfStock ? "var(--text-secondary)" : "#ffffff",
+                  transition: "opacity 0.2s ease, transform 0.2s ease",
+                  opacity: outOfStock ? 0.55 : 1,
+                }}
+              >
+                {!outOfStock && (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M11.999 2C6.477 2 2 6.477 2 12c0 1.76.459 3.414 1.263 4.857L2.018 22l5.305-1.223C8.71 21.581 10.317 22 12 22c5.523 0 10-4.477 10-10S17.523 2 11.999 2zm.001 18c-1.513 0-2.926-.41-4.134-1.12l-.295-.175-3.148.726.756-3.059-.193-.313A7.945 7.945 0 0 1 4 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+                  </svg>
+                )}
+                {outOfStock ? "Sin stock disponible" : "Consultar por WhatsApp"}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Styles ── */}
+      <style>{`
+        /* Backdrop visible */
+        .modal-backdrop.is-visible {
+          background-color: rgba(0, 0, 0, 0.55) !important;
+          backdrop-filter: blur(6px) !important;
+        }
+
+        /* Panel visible */
+        .modal-panel.is-visible {
+          opacity: 1 !important;
+          transform: translateY(0) scale(1) !important;
+        }
+
+        /* Close button hover */
+        .modal-close-btn:hover {
+          background: var(--coragem-pink) !important;
+          border-color: var(--coragem-pink) !important;
+          color: #fff !important;
+        }
+
+        /* CTA hover */
+        .modal-cta:not(.modal-cta--disabled):hover {
+          opacity: 0.88;
+          transform: translateY(-1px);
+        }
+
+        /* Zoom hint desaparece cuando zoom está activo */
+        .zoom-hint.is-hidden {
+          opacity: 0 !important;
+          pointer-events: none;
+        }
+
+        /* Layout del body del modal */
+        .modal-body {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          min-height: 400px;
+        }
+
+        .modal-left {
+          padding: 1.75rem;
+          border-right: 1px solid var(--border);
+        }
+
+        .modal-right {
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        /* Solo desktop muestra zoom */
+        @media (hover: none) {
+          /* touch devices — no zoom */
+          .zoom-panel-wrapper,
+          .zoom-hint {
+            display: none !important;
+          }
+        }
+      `}</style>
+    </>
+  );
+}
+
+/* ─── Detail Item ────────────────────────────────────────────────── */
+function DetailItem({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div>
+      <p
+        style={{
+          fontFamily: "var(--font-jost), sans-serif",
+          fontSize: "0.58rem",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "var(--text-secondary)",
+          marginBottom: "0.2rem",
+        }}
+      >
+        {label}
+      </p>
+      <p
+        style={{
+          fontFamily: "var(--font-jost), sans-serif",
+          fontSize: "0.78rem",
+          fontWeight: 500,
+          color: accent ?? "var(--text-primary)",
+          letterSpacing: "0.04em",
+        }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}

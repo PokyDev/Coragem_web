@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import products from "@/data/products.json";
+import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
+import { ProductModal } from "@/components/ui/ProductModal";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
+import { Product } from "@/types/catalog";
 
 /* ─── Format price ──────────────────────────────────────────────── */
 function formatPrice(price: number) {
@@ -16,82 +19,34 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/* ─── No-Stock ribbon ───────────────────────────────────────────── */
-function NoStockRibbon() {
-  return (
-    <>
-      {/* Dark overlay */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "rgba(15, 26, 42, 0.42)",
-          zIndex: 1,
-          borderRadius: "inherit",
-          pointerEvents: "none",
-        }}
-      />
-      {/* Diagonal band */}
-      <div
-        style={{
-          position: "absolute",
-          top: "22px",
-          left: "-34px",
-          width: "140px",
-          padding: "5px 0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
-          transform: "rotate(-38deg)",
-          zIndex: 2,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-          pointerEvents: "none",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "var(--font-jost), sans-serif",
-            fontSize: "0.6rem",
-            fontWeight: 600,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#ffffff",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Sin Stock
-        </span>
-      </div>
-    </>
-  );
-}
-
 /* ─── Single Product Card ───────────────────────────────────────── */
 function ProductCard({
   product,
   index,
+  onClick,
 }: {
-  product: (typeof products)[0];
+  product: Product;
   index: number;
+  onClick: (p: Product) => void;
 }) {
   const outOfStock = product.stock === 0;
 
   return (
-    /*
-     * height: 100% en el Link asegura que ocupe toda la altura de su celda
-     * en el grid, lo que permite que CSS Grid iguale las alturas de la fila.
-     */
-    <Link
-      href={`/products/${product.id}`}
+    <button
+      onClick={() => onClick(product)}
+      aria-label={`Ver ${product.name}`}
+      className="product-card-btn"
       style={{
         display: "flex",
         height: "100%",
-        textDecoration: "none",
+        width: "100%",
+        textAlign: "left",
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
         animationDelay: `${index * 0.07}s`,
       }}
-      className="product-card-link"
     >
       <article
         className="product-card"
@@ -131,8 +86,6 @@ function ProductCard({
             }}
             className="product-img"
           />
-
-          {/* No-stock overlay */}
           {outOfStock && <NoStockRibbon />}
         </div>
 
@@ -144,12 +97,9 @@ function ProductCard({
             display: "flex",
             flexDirection: "column",
             gap: "0.35rem",
-            /* flex: 1 hace que esta sección crezca y mantenga alineados
-               los precios al fondo cuando los títulos tienen distinta longitud */
             flex: 1,
           }}
         >
-          {/* Name */}
           <h3
             className="product-name"
             style={{
@@ -160,14 +110,12 @@ function ProductCard({
               lineHeight: 1.25,
               letterSpacing: "0.02em",
               transition: "color 0.2s ease",
-              /* Permite que el título crezca sin romper el layout */
               flex: 1,
             }}
           >
             {product.name}
           </h3>
 
-          {/* Price row */}
           <div
             style={{
               display: "flex",
@@ -194,7 +142,6 @@ function ProductCard({
               {formatPrice(product.price)}
             </span>
 
-            {/* Stock indicator */}
             {!outOfStock ? (
               <span
                 className="product-stock"
@@ -227,13 +174,14 @@ function ProductCard({
           </div>
         </div>
       </article>
-    </Link>
+    </button>
   );
 }
 
 /* ─── Main Grid Component ───────────────────────────────────────── */
 export function ProductsGrid() {
   const router = useRouter();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   return (
     <section
@@ -243,10 +191,6 @@ export function ProductsGrid() {
         padding: "0 1.5rem 4rem",
       }}
     >
-      {/* Grid
-          align-items: stretch (default) + height:100% en los hijos
-          garantiza que todas las tarjetas de una misma fila tengan
-          la misma altura, independiente de la longitud del título. */}
       <div
         style={{
           display: "grid",
@@ -256,8 +200,13 @@ export function ProductsGrid() {
         }}
         className="products-grid"
       >
-        {products.map((product, i) => (
-          <ProductCard key={product.id} product={product} index={i} />
+        {(products as Product[]).map((product, i) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            index={i}
+            onClick={setSelectedProduct}
+          />
         ))}
       </div>
 
@@ -266,24 +215,26 @@ export function ProductsGrid() {
         onClick={() => router.push("/products")}
       />
 
+      {/* ── Modal ── */}
+      <ProductModal
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
+
       {/* ── Styles ── */}
       <style>{`
-        /* Card hover */
-        .product-card-link:hover .product-card {
+        .product-card-btn:hover .product-card {
           transform: translateY(-4px);
           box-shadow: 0 12px 32px rgba(78, 196, 196, 0.12), 0 2px 8px rgba(0,0,0,0.06);
           border-color: rgba(78, 196, 196, 0.3);
         }
-        /* Image zoom on hover */
-        .product-card-link:hover .product-img {
+        .product-card-btn:hover .product-img {
           transform: scale(1.05);
         }
-        /* Name color on hover */
-        .product-card-link:hover .product-name {
+        .product-card-btn:hover .product-name {
           color: var(--coragem-teal);
         }
 
-        /* Responsive: 2 cols on tablet */
         @media (max-width: 768px) {
           .products-grid {
             grid-template-columns: repeat(2, 1fr) !important;
@@ -291,31 +242,25 @@ export function ProductsGrid() {
           }
         }
 
-        /* Responsive: ≤ 400px — tarjetas compactas */
         @media (max-width: 400px) {
           .products-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 0.5rem !important;
           }
-
           .product-card {
             border-radius: 10px !important;
           }
-
           .product-info {
             padding: 0.55rem 0.65rem 0.65rem !important;
             gap: 0.25rem !important;
           }
-
           .product-name {
             font-size: 0.82rem !important;
             line-height: 1.2 !important;
           }
-
           .product-price {
             font-size: 0.75rem !important;
           }
-
           .product-stock {
             font-size: 0.52rem !important;
             letter-spacing: 0.06em !important;

@@ -5,8 +5,10 @@
  *  - Animación de entrada/salida (slide-up + fade)
  *  - Cierre con botón X o click fuera del panel
  *  - NoStockRibbon reutilizado desde /ui
- *  - Zoom mágico: cursor sobre imagen original → preview ampliada
- *    con animación de desplazamiento (solo desktop, sin stock excluido)
+ *  - Zoom mágico: cursor sobre imagen original → el panel de info
+ *    (modal-right) se reemplaza visualmente por el zoom con slide
+ *    left-to-right. La imagen original nunca cambia de tamaño.
+ *    Solo desktop (hover: hover). Excluido para sin stock.
  * ──────────────────────────────────────────────────────────────────── */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -26,78 +28,123 @@ function formatPrice(price: number) {
 
 const ZOOM_SCALE = 2.5; // cuántas veces amplía el zoom
 
-/* ─── ZoomPanel ──────────────────────────────────────────────────── */
+/* ─── ZoomState ──────────────────────────────────────────────────── */
 interface ZoomState {
   visible: boolean;
   bgX: number; // porcentaje background-position-x
   bgY: number; // porcentaje background-position-y
 }
 
-interface ZoomPanelProps {
+/* ─── ZoomOverlay ────────────────────────────────────────────────────
+ * Se posiciona absolutamente sobre modal-right, deslizándose desde
+ * la derecha cuando el zoom está activo. No afecta el tamaño del modal
+ * ni el de la imagen original.
+ * ──────────────────────────────────────────────────────────────────── */
+interface ZoomOverlayProps {
   src: string;
   alt: string;
   zoomState: ZoomState;
 }
 
-function ZoomPanel({ src, alt, zoomState }: ZoomPanelProps) {
+function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
   return (
+    /*
+     * Wrapper posicionado absolutamente sobre modal-right.
+     * Replica el mismo padding que modal-left para que el div de zoom
+     * quede idéntico al contenedor de la imagen original.
+     */
     <div
-      className="zoom-panel-wrapper"
-      style={{
-        overflow: "hidden",
-        borderRadius: "12px",
-        border: "1px solid var(--border)",
-        background: "var(--bg)",
-        /*
-         * La animación de desplazamiento se maneja con CSS:
-         *  - visible  → max-width: tamaño completo
-         *  - oculto   → max-width: 0  (colapsa empujando nada)
-         * Se añade la clase `is-visible` para activar el estado expandido.
-         */
-      }}
+      className={`zoom-overlay ${zoomState.visible ? "zoom-overlay--visible" : ""}`}
       aria-hidden="true"
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: "50%",
+        backgroundColor: "var(--bg-card)",
+        /* Padding idéntico al de modal-left */
+        padding: "1.75rem",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        /* Animación: aparece deslizándose desde la derecha */
+        opacity: 0,
+        transform: "translateX(20px)",
+        transition:
+          "opacity 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+        pointerEvents: "none",
+        borderRadius: "0 20px 20px 0",
+      }}
     >
-      {/* Etiqueta de zoom */}
+      {/*
+       * El div de zoom tiene:
+       *  - width: 100% + aspectRatio: 1/1  →  cuadrado, igual que la imagen original
+       *  - borderRadius: 12px              →  igual que el contenedor de la imagen
+       *  - overflow: hidden                →  el zoom no se sale del borde
+       *  - background-* hace el zoom real
+       */}
       <div
         style={{
-          padding: "0.45rem 0.85rem",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.4rem",
-        }}
-      >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
-          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          <line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" />
-        </svg>
-        <span
-          style={{
-            fontFamily: "var(--font-jost), sans-serif",
-            fontSize: "0.6rem",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Zoom
-        </span>
-      </div>
-
-      {/* Contenedor de imagen con zoom via background */}
-      <div
-        style={{
+          position: "relative",
           width: "100%",
           aspectRatio: "1 / 1",
+          borderRadius: "12px",
+          overflow: "hidden",
           backgroundImage: `url(${src})`,
           backgroundSize: `${ZOOM_SCALE * 100}%`,
           backgroundPosition: `${zoomState.bgX}% ${zoomState.bgY}%`,
           backgroundRepeat: "no-repeat",
-          transition: "background-position 0.05s linear",
+          transition: "background-position 0.04s linear",
         }}
         role="img"
         aria-label={`Vista ampliada: ${alt}`}
-      />
+      >
+        {/* Header flotante — position absolute para no afectar el tamaño */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: "0.6rem 1rem",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            background: "rgba(0,0,0,0.35)",
+            backdropFilter: "blur(6px)",
+            zIndex: 2,
+            borderRadius: "12px 12px 0 0",
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--coragem-teal)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+          <span
+            style={{
+              fontFamily: "var(--font-jost), sans-serif",
+              fontSize: "0.6rem",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.8)",
+            }}
+          >
+            Vista ampliada
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -243,6 +290,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             aria-label="Cerrar"
             className="modal-close-btn"
             style={{
+              opacity: zoomState.visible ? 0 : 1,
+              pointerEvents: zoomState.visible ? "none" : "auto",
               position: "absolute",
               top: "1rem",
               right: "1rem",
@@ -257,7 +306,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               alignItems: "center",
               justifyContent: "center",
               cursor: "pointer",
-              transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease",
+              transition: "background 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.25s ease",
             }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -267,108 +316,90 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           </button>
 
           {/* ── Body ── */}
-          <div className="modal-body">
-            {/* ── LEFT: image + zoom ── */}
+          {/*
+           * position: relative en modal-body permite que ZoomOverlay
+           * se posicione absolutamente cubriendo solo modal-right,
+           * sin afectar el tamaño ni la imagen de modal-left.
+           */}
+          <div className="modal-body" style={{ position: "relative" }}>
+
+            {/* ── LEFT: imagen original (tamaño siempre fijo) ── */}
             <div className="modal-left">
-              {/* Fila: imagen original + panel zoom (slide desde la derecha) */}
               <div
+                ref={imageContainerRef}
+                onMouseMove={handleImageMouseMove}
+                onMouseLeave={handleImageMouseLeave}
                 style={{
-                  display: "flex",
-                  gap: "0.75rem",
-                  alignItems: "flex-start",
+                  position: "relative",
+                  width: "100%",
+                  aspectRatio: "1 / 1",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  backgroundColor: "var(--bg)",
+                  cursor: outOfStock ? "default" : "crosshair",
                 }}
               >
-                {/* Imagen original */}
-                <div
-                  ref={imageContainerRef}
-                  onMouseMove={handleImageMouseMove}
-                  onMouseLeave={handleImageMouseLeave}
+                <Image
+                  src={imageSrc}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 860px) 80vw, 430px"
                   style={{
-                    position: "relative",
-                    flex: "0 0 auto",
-                    width: "100%",
-                    maxWidth: zoomState.visible ? "calc(50% - 0.375rem)" : "100%",
-                    aspectRatio: "1 / 1",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    backgroundColor: "var(--bg)",
-                    cursor: outOfStock ? "default" : "crosshair",
-                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1)",
-                    flexShrink: 0,
+                    objectFit: "cover",
+                    opacity: outOfStock ? 0.55 : 1,
                   }}
-                >
-                  <Image
-                    src={imageSrc}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 860px) 80vw, 430px"
-                    style={{
-                      objectFit: "cover",
-                      opacity: outOfStock ? 0.55 : 1,
-                    }}
-                    priority
-                  />
-                  {outOfStock && <NoStockRibbon />}
+                  priority
+                />
+                {outOfStock && <NoStockRibbon />}
 
-                  {/* Hint de zoom — solo si hay stock */}
-                  {!outOfStock && (
-                    <div
-                      className={`zoom-hint ${zoomState.visible ? "is-hidden" : ""}`}
+                {/* Hint de zoom — solo si hay stock, se oculta al activar */}
+                {!outOfStock && (
+                  <div
+                    className={`zoom-hint ${zoomState.visible ? "zoom-hint--hidden" : ""}`}
+                    style={{
+                      position: "absolute",
+                      bottom: "0.75rem",
+                      right: "0.75rem",
+                      zIndex: 3,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.35rem",
+                      padding: "0.3rem 0.65rem",
+                      borderRadius: "999px",
+                      background: "rgba(0,0,0,0.45)",
+                      backdropFilter: "blur(6px)",
+                      transition: "opacity 0.25s ease",
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <span
                       style={{
-                        position: "absolute",
-                        bottom: "0.75rem",
-                        right: "0.75rem",
-                        zIndex: 3,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.35rem",
-                        padding: "0.3rem 0.65rem",
-                        borderRadius: "999px",
-                        background: "rgba(0,0,0,0.45)",
-                        backdropFilter: "blur(6px)",
-                        transition: "opacity 0.2s ease",
+                        fontFamily: "var(--font-jost), sans-serif",
+                        fontSize: "0.58rem",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.75)",
                       }}
                     >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
-                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                      </svg>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-jost), sans-serif",
-                          fontSize: "0.58rem",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          color: "rgba(255,255,255,0.75)",
-                        }}
-                      >
-                        Pasa el cursor para hacer zoom
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Panel de zoom — colapsa/expande con max-width */}
-                <div
-                  style={{
-                    flex: "0 0 auto",
-                    width: "calc(50% - 0.375rem)",
-                    maxWidth: zoomState.visible ? "calc(50% - 0.375rem)" : "0px",
-                    overflow: "hidden",
-                    transition: "max-width 0.35s cubic-bezier(0.4,0,0.2,1)",
-                    opacity: zoomState.visible ? 1 : 0,
-                  }}
-                >
-                  <ZoomPanel
-                    src={imageSrc}
-                    alt={product.name}
-                    zoomState={zoomState}
-                  />
-                </div>
+                      Pasa el cursor para hacer zoom
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* ── RIGHT: info ── */}
-            <div className="modal-right">
+            {/* ── RIGHT: info — se desvanece cuando zoom está activo ── */}
+            <div
+              className="modal-right"
+              style={{
+                opacity: zoomState.visible ? 0 : 1,
+                transition: "opacity 0.25s ease",
+                pointerEvents: zoomState.visible ? "none" : "auto",
+              }}
+            >
               {/* Name */}
               <h2
                 style={{
@@ -525,6 +556,15 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                 {outOfStock ? "Sin stock disponible" : "Consultar por WhatsApp"}
               </a>
             </div>
+
+            {/* ── ZoomOverlay: se superpone sobre modal-right con slide L→R ── */}
+            {!outOfStock && (
+              <ZoomOverlay
+                src={imageSrc}
+                alt={product.name}
+                zoomState={zoomState}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -556,10 +596,17 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           transform: translateY(-1px);
         }
 
-        /* Zoom hint desaparece cuando zoom está activo */
-        .zoom-hint.is-hidden {
+        /* Zoom hint — se oculta cuando zoom activo */
+        .zoom-hint--hidden {
           opacity: 0 !important;
           pointer-events: none;
+        }
+
+        /* ZoomOverlay activo: desliza desde la derecha */
+        .zoom-overlay--visible {
+          opacity: 1 !important;
+          transform: translateX(0) !important;
+          pointer-events: auto !important;
         }
 
         /* Layout del body del modal */
@@ -582,10 +629,19 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           justify-content: center;
         }
 
-        /* Solo desktop muestra zoom */
+        /*
+         * ZoomOverlay: posición absoluta sobre la mitad derecha del modal.
+         * left: 50% lo ancla exactamente donde empieza modal-right.
+         * El padding interno replica el de modal-left para que el div
+         * de zoom tenga el mismo tamaño que el contenedor de la imagen.
+         */
+        .zoom-overlay {
+          /* left: 50% ya está en el style inline */
+        }
+
+        /* Touch devices — ocultar zoom completamente */
         @media (hover: none) {
-          /* touch devices — no zoom */
-          .zoom-panel-wrapper,
+          .zoom-overlay,
           .zoom-hint {
             display: none !important;
           }

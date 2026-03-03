@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ContactBody } from "@/components/contact/ContactBody";
+import { ContactBody } from "@/components/user/contact/ContactBody";
 
 /* ─── SEO ────────────────────────────────────────────────────────── */
 export const metadata: Metadata = {

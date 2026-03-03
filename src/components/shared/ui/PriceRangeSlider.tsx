@@ -1,6 +1,6 @@
 "use client";
 
-import { useDebouncedPrice } from "@/hooks/useDebouncedPrice";
+import { useDebouncedPrice } from "@/hooks/user/useDebouncedPrice";
 
 interface PriceRangeSliderProps {
   min: number;

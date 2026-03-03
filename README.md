@@ -34,7 +34,7 @@ Este repositorio contiene la plataforma web oficial de Coragem: un catálogo dig
 
 ## Estado del proyecto
 
-🚧 **En desarrollo activo — Fase 2: Panel Administrativo**
+🔄 **En desarrollo activo — Fase 2: Panel Administrativo**
 
 ---
 
@@ -49,7 +49,7 @@ Se diseñó e implementó la experiencia completa del usuario visitante, con én
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Landing page con productos destacados y CTA al catálogo |
-| `/catalog` | Catálogo con filtros por categoría, búsqueda y ordenamiento |
+| `/products` | Catálogo con filtros por categoría, búsqueda y ordenamiento |
 | `/contact` | Perfil de contacto con redes sociales (Instagram, WhatsApp) |
 
 **Componentes destacados:**
@@ -117,28 +117,108 @@ Configurar EC2 + Nginx + PM2 para el backend, conectar Vercel al repositorio, co
 ## Estructura del proyecto
 
 ```
-coragem-web/
-├── app/
-│   ├── (public)/
-│   │   ├── page.tsx               # Landing page
-│   │   ├── catalog/
-│   │   │   └── page.tsx           # Catálogo
+bisuteria-rodio-frontend/
+│
+├── app/                                  ← Next.js App Router
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx                        ← Layout raíz (Navbar, Footer, FloatingControls)
+│   ├── providers.tsx
+│   │
+│   ├── (public)/                         ← Route group visitante (sin prefijo en URL)
+│   │   ├── page.tsx                      →  /
+│   │   ├── products/
+│   │   │   └── page.tsx                  →  /products
 │   │   └── contact/
-│   │       └── page.tsx           # Contacto
-│   └── admin/                     # Panel administrativo (Fase 2)
-│       ├── page.tsx               # Login
-│       ├── dashboard/
-│       └── products/
-├── components/
-│   ├── landing/
-│   ├── catalog/
-│   ├── product/
-│   ├── ui/                        # Componentes globales reutilizables
-│   └── admin/                     # Componentes del panel (Fase 2)
-├── hooks/
-├── lib/
-└── public/
-    └── images/
+│   │       └── page.tsx                  →  /contact
+│   │
+│   └── (admin)/                          ← Route group admin (sin prefijo en URL)
+│       ├── layout.tsx                    ← Layout exclusivo admin (sidebar, sin Navbar público)
+│       └── admin/
+│           ├── page.tsx                  →  /admin          (login)
+│           ├── dashboard/
+│           │   └── page.tsx              →  /admin/dashboard
+│           └── products/
+│               ├── new/
+│               │   └── page.tsx          →  /admin/products/new
+│               └── [id]/
+│                   └── edit/
+│                       └── page.tsx      →  /admin/products/[id]/edit
+│
+└── src/
+    │
+    ├── components/
+    │   │
+    │   ├── user/                         ← Exclusivos del visitante
+    │   │   ├── catalog/
+    │   │   │   ├── CatalogAside.tsx
+    │   │   │   ├── CatalogClient.tsx
+    │   │   │   ├── CatalogGrid.tsx
+    │   │   │   ├── CatalogToolbar.tsx
+    │   │   │   └── MobileFilterDrawer.tsx
+    │   │   ├── contact/
+    │   │   │   └── ContactBody.tsx
+    │   │   └── landing/
+    │   │       ├── LandingHeader.tsx
+    │   │       └── ProductsGrid.tsx
+    │   │
+    │   ├── admin/                        ← Exclusivos del panel administrativo
+    │   │   ├── layout/
+    │   │   │   ├── AdminSidebar.tsx
+    │   │   │   ├── AdminHeader.tsx
+    │   │   │   └── AdminNavLink.tsx
+    │   │   ├── dashboard/
+    │   │   │   ├── ProductTable.tsx
+    │   │   │   └── StockBadge.tsx
+    │   │   ├── products/
+    │   │   │   ├── ProductForm.tsx
+    │   │   │   ├── ImageUploader.tsx
+    │   │   │   ├── ImageEditor.tsx       ← Fabric.js (Fase 4)
+    │   │   │   └── DeleteConfirmModal.tsx
+    │   │   └── auth/
+    │   │       └── LoginForm.tsx
+    │   │
+    │   ├── shared/                       ← Reutilizables entre user y admin
+    │   │   ├── ui/
+    │   │   │   ├── NoStockRibbon.tsx
+    │   │   │   ├── PriceRangeSlider.tsx
+    │   │   │   ├── LoadMoreButton.tsx
+    │   │   │   └── ConfirmDialog.tsx     ← nuevo
+    │   │   └── product/
+    │   │       ├── ProductModal.tsx
+    │   │       └── ProductMobileSheet.tsx
+    │   │
+    │   └── layout/                       ← Layout público
+    │       ├── Navbar.tsx
+    │       ├── NavLink.tsx
+    │       ├── Footer.tsx
+    │       ├── MobileMenu.tsx
+    │       ├── FloatingControls.tsx
+    │       └── ui/
+    │           ├── BrandIcon.tsx
+    │           ├── ScrollToTop.tsx
+    │           └── ThemeToggle.tsx
+    │
+    ├── hooks/
+    │   ├── user/
+    │   │   └── useDebouncedPrice.ts
+    │   └── admin/
+    │       ├── useProductForm.ts         ← estado del formulario de producto
+    │       └── useImageUpload.ts         ← integración con Cloudinary
+    │
+    ├── types/
+    │   ├── catalog.ts                    ← Product, Category, Color, SortKey, ActiveFilters
+    │   └── admin.ts                      ← ProductFormData, AdminUser, ApiResponse
+    │
+    ├── lib/
+    │   ├── formatters.ts                 ← formatPrice, formatDate (hoy duplicados en 4 archivos)
+    │   ├── constants.ts                  ← PRICE_MIN, PRICE_MAX, MOBILE_BREAKPOINT, etc.
+    │   └── validators.ts                 ← validaciones de formularios admin
+    │
+    └── data/                             ← Datos estáticos (temporales, reemplazados por API en Fase 3)
+        ├── categories.json
+        ├── colors.json
+        └── products.json
 ```
 
 ---

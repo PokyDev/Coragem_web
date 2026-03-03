@@ -1,5 +1,5 @@
-import { LandingHeader } from "@/components/landing/LandingHeader";
-import { ProductsGrid } from "@/components/landing/ProductsGrid";
+import { LandingHeader } from "@/components/user/landing/LandingHeader";
+import { ProductsGrid } from "@/components/user/landing/ProductsGrid";
 
 export default function Home() {
   return (

@@ -22,9 +22,12 @@
  *   - El overlay de zoom NO cubre la imagen original.
  * ──────────────────────────────────────────────────────────────────── */
 
+// Config import
+import { buildWhatsAppUrl } from "@/lib/config";
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
+import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
 import { Product } from "@/types/catalog";
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
@@ -668,7 +671,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
 
           {/* CTA WhatsApp */}
           <a
-            href={`https://wa.me/573001234567?text=Hola, me interesa el producto: ${encodeURIComponent(product.name)}`}
+            href={buildWhatsAppUrl(`Hola, me interesa el producto: ${product.name}`)}
             target="_blank"
             rel="noopener noreferrer"
             className={`ms-cta ${outOfStock ? "ms-cta--disabled" : ""}`}

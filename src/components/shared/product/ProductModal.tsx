@@ -13,10 +13,13 @@
  * interacción del usuario, por lo que no hay CLS).
  * ──────────────────────────────────────────────────────────────────── */
 
+// Config import
+import { buildWhatsAppUrl } from "@/lib/config";
+
 import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
-import { ProductMobileSheet } from "@/components/ui/ProductMobileSheet";
+import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
+import { ProductMobileSheet } from "@/components/shared/product/ProductMobileSheet";
 import { Product } from "@/types/catalog";
 
 /* ─── Hook: detectar móvil ───────────────────────────────────────── */
@@ -497,7 +500,7 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
               )}
 
               <a
-                href={`https://wa.me/573001234567?text=Hola, me interesa el producto: ${encodeURIComponent(product.name)}`}
+                href={buildWhatsAppUrl(`Hola, me interesa el producto: ${product.name}`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`dm-cta ${outOfStock ? "dm-cta--disabled" : ""}`}

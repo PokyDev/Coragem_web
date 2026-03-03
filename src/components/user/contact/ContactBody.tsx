@@ -1,5 +1,8 @@
 "use client";
 
+// Config import
+import { INSTAGRAM_URL, buildWhatsAppUrl } from "@/lib/config";
+
 import Image from "next/image";
 import { useState } from "react";
 
@@ -43,7 +46,7 @@ function InstagramCard() {
       >
         {/* Avatar with hover overlay */}
         <a
-          href="https://www.instagram.com/coragem_accesorios"
+          href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Ver perfil de Coragem en Instagram"
@@ -280,7 +283,7 @@ function HighlightBubble({
 
   return (
     <a
-      href="https://www.instagram.com/coragem_accesorios"
+      href={INSTAGRAM_URL}
       target="_blank"
       rel="noopener noreferrer"
       style={{
@@ -405,7 +408,7 @@ function SocialPanel() {
 
       {/* Instagram Button */}
       <SocialButton
-        href="https://www.instagram.com/coragem_accesorios"
+        href={INSTAGRAM_URL}
         hovered={igHovered}
         onHover={setIgHovered}
         accentColor="#dc2743"
@@ -419,7 +422,7 @@ function SocialPanel() {
 
       {/* WhatsApp Button */}
       <SocialButton
-        href="https://wa.me/573246571248"
+        href={buildWhatsAppUrl()}
         hovered={waHovered}
         onHover={setWaHovered}
         accentColor="#25D366"

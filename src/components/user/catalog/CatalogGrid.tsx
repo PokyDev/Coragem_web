@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
-import { ProductModal } from "@/components/ui/ProductModal";
+import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
+import { ProductModal } from "@/components/shared/product/ProductModal";
 import { Product } from "@/types/catalog";
 
 /* ─── Format price ──────────────────────────────────────────────── */

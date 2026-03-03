@@ -1,4 +1,6 @@
 "use client";
+// Config import
+import { INSTAGRAM_URL } from "@/lib/config";
 
 import { NavLink } from "@/components/layout/NavLink";
 
@@ -105,7 +107,7 @@ export function Footer() {
         <div className="footer-col">
           <SectionLabel>Síguenos</SectionLabel>
           <a
-            href="https://www.instagram.com/coragem_accesorios"
+            href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram de Coragem Accesorios"

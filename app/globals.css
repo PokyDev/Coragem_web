@@ -172,7 +172,43 @@ body {
   --stock-out-bg:      rgba(196, 122, 158, 0.14);
   --stock-out-color:   #c47a9e;
 
-  /* Forzar fondo oscuro independientemente del tema público */
+  /* Forzar fondo oscuro por defecto (dark-first) */
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+/* ── Admin tema claro — data-admin-theme="light" ──────────────── */
+/* Scoped a .admin para no afectar el resto del sitio             */
+
+.admin[data-admin-theme="light"] {
+  --admin-bg:          #f4f6f9;
+  --admin-bg-card:     #ffffff;
+  --admin-surface:     #e8edf4;
+  --admin-border:      #cdd5e0;
+  --admin-sidebar-bg:  #eef1f6;
+  --admin-hover-bg:    rgba(0, 0, 0, 0.04);
+
+  --admin-text:        #1e2d3d;
+  --admin-text-muted:  #4a6080;
+  --admin-text-dim:    #8da0b8;
+
+  /* Los acentos de marca se mantienen igual en ambos temas */
+  --admin-accent:      #3aafaf;   /* teal levemente más saturado en claro */
+  --admin-warning:     #b8864e;
+  --admin-danger:      #b55f87;
+
+  --admin-nav-active-bg:    rgba(58, 175, 175, 0.1);
+  --admin-nav-active-color: #3aafaf;
+
+  --stock-ok-bg:       rgba(58,  175, 175, 0.1);
+  --stock-ok-color:    #3aafaf;
+
+  --stock-low-bg:      rgba(184, 134,  78, 0.12);
+  --stock-low-color:   #b8864e;
+
+  --stock-out-bg:      rgba(181,  95, 135, 0.1);
+  --stock-out-color:   #b55f87;
+
   background-color: var(--admin-bg);
   color: var(--admin-text);
 }

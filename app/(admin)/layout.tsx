@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdminThemeProvider } from "@/components/admin/layout/AdminThemeProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -9,21 +10,18 @@ export const metadata: Metadata = {
 };
 
 /**
- * AdminLayout
+ * AdminLayout (Server Component)
  *
  * - NO hereda Navbar, Footer ni FloatingControls del sitio público.
- * - Siempre renderiza en dark mode mediante la clase `.admin`.
- * - La clase `.admin` sobreescribe las variables CSS del tema público,
- *   scoped al árbol de admin (ver globals.css sección .admin).
+ * - El tema (dark/light) es independiente del sitio público y se
+ *   gestiona mediante useAdminTheme (localStorage + data-admin-theme).
+ * - AdminThemeProvider es el Client Component que aplica el atributo
+ *   al wrapper .admin, manteniendo este layout como Server Component.
  */
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="admin">
-      {children}
-    </div>
-  );
+  return <AdminThemeProvider>{children}</AdminThemeProvider>;
 }

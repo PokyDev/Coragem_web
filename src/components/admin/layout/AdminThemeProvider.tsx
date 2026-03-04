@@ -42,12 +42,17 @@ export function AdminThemeProvider({
   const { theme, toggleTheme, mounted } = useAdminTheme();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  /* Aplicar data-admin-theme directamente al wrapper .admin */
+  /*
+   * Aplicar data-admin-theme al wrapper cada vez que `theme` cambia.
+   * Esto incluye el momento de montaje (cuando useAdminTheme lee
+   * localStorage y actualiza el estado por primera vez).
+   * La dependencia en `mounted` garantiza que no se aplique antes
+   * de que el valor de localStorage esté disponible.
+   */
   useEffect(() => {
-    if (wrapperRef.current) {
-      wrapperRef.current.setAttribute("data-admin-theme", theme);
-    }
-  }, [theme]);
+    if (!mounted || !wrapperRef.current) return;
+    wrapperRef.current.setAttribute("data-admin-theme", theme);
+  }, [theme, mounted]);
 
   return (
     <AdminThemeContext.Provider value={{ theme, toggleTheme, mounted }}>

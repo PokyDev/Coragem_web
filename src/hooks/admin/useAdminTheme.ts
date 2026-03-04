@@ -8,9 +8,8 @@
  *
  * - Estado persistido en localStorage bajo la clave "coragem-admin-theme".
  * - Valor por defecto: "dark" (Slate Command es dark-first).
- * - Aplica el atributo `data-admin-theme="dark|light"` al wrapper `.admin`
- *   más cercano en el DOM (o al document.documentElement como fallback).
  * - No interfiere con la clase `.dark` que gestiona next-themes para el sitio público.
+ * - NO toca el DOM — esa responsabilidad es exclusiva de AdminThemeProvider.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -32,18 +31,6 @@ export function useAdminTheme() {
     setThemeState(resolved);
     setMounted(true);
   }, []);
-
-  /* ── Aplicar atributo al DOM cada vez que cambia el tema ── */
-  useEffect(() => {
-    if (!mounted) return;
-
-    // Buscar el wrapper `.admin` en el DOM; si no existe, usar <html>
-    const adminRoot =
-      document.querySelector<HTMLElement>(".admin") ??
-      document.documentElement;
-
-    adminRoot.setAttribute("data-admin-theme", theme);
-  }, [theme, mounted]);
 
   /* ── Toggle público ── */
   const toggleTheme = useCallback(() => {

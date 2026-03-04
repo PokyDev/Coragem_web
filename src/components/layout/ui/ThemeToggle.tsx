@@ -18,7 +18,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { useAdminTheme } from "@/hooks/admin/useAdminTheme";
+import { useAdminThemeContext } from "@/components/admin/layout/AdminThemeProvider";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 export type ThemeToggleVariant = "public" | "admin";
@@ -116,7 +116,9 @@ function PublicThemeToggle({ size }: { size: string }) {
 
 /* ─── Sub-componente: variante admin ─────────────────────────────── */
 function AdminThemeToggle({ size }: { size: string }) {
-  const { theme, toggleTheme, mounted } = useAdminTheme();
+  // Consume el contexto del AdminThemeProvider — garantiza que toggle
+  // y provider compartan el mismo estado y que el cambio se refleje en el DOM.
+  const { theme, toggleTheme, mounted } = useAdminThemeContext();
 
   if (!mounted) return <div style={{ width: size, height: size }} />;
 

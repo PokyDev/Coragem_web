@@ -6,12 +6,14 @@
  * Tarjeta de inicio de sesión con Google.
  *
  * Aparece después de que el usuario completa un patrón válido.
- * El botón de "Continuar con Google" está preparado para conectarse
- * con Google OAuth en una fase futura — por ahora es un placeholder visual.
+ * Al hacer click en "Continuar con Google", simula un inicio de sesión
+ * exitoso y redirige al usuario a /admin/dashboard.
  *
  * Estilos: usa exclusivamente los tokens de "Slate Command" definidos
  * en globals.css bajo la clase .admin.
  */
+
+import { useRouter } from "next/navigation";
 
 /* ─── Google Logo SVG (oficial, colores reales) ──────────────────── */
 function GoogleLogo({ size = 48 }: { size?: number }) {
@@ -46,17 +48,18 @@ function GoogleLogo({ size = 48 }: { size?: number }) {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export function GoogleSignInCard() {
+  const router = useRouter();
+
   /**
    * handleGoogleSignIn
    *
-   * Placeholder para la integración con Google OAuth.
-   * En la Fase de autenticación real se reemplazará con:
-   *   signIn("google") de next-auth, o la URL de autorización
-   *   del endpoint /api/auth/google del backend Fastify.
+   * Por ahora simula un inicio de sesión exitoso redirigiendo
+   * directamente al dashboard. En la fase de autenticación real
+   * se reemplazará con signIn("google") de next-auth o el endpoint
+   * /api/auth/google del backend Fastify.
    */
   const handleGoogleSignIn = () => {
-    // TODO: implementar Google OAuth
-    console.log("[AdminAuth] Google sign-in iniciado (placeholder)");
+    router.push("/admin/dashboard");
   };
 
   return (
@@ -123,8 +126,6 @@ export function GoogleSignInCard() {
           background: var(--admin-surface);
           border: 1px solid var(--admin-border);
           margin-bottom: 1rem;
-
-          /* Sutil brillo exterior */
           box-shadow: var(--admin-shadow-logo);
         }
 

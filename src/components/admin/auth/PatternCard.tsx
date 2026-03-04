@@ -86,7 +86,7 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
         <span>{statusMsg}</span>
       </div>
 
-      <p className="pc-hint">Mantén el click y arrastra para conectar los puntos</p>
+      { /* <p className="pc-hint">Mantén el click y arrastra para conectar los puntos</p> */}
 
       <style>{`
         /* ── Card ── */

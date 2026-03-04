@@ -1,0 +1,336 @@
+/**
+ * src/components/admin/css/AdminShell.module.css
+ *
+ * Estilos del layout principal del panel administrativo.
+ * Cubre: shell grid, sidebar, topbar, y clases de navegación.
+ *
+ * Usa los tokens de "Slate Command" definidos en globals.css bajo .admin
+ * (y su variante [data-admin-theme="light"]).
+ */
+
+/* ── Shell: layout de dos columnas ──────────────────────────────── */
+.shell {
+  display: flex;
+  min-height: 100dvh;
+  background-color: var(--admin-bg);
+}
+
+/* ── Body: topbar + contenido principal ─────────────────────────── */
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* evita overflow en flex */
+  background-color: var(--admin-bg);
+}
+
+/* ── Main: área de contenido de la página ───────────────────────── */
+.main {
+  flex: 1;
+  padding: 2rem 2.25rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────────────────────────── */
+
+.sidebar {
+  width: 216px;
+  flex-shrink: 0;
+  background: var(--admin-sidebar-bg);
+  border-right: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header — marca ── */
+.sidebarHeader {
+  padding: 1.5rem 1.25rem 1.1rem;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sidebarBrand {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--admin-text);
+  line-height: 1;
+}
+
+.sidebarBrand span {
+  color: var(--admin-accent);
+}
+
+.sidebarRole {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-text-dim);
+}
+
+/* ── Nav ── */
+.sidebarNav {
+  flex: 1;
+  padding: 0.75rem 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sidebarNav::-webkit-scrollbar { display: none; }
+
+.navSectionLabel {
+  display: block;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--admin-text-dim);
+  padding: 0.75rem 0.625rem 0.35rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 0.625rem;
+  border-radius: 8px;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  text-decoration: none;
+  transition:
+    background   0.15s ease,
+    color        0.15s ease;
+}
+
+.navItem:hover {
+  background: var(--admin-hover-bg);
+  color: var(--admin-text);
+}
+
+.navItemActive {
+  background: var(--admin-nav-active-bg) !important;
+  color: var(--admin-nav-active-color) !important;
+  font-weight: 600;
+}
+
+.navIcon {
+  font-size: 0.85rem;
+  width: 1rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ── Footer — cerrar sesión ── */
+.sidebarFooter {
+  padding: 0.75rem 0.625rem;
+  border-top: 1px solid var(--admin-border);
+}
+
+.navItemLogout {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.55rem 0.625rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--admin-danger);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.navItemLogout:hover {
+  background: var(--stock-out-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TOPBAR
+───────────────────────────────────────────────────────────────── */
+
+.topbar {
+  height: 56px;
+  background: var(--admin-bg-card);
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  flex-shrink: 0;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Título de la página activa ── */
+.topbarTitle {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--admin-text);
+  text-transform: uppercase;
+}
+
+/* ── Avatar / Perfil ── */
+.profileWrap {
+  position: relative;
+}
+
+.avatarBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--admin-accent) 0%,
+    var(--admin-danger) 100%
+  );
+  border: 2px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    border-color  0.2s ease,
+    box-shadow    0.2s ease,
+    transform     0.15s ease;
+  padding: 0;
+}
+
+.avatarBtn:hover {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px rgba(78, 196, 196, 0.15);
+  transform: scale(1.05);
+}
+
+.avatarBtn:active {
+  transform: scale(0.98);
+}
+
+.avatarInitials {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ── Menú desplegable de perfil ── */
+.profileMenuWrap {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 100;
+
+  /* Animación de entrada */
+  animation: menuDropIn 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes menuDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.profileMenu {
+  min-width: 210px;
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.28),
+    0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.profileMenuHeader {
+  padding: 0.85rem 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.profileMenuName {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-text);
+  letter-spacing: 0.02em;
+}
+
+.profileMenuEmail {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.68rem;
+  color: var(--admin-text-muted);
+  letter-spacing: 0.03em;
+}
+
+.profileMenuDivider {
+  height: 1px;
+  background: var(--admin-border);
+  margin: 0;
+}
+
+.profileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: transparent;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+  letter-spacing: 0.02em;
+}
+
+.profileMenuItem:hover {
+  background: var(--admin-hover-bg);
+  color: var(--admin-text);
+}
+
+.profileMenuItemDanger {
+  color: var(--admin-danger);
+}
+
+.profileMenuItemDanger:hover {
+  background: var(--stock-out-bg);
+  color: var(--admin-danger);
+}

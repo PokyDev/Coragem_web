@@ -4,9 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import products from "@/data/products.json";
-import { NoStockRibbon } from "@/components/ui/NoStockRibbon";
-import { ProductModal } from "@/components/ui/ProductModal";
-import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
+import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
+import { ProductModal } from "@/components/shared/product/ProductModal";
+import { LoadMoreButton } from "@/components/shared/ui/LoadMoreButton";
 import { Product } from "@/types/catalog";
 
 /* ─── Format price ──────────────────────────────────────────────── */

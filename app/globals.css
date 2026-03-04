@@ -175,6 +175,22 @@ body {
   /* Forzar fondo oscuro por defecto (dark-first) */
   background-color: var(--admin-bg);
   color: var(--admin-text);
+
+  /* Sombras de tarjetas */
+  --admin-shadow-card:
+    0 0 0 1px rgba(78, 196, 196, 0.07),
+    0 32px 64px rgba(0, 0, 0, 0.22),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+  --admin-shadow-card-subtle:
+    0 0 0 1px rgba(78, 196, 196, 0.05),
+    0 24px 48px rgba(0, 0, 0, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.10);
+  --admin-shadow-logo:    0 0 20px rgba(78, 196, 196, 0.08);
+  --admin-shadow-node-active: 0 0 14px rgba(78, 196, 196, 0.3);
+  --admin-shadow-node-first:
+    0 0 0 4px rgba(78, 196, 196, 0.18),
+    0 0 18px rgba(78, 196, 196, 0.35);
+  --admin-shadow-node-error: 0 0 12px rgba(196, 122, 158, 0.3);
 }
 
 /* ── Admin tema claro — data-admin-theme="light" ──────────────── */
@@ -211,4 +227,20 @@ body {
 
   background-color: var(--admin-bg);
   color: var(--admin-text);
+
+  /* Sombras atenuadas para tema claro */
+  --admin-shadow-card:
+    0 0 0 1px rgba(58, 175, 175, 0.10),
+    0 12px 32px rgba(30, 45, 61, 0.08),
+    0 2px 6px rgba(30, 45, 61, 0.05);
+  --admin-shadow-card-subtle:
+    0 0 0 1px rgba(58, 175, 175, 0.08),
+    0 8px 24px rgba(30, 45, 61, 0.07),
+    0 1px 4px rgba(30, 45, 61, 0.04);
+  --admin-shadow-logo:    0 0 16px rgba(58, 175, 175, 0.12);
+  --admin-shadow-node-active: 0 0 10px rgba(58, 175, 175, 0.20);
+  --admin-shadow-node-first:
+    0 0 0 4px rgba(58, 175, 175, 0.12),
+    0 0 14px rgba(58, 175, 175, 0.18);
+  --admin-shadow-node-error: 0 0 8px rgba(181, 95, 135, 0.18);
 }

@@ -99,10 +99,7 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           display: flex;
           flex-direction: column;
           align-items: center;
-          box-shadow:
-            0 0 0 1px rgba(78,196,196,0.07),
-            0 32px 64px rgba(0,0,0,0.22),
-            0 2px 4px rgba(0,0,0,0.12);
+          box-shadow: var(--admin-shadow-card);
         }
 
         /* ── Marca ── */

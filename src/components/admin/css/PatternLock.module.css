@@ -61,19 +61,17 @@
 /* ── Nodo activo (en el patrón) ──────────────────────────────────── */
 .nodeOn::after {
   transform: scale(1.1);
-  box-shadow: 0 0 14px rgba(78, 196, 196, 0.3);
+  box-shadow: var(--admin-shadow-node-active);
 }
 
 /* ── Primer nodo — halo de inicio ────────────────────────────────── */
 .nodeFirst::after {
-  box-shadow:
-    0 0 0 4px rgba(78, 196, 196, 0.18),
-    0 0 18px rgba(78, 196, 196, 0.35);
+  box-shadow: var(--admin-shadow-node-first);
 }
 
 /* ── Estado error: nodos activos en pink ─────────────────────────── */
 .nodeOn[data-state="error"]::after {
-  box-shadow: 0 0 12px rgba(196, 122, 158, 0.3);
+  box-shadow: var(--admin-shadow-node-error);
 }
 
 /* ── Estado success: pulso de confirmación ───────────────────────── */

@@ -109,10 +109,7 @@ export function GoogleSignInCard() {
           flex-direction: column;
           align-items: center;
           gap: 0;
-          box-shadow:
-            0 0 0 1px rgba(78,196,196,0.05),
-            0 24px 48px rgba(0,0,0,0.18),
-            0 2px 4px rgba(0,0,0,0.1);
+          box-shadow: var(--admin-shadow-card-subtle);
         }
 
         /* ── Logo de Google ── */
@@ -126,8 +123,9 @@ export function GoogleSignInCard() {
           background: var(--admin-surface);
           border: 1px solid var(--admin-border);
           margin-bottom: 1rem;
+
           /* Sutil brillo exterior */
-          box-shadow: 0 0 20px rgba(78,196,196,0.08);
+          box-shadow: var(--admin-shadow-logo);
         }
 
         /* ── Copy ── */

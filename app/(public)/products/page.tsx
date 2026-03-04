@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CatalogClient } from "@/components/catalog/CatalogClient";
+import { CatalogClient } from "@/components/user/catalog/CatalogClient";
 import products from "@/data/products.json";
 import categories from "@/data/categories.json";
 import colors from "@/data/colors.json";

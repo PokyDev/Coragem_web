@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { CatalogAside } from "@/components/catalog/CatalogAside";
-import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
-import { CatalogGrid } from "@/components/catalog/CatalogGrid";
-import { MobileFilterDrawer } from "@/components/catalog/MobileFilterDrawer";
-import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
+import { CatalogAside } from "@/components/user/catalog/CatalogAside";
+import { CatalogToolbar } from "@/components/user/catalog/CatalogToolbar";
+import { CatalogGrid } from "@/components/user/catalog/CatalogGrid";
+import { MobileFilterDrawer } from "@/components/user/catalog/MobileFilterDrawer";
+import { LoadMoreButton } from "@/components/shared/ui/LoadMoreButton";
 import {
   Product,
   Category,

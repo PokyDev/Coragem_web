@@ -132,3 +132,47 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.8s ease forwards;
 }
+
+/* ── Coragem Admin Design System — Slate Command ──────────────── */
+/* Aplicar en el layout raíz de /admin: <div className="admin">   */
+/* No afecta al sitio público ya que está scoped a .admin          */
+
+.admin {
+  min-height: 100dvh;
+
+  /* Fondos */
+  --admin-bg:          #0d1520;
+  --admin-bg-card:     #111827;
+  --admin-surface:     #1e2d3d;
+  --admin-border:      #1e3a5f;
+  --admin-sidebar-bg:  #0d1520;
+  --admin-hover-bg:    rgba(255, 255, 255, 0.04);
+
+  /* Texto */
+  --admin-text:        #e2e8f0;
+  --admin-text-muted:  #94a3b8;
+  --admin-text-dim:    #4a5568;
+
+  /* Acentos — los 3 colores de marca reutilizados como semáforo */
+  --admin-accent:      #4ec4c4;   /* teal  — nav activo, CTAs, links  */
+  --admin-warning:     #c49a6c;   /* sand  — stock bajo, advertencias */
+  --admin-danger:      #c47a9e;   /* pink  — sin stock, delete, error */
+
+  /* Nav activo */
+  --admin-nav-active-bg:    rgba(78, 196, 196, 0.12);
+  --admin-nav-active-color: #4ec4c4;
+
+  /* Semáforo de inventario */
+  --stock-ok-bg:       rgba(78,  196, 196, 0.12);
+  --stock-ok-color:    #4ec4c4;
+
+  --stock-low-bg:      rgba(196, 154, 108, 0.18);
+  --stock-low-color:   #c49a6c;
+
+  --stock-out-bg:      rgba(196, 122, 158, 0.14);
+  --stock-out-color:   #c47a9e;
+
+  /* Forzar fondo oscuro independientemente del tema público */
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+}

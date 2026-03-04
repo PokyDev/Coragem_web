@@ -2,7 +2,7 @@
 
 import { useEffect, memo, useCallback } from "react";
 import { Category, Color, ActiveFilters } from "@/types/catalog";
-import { PriceRangeSlider } from "@/components/ui/PriceRangeSlider";
+import { PriceRangeSlider } from "@/components/shared/ui/PriceRangeSlider";
 
 /* ─── Sub-components ──────────────────────────────────────────────── */
 

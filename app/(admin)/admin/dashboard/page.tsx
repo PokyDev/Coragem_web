@@ -3,55 +3,119 @@
 /**
  * app/(admin)/admin/dashboard/page.tsx
  *
- * Orquesta el dashboard: búsqueda (topbar) + filtro por estado (StatsCards)
- * + tabla de productos.
+ * Orquesta el dashboard: búsqueda + filtro de stock + tabla + modal de producto.
  *
- * Estado local:
- *   stockFilter — "all" | "ok" | "low" | "out"
- *     Controlado por las StatsCards (click para activar/desactivar).
- *     Se combina con la búsqueda del topbar antes de pasarlo a la tabla.
+ * Al montar, registra openNewModal en DashboardActionsContext para que
+ * AdminTopbar pueda invocarla desde el botón "+ Nuevo Producto".
  */
 
-import { useMemo, useState, useCallback } from "react";
-import type { StockFilter }           from "@/types/admin";
-import { StatsCards }             from "@/components/admin/dashboard/StatsCards";
-import { ProductsTable }          from "@/components/admin/dashboard/ProductsTable";
-import { useDashboardSearch }     from "@/components/admin/layout/AdminShell";
+import { useMemo, useState, useCallback, useEffect } from "react";
+import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
+import { StatsCards }          from "@/components/admin/dashboard/StatsCards";
+import { ProductsTable }       from "@/components/admin/dashboard/ProductsTable";
+import { ProductFormModal }    from "@/components/admin/dashboard/ProductFormModal";
+import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
 import products from "@/data/products.json";
 import styles   from "./css/DashboardPage.module.css";
 
-export default function DashboardPage() {
-  const { searchQuery } = useDashboardSearch();
-  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+async function getSwal() {
+  const Swal = (await import("sweetalert2")).default;
+  return Swal;
+}
 
-  /* Toggle: click en la misma tarjeta activa → deselecciona */
+export default function DashboardPage() {
+  const { searchQuery }           = useDashboardSearch();
+  const { registerNewProductAction } = useDashboardActions();
+
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [modalState,  setModalState]  = useState<ProductModalState>({
+    isOpen: false, product: null,
+  });
+
+  /* ── Handlers del modal ── */
+  const openNewModal  = useCallback(() => setModalState({ isOpen: true, product: null }), []);
+  const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
+  const closeModal    = useCallback(() => setModalState((prev) => ({ ...prev, isOpen: false })), []);
+
+  /* ── Registrar openNewModal en el contexto del shell para el topbar ── */
+  useEffect(() => {
+    registerNewProductAction(openNewModal);
+  }, [registerNewProductAction, openNewModal]);
+
+  /* ── Filtros ── */
   const handleStockFilter = useCallback((next: StockFilter) => {
     setStockFilter((prev) => (prev === next ? "all" : next));
   }, []);
 
-  /* Stats: siempre sobre el total completo */
   const stats = useMemo(() => computeStats(products), []);
 
-  /* Filas: búsqueda + filtro de estado */
   const filteredRows = useMemo(() => {
     const bySearch = filterProductRows(products, searchQuery);
     if (stockFilter === "all") return bySearch;
     return bySearch.filter((p) => p.stockStatus === stockFilter);
   }, [searchQuery, stockFilter]);
 
+  /* ── Callback post-guardado ── */
+  const handleSaved = useCallback((mode: "new" | "edit") => {
+    // Pendiente integración API — aquí se refrescará la lista
+    console.log(`Producto ${mode === "new" ? "creado" : "editado"} — pendiente integración API`);
+  }, []);
+
+  /* ── Eliminar con confirmación ── */
+  const handleDelete = useCallback(async (product: ProductRow) => {
+    const Swal = await getSwal();
+    const { isConfirmed } = await Swal.fire({
+      title: "¿Eliminar producto?",
+      html:  `<span style="color:#94a3b8">Se eliminará permanentemente <strong style="color:#e2e8f0">${product.name}</strong>.</span>`,
+      icon:  "warning",
+      showCancelButton:   true,
+      confirmButtonText:  "Sí, eliminar",
+      cancelButtonText:   "Cancelar",
+      confirmButtonColor: "#c47a9e",
+      cancelButtonColor:  "#1e2d3d",
+      background:         "#111827",
+      color:              "#e2e8f0",
+    });
+
+    if (isConfirmed) {
+      await Swal.fire({
+        title:             "Producto eliminado",
+        text:              `"${product.name}" fue eliminado del catálogo.`,
+        icon:              "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#4ec4c4",
+        timer:             2200,
+        timerProgressBar:  true,
+        background:        "#111827",
+        color:             "#e2e8f0",
+      });
+    }
+  }, []);
+
   return (
-    <div className={styles.root}>
-      <StatsCards
-        stats={stats}
-        activeFilter={stockFilter}
-        onFilterChange={handleStockFilter}
+    <>
+      <div className={styles.root}>
+        <StatsCards
+          stats={stats}
+          activeFilter={stockFilter}
+          onFilterChange={handleStockFilter}
+        />
+        <ProductsTable
+          products={filteredRows}
+          searchQuery={searchQuery}
+          stockFilter={stockFilter}
+          onEdit={openEditModal}
+          onDelete={handleDelete}
+        />
+      </div>
+
+      <ProductFormModal
+        isOpen={modalState.isOpen}
+        product={modalState.product}
+        onClose={closeModal}
+        onSaved={handleSaved}
       />
-      <ProductsTable
-        products={filteredRows}
-        searchQuery={searchQuery}
-        stockFilter={stockFilter}
-      />
-    </div>
+    </>
   );
 }

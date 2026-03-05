@@ -30,12 +30,8 @@ export interface PatternLockHandlers {
 
 /* ─── Dashboard ─────────────────────────────────────────────────── */
 
-/**
- * Umbrales para clasificar el estado de stock de un producto.
- * Ajustar según las necesidades del negocio.
- */
 export const STOCK_THRESHOLDS = {
-  LOW: 3, // stock > 0 && stock <= LOW  → Stock Bajo
+  LOW: 3,
 } as const;
 
 export type StockStatus = "ok" | "low" | "out";
@@ -47,10 +43,6 @@ export interface DashboardStats {
   outStock: number;
 }
 
-/**
- * Fila enriquecida de la tabla de productos del dashboard.
- * Extiende el Product del catálogo con el estado de stock calculado.
- */
 export interface ProductRow {
   id:          number;
   name:        string;
@@ -63,6 +55,35 @@ export interface ProductRow {
   color:       string;
 }
 
-/* ─── Dashboard filters ─────────────────────────────────────────── */
-
 export type StockFilter = StockStatus | "all";
+
+/* ─── Product Form ──────────────────────────────────────────────── */
+
+export interface ProductFormData {
+  name:     string;
+  price:    string;
+  stock:    string;
+  ventas:   string;
+  category: string;
+  color:    string;
+  image:    File | null;
+}
+
+export interface ProductFormErrors {
+  name?:     string;
+  price?:    string;
+  stock?:    string;
+  ventas?:   string;
+  category?: string;
+  color?:    string;
+  image?:    string;
+}
+
+/* ─── Modal state ───────────────────────────────────────────────── */
+
+export type ProductModalMode = "new" | "edit";
+
+export interface ProductModalState {
+  isOpen:  boolean;
+  product: ProductRow | null; // null → modo "new"
+}

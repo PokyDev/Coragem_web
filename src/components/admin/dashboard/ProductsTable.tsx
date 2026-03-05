@@ -3,12 +3,9 @@
 /**
  * src/components/admin/dashboard/ProductsTable.tsx
  *
- * Tabla de productos del dashboard con:
- *   - Scroll interno (solo la tabla hace overflow-y)
- *   - Paginación de 10 productos por página
- *   - Columna "Stock" con valor numérico coloreado por estado
- *   - Columna "Estado" con badge semáforo
- *   - Acciones: Editar / Eliminar (placeholders)
+ * Tabla de productos del dashboard.
+ * Ahora expone onEdit y onDelete para que DashboardPage
+ * controle el modal y las acciones.
  */
 
 import { useState, useEffect } from "react";
@@ -28,7 +25,7 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/* ─── Stock Badge (estado) ───────────────────────────────────────── */
+/* ─── Stock Badge ────────────────────────────────────────────────── */
 
 function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   const map = {
@@ -45,35 +42,24 @@ function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   );
 }
 
-/* ─── Stock Count (número coloreado por estado) ──────────────────── */
+/* ─── Stock Count ────────────────────────────────────────────────── */
 
 function StockCount({ status, stock }: { status: ProductRow["stockStatus"]; stock: number }) {
-  const colorClass = {
-    ok:  styles.stockOk,
-    low: styles.stockLow,
-    out: styles.stockOut,
-  }[status];
+  const colorClass = { ok: styles.stockOk, low: styles.stockLow, out: styles.stockOut }[status];
   return <span className={`${styles.stockCount} ${colorClass}`}>{stock}</span>;
 }
 
 /* ─── Category label ─────────────────────────────────────────────── */
 
 const CATEGORY_LABELS: Record<string, string> = {
-  EARCUFF:   "Earcuff",
-  ANILLO:    "Anillo",
-  DIJE:      "Dije",
-  CADENA:    "Cadena",
-  TOPOS:     "Topos",
-  CANDONGAS: "Candongas",
-  CONJUNTOS: "Conjuntos",
+  EARCUFF: "Earcuff", ANILLO: "Anillo", DIJE: "Dije",
+  CADENA: "Cadena", TOPOS: "Topos", CANDONGAS: "Candongas", CONJUNTOS: "Conjuntos",
 };
 
 /* ─── Pagination ─────────────────────────────────────────────────── */
 
 interface PaginationProps {
-  current:  number;
-  total:    number;
-  onChange: (page: number) => void;
+  current: number; total: number; onChange: (page: number) => void;
 }
 
 function Pagination({ current, total, onChange }: PaginationProps) {
@@ -81,33 +67,17 @@ function Pagination({ current, total, onChange }: PaginationProps) {
   const pages = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className={styles.pagination}>
-      <button
-        className={styles.pageBtn}
-        onClick={() => onChange(current - 1)}
-        disabled={current === 1}
-        aria-label="Página anterior"
-      >
+      <button className={styles.pageBtn} onClick={() => onChange(current - 1)} disabled={current === 1} aria-label="Página anterior">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
       {pages.map((p) => (
-        <button
-          key={p}
-          className={`${styles.pageBtn} ${p === current ? styles.pageBtnActive : ""}`}
-          onClick={() => onChange(p)}
-          aria-label={`Página ${p}`}
-          aria-current={p === current ? "page" : undefined}
-        >
+        <button key={p} className={`${styles.pageBtn} ${p === current ? styles.pageBtnActive : ""}`} onClick={() => onChange(p)} aria-label={`Página ${p}`} aria-current={p === current ? "page" : undefined}>
           {p}
         </button>
       ))}
-      <button
-        className={styles.pageBtn}
-        onClick={() => onChange(current + 1)}
-        disabled={current === total}
-        aria-label="Página siguiente"
-      >
+      <button className={styles.pageBtn} onClick={() => onChange(current + 1)} disabled={current === total} aria-label="Página siguiente">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <polyline points="9 18 15 12 9 6" />
         </svg>
@@ -119,22 +89,14 @@ function Pagination({ current, total, onChange }: PaginationProps) {
 /* ─── Empty State ────────────────────────────────────────────────── */
 
 const STOCK_FILTER_LABELS: Record<string, string> = {
-  ok:  "con stock",
-  low: "con stock bajo",
-  out: "sin stock",
+  ok: "con stock", low: "con stock bajo", out: "sin stock",
 };
 
-interface EmptyStateProps {
-  hasSearch:   boolean;
-  stockFilter: StockFilter;
-}
-
-function EmptyState({ hasSearch, stockFilter }: EmptyStateProps) {
+function EmptyState({ hasSearch, stockFilter }: { hasSearch: boolean; stockFilter: StockFilter }) {
   const filterLabel = stockFilter !== "all" ? STOCK_FILTER_LABELS[stockFilter] : "";
   const desc = hasSearch
     ? `Ningún producto ${filterLabel ? `${filterLabel} ` : ""}coincide con la búsqueda.`
     : `No hay productos ${filterLabel}.`;
-
   return (
     <tr>
       <td colSpan={7} className={styles.emptyCell}>
@@ -148,15 +110,19 @@ function EmptyState({ hasSearch, stockFilter }: EmptyStateProps) {
   );
 }
 
-/* ─── Main Component ─────────────────────────────────────────────── */
+/* ─── Props ─────────────────────────────────────────────────────── */
 
 interface ProductsTableProps {
   products:    ProductRow[];
   searchQuery: string;
   stockFilter: StockFilter;
+  onEdit:      (product: ProductRow) => void;
+  onDelete:    (product: ProductRow) => void;
 }
 
-export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTableProps) {
+/* ─── Component ─────────────────────────────────────────────────── */
+
+export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDelete }: ProductsTableProps) {
   const [page, setPage] = useState(1);
 
   useEffect(() => { setPage(1); }, [searchQuery, stockFilter]);
@@ -189,7 +155,7 @@ export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTa
         )}
       </div>
 
-      {/* Tabla con scroll interno */}
+      {/* Tabla */}
       <div className={styles.tableScroll}>
         <table className={styles.table}>
           <thead>
@@ -221,9 +187,7 @@ export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTa
                   <td className={styles.td}>
                     <span className={styles.price}>{formatPrice(product.price)}</span>
                   </td>
-                  <td className={`${styles.td} ${styles.tdMuted}`}>
-                    {product.ventas}
-                  </td>
+                  <td className={`${styles.td} ${styles.tdMuted}`}>{product.ventas}</td>
                   <td className={styles.td}>
                     <StockCount status={product.stockStatus} stock={product.stock} />
                   </td>
@@ -236,7 +200,7 @@ export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTa
                         className={styles.actionBtn}
                         type="button"
                         aria-label={`Editar ${product.name}`}
-                        onClick={() => { /* TODO */ }}
+                        onClick={() => onEdit(product)}
                       >
                         Editar
                       </button>
@@ -244,7 +208,7 @@ export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTa
                         className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                         type="button"
                         aria-label={`Eliminar ${product.name}`}
-                        onClick={() => { /* TODO */ }}
+                        onClick={() => onDelete(product)}
                       >
                         Eliminar
                       </button>
@@ -259,7 +223,7 @@ export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTa
         </table>
       </div>
 
-      {/* Footer: info + paginación */}
+      {/* Footer */}
       <div className={styles.footer}>
         <span className={styles.footerInfo}>
           Mostrando {pageItems.length > 0 ? start + 1 : 0}–{Math.min(start + PAGE_SIZE, products.length)} de {products.length}

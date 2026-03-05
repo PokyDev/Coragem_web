@@ -3,51 +3,57 @@
 /**
  * app/(admin)/admin/dashboard/page.tsx
  *
- * Página principal del dashboard administrativo.
+ * Orquesta el dashboard: búsqueda (topbar) + filtro por estado (StatsCards)
+ * + tabla de productos.
  *
- * Consume el contexto de búsqueda expuesto por AdminShell
- * (vía useDashboardSearch) para filtrar la tabla de productos
- * en tiempo real a medida que el usuario escribe en el topbar.
- *
- * Layout:
- *   ┌──────────────────────────────────────────┐
- *   │  [StatsCards × 4]                        │
- *   ├──────────────────────────────────────────┤
- *   │  [ProductsTable con scroll interno]      │  ← crece para ocupar el espacio restante
- *   └──────────────────────────────────────────┘
- *
- * El main del AdminShell tiene overflow-y: auto, pero la tabla
- * gestiona su propio scroll interno para que la página en sí no scrollee.
+ * Estado local:
+ *   stockFilter — "all" | "ok" | "low" | "out"
+ *     Controlado por las StatsCards (click para activar/desactivar).
+ *     Se combina con la búsqueda del topbar antes de pasarlo a la tabla.
  */
 
-import { useMemo }            from "react";
-import type { Metadata }      from "next";
-import { StatsCards }         from "@/components/admin/dashboard/StatsCards";
-import { ProductsTable }      from "@/components/admin/dashboard/ProductsTable";
-import { useDashboardSearch } from "@/components/admin/layout/AdminShell";
+import { useMemo, useState, useCallback } from "react";
+import type { StockStatus }       from "@/types/admin";
+import { StatsCards }             from "@/components/admin/dashboard/StatsCards";
+import { ProductsTable }          from "@/components/admin/dashboard/ProductsTable";
+import { useDashboardSearch }     from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
 import products from "@/data/products.json";
 import styles   from "./css/DashboardPage.module.css";
 
+export type StockFilter = StockStatus | "all";
+
 export default function DashboardPage() {
   const { searchQuery } = useDashboardSearch();
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
 
-  /* Stats: siempre sobre el total completo, sin filtrar */
+  /* Toggle: click en la misma tarjeta activa → deselecciona */
+  const handleStockFilter = useCallback((next: StockFilter) => {
+    setStockFilter((prev) => (prev === next ? "all" : next));
+  }, []);
+
+  /* Stats: siempre sobre el total completo */
   const stats = useMemo(() => computeStats(products), []);
 
-  /* Filas filtradas por la búsqueda del topbar */
-  const filteredRows = useMemo(
-    () => filterProductRows(products, searchQuery),
-    [searchQuery]
-  );
+  /* Filas: búsqueda + filtro de estado */
+  const filteredRows = useMemo(() => {
+    const bySearch = filterProductRows(products, searchQuery);
+    if (stockFilter === "all") return bySearch;
+    return bySearch.filter((p) => p.stockStatus === stockFilter);
+  }, [searchQuery, stockFilter]);
 
   return (
     <div className={styles.root}>
-      {/* ── Tarjetas de estadísticas ── */}
-      <StatsCards stats={stats} />
-
-      {/* ── Tabla de productos ── */}
-      <ProductsTable products={filteredRows} searchQuery={searchQuery} />
+      <StatsCards
+        stats={stats}
+        activeFilter={stockFilter}
+        onFilterChange={handleStockFilter}
+      />
+      <ProductsTable
+        products={filteredRows}
+        searchQuery={searchQuery}
+        stockFilter={stockFilter}
+      />
     </div>
   );
 }

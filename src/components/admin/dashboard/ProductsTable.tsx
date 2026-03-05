@@ -4,16 +4,16 @@
  * src/components/admin/dashboard/ProductsTable.tsx
  *
  * Tabla de productos del dashboard con:
- *   - Scroll interno (el contenedor tiene altura fija, solo la tabla hace scroll)
+ *   - Scroll interno (solo la tabla hace overflow-y)
  *   - Paginación de 10 productos por página
- *   - Badge de estado de stock (semáforo Slate Command)
+ *   - Columna "Stock" con valor numérico coloreado por estado
+ *   - Columna "Estado" con badge semáforo
  *   - Acciones: Editar / Eliminar (placeholders)
- *
- * Recibe los productos ya filtrados por la búsqueda del topbar.
  */
 
 import { useState, useEffect } from "react";
 import type { ProductRow }     from "@/types/admin";
+import type { StockFilter }    from "@/app/(admin)/admin/dashboard/page";
 import styles from "@/components/admin/css/ProductsTable.module.css";
 
 const PAGE_SIZE = 10;
@@ -29,25 +29,32 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/* ─── Stock Badge ────────────────────────────────────────────────── */
+/* ─── Stock Badge (estado) ───────────────────────────────────────── */
 
-function StockBadge({ status, stock }: { status: ProductRow["stockStatus"]; stock: number }) {
+function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   const map = {
-    ok:  { label: "Con Stock",   cls: styles.badgeOk  },
-    low: { label: "Stock Bajo",  cls: styles.badgeLow },
-    out: { label: "Sin Stock",   cls: styles.badgeOut },
+    ok:  { label: "Con Stock",  cls: styles.badgeOk  },
+    low: { label: "Stock Bajo", cls: styles.badgeLow },
+    out: { label: "Sin Stock",  cls: styles.badgeOut },
   };
   const { label, cls } = map[status];
-
   return (
     <span className={`${styles.badge} ${cls}`}>
       <span className={styles.badgeDot} />
       {label}
-      {status !== "out" && (
-        <span className={styles.badgeCount}>({stock})</span>
-      )}
     </span>
   );
+}
+
+/* ─── Stock Count (número coloreado por estado) ──────────────────── */
+
+function StockCount({ status, stock }: { status: ProductRow["stockStatus"]; stock: number }) {
+  const colorClass = {
+    ok:  styles.stockOk,
+    low: styles.stockLow,
+    out: styles.stockOut,
+  }[status];
+  return <span className={`${styles.stockCount} ${colorClass}`}>{stock}</span>;
 }
 
 /* ─── Category label ─────────────────────────────────────────────── */
@@ -72,9 +79,7 @@ interface PaginationProps {
 
 function Pagination({ current, total, onChange }: PaginationProps) {
   if (total <= 1) return null;
-
   const pages = Array.from({ length: total }, (_, i) => i + 1);
-
   return (
     <div className={styles.pagination}>
       <button
@@ -87,7 +92,6 @@ function Pagination({ current, total, onChange }: PaginationProps) {
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
-
       {pages.map((p) => (
         <button
           key={p}
@@ -99,7 +103,6 @@ function Pagination({ current, total, onChange }: PaginationProps) {
           {p}
         </button>
       ))}
-
       <button
         className={styles.pageBtn}
         onClick={() => onChange(current + 1)}
@@ -116,20 +119,30 @@ function Pagination({ current, total, onChange }: PaginationProps) {
 
 /* ─── Empty State ────────────────────────────────────────────────── */
 
-function EmptyState({ hasSearch }: { hasSearch: boolean }) {
+const STOCK_FILTER_LABELS: Record<string, string> = {
+  ok:  "con stock",
+  low: "con stock bajo",
+  out: "sin stock",
+};
+
+interface EmptyStateProps {
+  hasSearch:   boolean;
+  stockFilter: StockFilter;
+}
+
+function EmptyState({ hasSearch, stockFilter }: EmptyStateProps) {
+  const filterLabel = stockFilter !== "all" ? STOCK_FILTER_LABELS[stockFilter] : "";
+  const desc = hasSearch
+    ? `Ningún producto ${filterLabel ? `${filterLabel} ` : ""}coincide con la búsqueda.`
+    : `No hay productos ${filterLabel}.`;
+
   return (
     <tr>
-      <td colSpan={6} className={styles.emptyCell}>
+      <td colSpan={7} className={styles.emptyCell}>
         <div className={styles.emptyState}>
           <span className={styles.emptyIcon} aria-hidden="true">◈</span>
-          <p className={styles.emptyTitle}>
-            {hasSearch ? "Sin resultados" : "No hay productos"}
-          </p>
-          <p className={styles.emptyDesc}>
-            {hasSearch
-              ? "Ningún producto coincide con la búsqueda."
-              : "Agrega tu primer producto con el botón + Nuevo Producto."}
-          </p>
+          <p className={styles.emptyTitle}>Sin resultados</p>
+          <p className={styles.emptyDesc}>{desc}</p>
         </div>
       </td>
     </tr>
@@ -141,15 +154,13 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
 interface ProductsTableProps {
   products:    ProductRow[];
   searchQuery: string;
+  stockFilter: StockFilter;
 }
 
-export function ProductsTable({ products, searchQuery }: ProductsTableProps) {
+export function ProductsTable({ products, searchQuery, stockFilter }: ProductsTableProps) {
   const [page, setPage] = useState(1);
 
-  /* Resetear a la primera página cuando cambia la búsqueda */
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery]);
+  useEffect(() => { setPage(1); }, [searchQuery, stockFilter]);
 
   const totalPages = Math.ceil(products.length / PAGE_SIZE);
   const start      = (page - 1) * PAGE_SIZE;
@@ -163,9 +174,18 @@ export function ProductsTable({ products, searchQuery }: ProductsTableProps) {
           <h2 className={styles.headerTitle}>Productos</h2>
           <span className={styles.headerCount}>{products.length} resultados</span>
         </div>
-        {searchQuery && (
-          <div className={styles.searchBadge}>
-            Filtrando por: <strong>{searchQuery}</strong>
+        {(searchQuery || stockFilter !== "all") && (
+          <div className={styles.filterBadges}>
+            {searchQuery && (
+              <div className={styles.searchBadge}>
+                Búsqueda: <strong>{searchQuery}</strong>
+              </div>
+            )}
+            {stockFilter !== "all" && (
+              <div className={`${styles.searchBadge} ${styles[`filterBadge_${stockFilter}`]}`}>
+                Estado: <strong>{STOCK_FILTER_LABELS[stockFilter]}</strong>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -179,6 +199,7 @@ export function ProductsTable({ products, searchQuery }: ProductsTableProps) {
               <th className={styles.th}>Categoría</th>
               <th className={styles.th}>Precio</th>
               <th className={styles.th}>Ventas</th>
+              <th className={styles.th}>Stock</th>
               <th className={styles.th}>Estado</th>
               <th className={`${styles.th} ${styles.thRight}`}>Acciones</th>
             </tr>
@@ -187,7 +208,6 @@ export function ProductsTable({ products, searchQuery }: ProductsTableProps) {
             {pageItems.length > 0 ? (
               pageItems.map((product) => (
                 <tr key={product.id} className={styles.row}>
-                  {/* Nombre */}
                   <td className={styles.td}>
                     <div className={styles.productCell}>
                       <div className={styles.productThumb}>
@@ -196,50 +216,45 @@ export function ProductsTable({ products, searchQuery }: ProductsTableProps) {
                       <span className={styles.productName}>{product.name}</span>
                     </div>
                   </td>
-
-                  {/* Categoría */}
                   <td className={`${styles.td} ${styles.tdMuted}`}>
                     {CATEGORY_LABELS[product.category] ?? product.category}
                   </td>
-
-                  {/* Precio */}
                   <td className={styles.td}>
                     <span className={styles.price}>{formatPrice(product.price)}</span>
                   </td>
-
-                  {/* Ventas */}
                   <td className={`${styles.td} ${styles.tdMuted}`}>
                     {product.ventas}
                   </td>
-
-                  {/* Estado */}
                   <td className={styles.td}>
-                    <StockBadge status={product.stockStatus} stock={product.stock} />
+                    <StockCount status={product.stockStatus} stock={product.stock} />
                   </td>
-
-                  {/* Acciones */}
+                  <td className={styles.td}>
+                    <StockBadge status={product.stockStatus} />
+                  </td>
                   <td className={`${styles.td} ${styles.tdActions}`}>
-                    <button
-                      className={styles.actionBtn}
-                      type="button"
-                      aria-label={`Editar ${product.name}`}
-                      onClick={() => { /* TODO */ }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                      type="button"
-                      aria-label={`Eliminar ${product.name}`}
-                      onClick={() => { /* TODO */ }}
-                    >
-                      Eliminar
-                    </button>
+                    <div className={styles.actionsWrap}>
+                      <button
+                        className={styles.actionBtn}
+                        type="button"
+                        aria-label={`Editar ${product.name}`}
+                        onClick={() => { /* TODO */ }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        type="button"
+                        aria-label={`Eliminar ${product.name}`}
+                        onClick={() => { /* TODO */ }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             ) : (
-              <EmptyState hasSearch={!!searchQuery} />
+              <EmptyState hasSearch={!!searchQuery} stockFilter={stockFilter} />
             )}
           </tbody>
         </table>

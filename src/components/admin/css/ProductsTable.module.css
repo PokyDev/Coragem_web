@@ -142,6 +142,12 @@
   background: var(--admin-hover-bg);
 }
 
+/* Revela los botones de acción solo en hover de la fila */
+.row:hover .actionsWrap {
+  opacity:    1;
+  visibility: visible;
+}
+
 /* ── Celdas ── */
 .td {
   padding:     0.75rem 1rem;
@@ -157,6 +163,21 @@
 
 .tdActions {
   text-align: right;
+  /* Ancho fijo para que la columna no colapse cuando los botones son invisibles */
+  width: 120px;
+}
+
+/* ── Wrapper de acciones: oculto por defecto ── */
+.actionsWrap {
+  display:     inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap:         0.1rem;
+  opacity:     0;
+  visibility:  hidden;
+  transition:
+    opacity    0.15s ease,
+    visibility 0.15s ease;
 }
 
 /* ── Celda de producto ── */
@@ -377,3 +398,31 @@
   color:        var(--admin-nav-active-color) !important;
   border-color: rgba(78, 196, 196, 0.3) !important;
 }
+
+/* ════════════════════════════════════════════════
+   STOCK COUNT (columna numérica con color)
+════════════════════════════════════════════════ */
+
+.stockCount {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.82rem;
+  font-weight:    700;
+  letter-spacing: -0.01em;
+}
+
+.stockOk  { color: var(--stock-ok-color);  }
+.stockLow { color: var(--stock-low-color); }
+.stockOut { color: var(--stock-out-color); }
+
+/* ── Filter badges agrupados ── */
+.filterBadges {
+  display:     flex;
+  align-items: center;
+  gap:         0.5rem;
+  flex-wrap:   wrap;
+}
+
+/* Badge de filtro de estado */
+.filterBadge_ok  strong { color: var(--stock-ok-color);  }
+.filterBadge_low strong { color: var(--stock-low-color); }
+.filterBadge_out strong { color: var(--stock-out-color); }

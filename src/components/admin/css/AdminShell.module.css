@@ -374,3 +374,13 @@
   background: var(--stock-out-bg);
   color: var(--admin-danger);
 }
+
+/* ── Botón Nuevo Producto — tema claro ── */
+.admin[data-admin-theme="light"] .btnNewProduct {
+  background: var(--admin-accent);   /* #3aafaf en light */
+  color:      #ffffff;               /* blanco legible sobre teal más saturado */
+}
+
+.admin[data-admin-theme="light"] .btnNewProduct:hover {
+  box-shadow: 0 4px 12px rgba(58, 175, 175, 0.35);
+}

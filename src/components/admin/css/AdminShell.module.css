@@ -375,12 +375,17 @@
   color: var(--admin-danger);
 }
 
-/* ── Botón Nuevo Producto — tema claro ── */
-.admin[data-admin-theme="light"] .btnNewProduct {
-  background: var(--admin-accent);   /* #3aafaf en light */
-  color:      #ffffff;               /* blanco legible sobre teal más saturado */
+/* ─────────────────────────────────────────────────────────────────
+   TEMA CLARO — overrides para .btnNewProduct
+   :global permite referenciar el atributo del wrapper .admin
+   que vive fuera de este CSS Module.
+───────────────────────────────────────────────────────────────── */
+
+:global(.admin[data-admin-theme="light"]) .btnNewProduct {
+  background: var(--admin-accent);  /* #3aafaf — teal más saturado en claro */
+  color:      #ffffff;              /* blanco: contraste legible sobre teal claro */
 }
 
-.admin[data-admin-theme="light"] .btnNewProduct:hover {
+:global(.admin[data-admin-theme="light"]) .btnNewProduct:hover {
   box-shadow: 0 4px 12px rgba(58, 175, 175, 0.35);
 }

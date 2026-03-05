@@ -1,0 +1,379 @@
+/**
+ * src/components/admin/css/ProductsTable.module.css
+ *
+ * Estilos de la tabla de productos del dashboard.
+ * La tabla tiene scroll interno: el contenedor tiene altura máxima
+ * y solo el área de filas hace overflow-y.
+ */
+
+/* ── Contenedor principal ── */
+.container {
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 14px;
+  overflow:      hidden;
+  display:       flex;
+  flex-direction: column;
+
+  /*
+   * Altura flexible: ocupa el espacio disponible en el main.
+   * El dashboard page define la altura del layout con flex,
+   * de modo que este contenedor crece hasta llenar el espacio.
+   */
+  min-height: 0;
+  flex: 1;
+}
+
+/* ── Header de la tarjeta ── */
+.header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         1rem 1.35rem;
+  border-bottom:   1px solid var(--admin-border);
+  flex-shrink:     0;
+  gap:             0.75rem;
+  flex-wrap:       wrap;
+}
+
+.headerLeft {
+  display:     flex;
+  align-items: baseline;
+  gap:         0.6rem;
+}
+
+.headerTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.15rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+}
+
+.headerCount {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.68rem;
+  font-weight:    600;
+  letter-spacing: 0.08em;
+  color:          var(--admin-text-dim);
+  text-transform: uppercase;
+}
+
+.searchBadge {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  color:          var(--admin-text-muted);
+  background:     var(--admin-surface);
+  border:         1px solid var(--admin-border);
+  border-radius:  6px;
+  padding:        0.2rem 0.65rem;
+  letter-spacing: 0.03em;
+}
+
+.searchBadge strong {
+  color:       var(--admin-accent);
+  font-weight: 600;
+}
+
+/*
+ * ── Scroll interno ──
+ * overflow-y: auto aquí, no en el contenedor padre.
+ * La tabla puede crecer sin límite y solo este wrapper scrollea.
+ */
+.tableScroll {
+  overflow-y:   auto;
+  flex:         1;
+  min-height:   0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg-card);
+}
+
+.tableScroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tableScroll::-webkit-scrollbar-track {
+  background: var(--admin-bg-card);
+}
+
+.tableScroll::-webkit-scrollbar-thumb {
+  background:    var(--admin-surface);
+  border-radius: 999px;
+}
+
+/* ── Tabla ── */
+.table {
+  width:            100%;
+  border-collapse:  collapse;
+}
+
+/* ── Encabezados ── */
+.th {
+  position:       sticky;
+  top:            0;
+  z-index:        1;
+  padding:        0.65rem 1rem;
+  text-align:     left;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  font-weight:    700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+  background:     var(--admin-surface);
+  border-bottom:  1px solid var(--admin-border);
+  white-space:    nowrap;
+}
+
+.thRight {
+  text-align: right;
+}
+
+/* ── Filas ── */
+.row {
+  transition: background 0.12s ease;
+}
+
+.row:not(:last-child) td {
+  border-bottom: 1px solid rgba(30, 58, 95, 0.35);
+}
+
+.row:hover td {
+  background: var(--admin-hover-bg);
+}
+
+/* ── Celdas ── */
+.td {
+  padding:     0.75rem 1rem;
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.78rem;
+  color:       var(--admin-text);
+  white-space: nowrap;
+}
+
+.tdMuted {
+  color: var(--admin-text-muted);
+}
+
+.tdActions {
+  text-align: right;
+}
+
+/* ── Celda de producto ── */
+.productCell {
+  display:     flex;
+  align-items: center;
+  gap:         0.7rem;
+}
+
+.productThumb {
+  width:         30px;
+  height:        30px;
+  border-radius: 7px;
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-border);
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  flex-shrink:   0;
+}
+
+.productId {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.05em;
+}
+
+.productName {
+  font-weight: 500;
+  color:       var(--admin-text);
+}
+
+/* ── Precio ── */
+.price {
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: -0.01em;
+}
+
+/* ════════════════════════════════════════════════
+   BADGES DE STOCK
+════════════════════════════════════════════════ */
+
+.badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           0.35rem;
+  padding:       0.28rem 0.7rem;
+  border-radius: 6px;
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.66rem;
+  font-weight:   600;
+  letter-spacing: 0.04em;
+  white-space:   nowrap;
+}
+
+.badgeDot {
+  width:         5px;
+  height:        5px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+.badgeCount {
+  font-weight: 500;
+  opacity:     0.7;
+}
+
+.badgeOk  { background: var(--stock-ok-bg);  color: var(--stock-ok-color); }
+.badgeOk  .badgeDot { background: var(--stock-ok-color); }
+
+.badgeLow { background: var(--stock-low-bg); color: var(--stock-low-color); }
+.badgeLow .badgeDot { background: var(--stock-low-color); }
+
+.badgeOut { background: var(--stock-out-bg); color: var(--stock-out-color); }
+.badgeOut .badgeDot { background: var(--stock-out-color); }
+
+/* ════════════════════════════════════════════════
+   ACCIONES
+════════════════════════════════════════════════ */
+
+.actionBtn {
+  background:     none;
+  border:         none;
+  cursor:         pointer;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  font-weight:    600;
+  letter-spacing: 0.04em;
+  color:          var(--admin-accent);
+  padding:        0.25rem 0.45rem;
+  border-radius:  5px;
+  transition:     background 0.15s ease, color 0.15s ease;
+}
+
+.actionBtn:hover {
+  background: var(--admin-nav-active-bg);
+}
+
+.actionBtnDanger {
+  color: var(--admin-danger);
+  margin-left: 0.15rem;
+}
+
+.actionBtnDanger:hover {
+  background: var(--stock-out-bg);
+}
+
+/* ════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════ */
+
+.emptyCell {
+  padding: 0 !important;
+}
+
+.emptyState {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         3.5rem 1.5rem;
+  gap:             0.5rem;
+  text-align:      center;
+}
+
+.emptyIcon {
+  font-size:     2rem;
+  color:         var(--admin-text-dim);
+  margin-bottom: 0.5rem;
+  display:       block;
+  animation:     emptyPulse 3s ease-in-out infinite;
+}
+
+@keyframes emptyPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
+}
+
+.emptyTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size:   1.2rem;
+  font-weight: 600;
+  color:       var(--admin-text);
+}
+
+.emptyDesc {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.74rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.03em;
+  max-width:      300px;
+}
+
+/* ════════════════════════════════════════════════
+   FOOTER: INFO + PAGINACIÓN
+════════════════════════════════════════════════ */
+
+.footer {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         0.75rem 1.35rem;
+  border-top:      1px solid var(--admin-border);
+  flex-shrink:     0;
+  gap:             1rem;
+  flex-wrap:       wrap;
+}
+
+.footerInfo {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.68rem;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.06em;
+  white-space:    nowrap;
+}
+
+/* ── Paginación ── */
+.pagination {
+  display:     flex;
+  align-items: center;
+  gap:         0.3rem;
+}
+
+.pageBtn {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       28px;
+  height:          28px;
+  padding:         0 0.4rem;
+  border-radius:   7px;
+  border:          1px solid var(--admin-border);
+  background:      transparent;
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.72rem;
+  font-weight:     600;
+  color:           var(--admin-text-muted);
+  cursor:          pointer;
+  transition:      background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background:    var(--admin-hover-bg);
+  color:         var(--admin-text);
+  border-color:  rgba(78, 196, 196, 0.3);
+}
+
+.pageBtn:disabled {
+  opacity: 0.3;
+  cursor:  not-allowed;
+}
+
+.pageBtnActive {
+  background:   var(--admin-nav-active-bg) !important;
+  color:        var(--admin-nav-active-color) !important;
+  border-color: rgba(78, 196, 196, 0.3) !important;
+}

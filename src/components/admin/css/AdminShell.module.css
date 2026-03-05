@@ -2,7 +2,7 @@
  * src/components/admin/css/AdminShell.module.css
  *
  * Estilos del layout principal del panel administrativo.
- * Cubre: shell grid, sidebar, topbar, y clases de navegación.
+ * Cubre: shell grid, sidebar, topbar y clases de navegación.
  *
  * Usa los tokens de "Slate Command" definidos en globals.css bajo .admin
  * (y su variante [data-admin-theme="light"]).
@@ -20,7 +20,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* evita overflow en flex */
+  min-width: 0;
   background-color: var(--admin-bg);
 }
 
@@ -46,7 +46,6 @@
   flex-direction: column;
 }
 
-/* ── Header — marca ── */
 .sidebarHeader {
   padding: 1.5rem 1.25rem 1.1rem;
   border-bottom: 1px solid var(--admin-border);
@@ -78,7 +77,6 @@
   color: var(--admin-text-dim);
 }
 
-/* ── Nav ── */
 .sidebarNav {
   flex: 1;
   padding: 0.75rem 0.625rem;
@@ -136,7 +134,6 @@
   flex-shrink: 0;
 }
 
-/* ── Footer — cerrar sesión ── */
 .sidebarFooter {
   padding: 0.75rem 0.625rem;
   border-top: 1px solid var(--admin-border);
@@ -177,12 +174,27 @@
   justify-content: space-between;
   padding: 0 1.75rem;
   flex-shrink: 0;
+  gap: 1rem;
+}
+
+/*
+ * Layout extendido para el dashboard:
+ * Título | [flex: SearchInput] | Nuevo Producto + Avatar
+ */
+.topbarExpanded {
+  /* El SearchInput ocupa el espacio central gracias a flex */
+}
+
+.topbarSearch {
+  flex: 1;
+  max-width: 380px;
 }
 
 .topbarRight {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 /* ── Título de la página activa ── */
@@ -193,6 +205,42 @@
   letter-spacing: 0.04em;
   color: var(--admin-text);
   text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Botón Nuevo Producto ── */
+.btnNewProduct {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.85rem;
+  height: 2.05rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--admin-accent);
+  color: #0d1520;
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    opacity     0.15s ease,
+    transform   0.12s ease,
+    box-shadow  0.15s ease;
+}
+
+.btnNewProduct:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(78, 196, 196, 0.28);
+}
+
+.btnNewProduct:active {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 /* ── Avatar / Perfil ── */
@@ -247,20 +295,12 @@
   top: calc(100% + 10px);
   right: 0;
   z-index: 100;
-
-  /* Animación de entrada */
   animation: menuDropIn 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes menuDropIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .profileMenu {

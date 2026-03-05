@@ -1,0 +1,109 @@
+/**
+ * src/components/admin/css/StatsCards.module.css
+ *
+ * Estilos de las 4 tarjetas de estadísticas del dashboard.
+ * Usa tokens de "Slate Command".
+ */
+
+/* ── Grid de 4 columnas ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* ── Tarjeta base ── */
+.card {
+  position: relative;
+  background: var(--admin-bg-card);
+  border: 1px solid var(--admin-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem 1.1rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Header: label + icon ── */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.cardLabel {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+}
+
+.cardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+
+/* ── Valor numérico ── */
+.cardValue {
+  font-family: var(--font-jost), sans-serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 0.85rem;
+}
+
+/* ── Barra decorativa inferior ── */
+.cardBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 0 0 14px 14px;
+}
+
+/* ════════════════════════════════════════════════
+   Variantes de color por estado
+════════════════════════════════════════════════ */
+
+/* Neutral (Total) */
+.neutral .cardIcon { background: rgba(148, 163, 184, 0.1); color: var(--admin-text-muted); }
+.neutral .cardValue { color: var(--admin-text); }
+.bar_neutral { background: linear-gradient(90deg, var(--admin-border), transparent); }
+
+/* OK (Con Stock) */
+.ok .cardIcon { background: var(--stock-ok-bg); color: var(--stock-ok-color); }
+.ok .cardValue { color: var(--stock-ok-color); }
+.bar_ok { background: linear-gradient(90deg, var(--stock-ok-color), transparent); opacity: 0.6; }
+
+/* Low (Stock Bajo) */
+.low .cardIcon { background: var(--stock-low-bg); color: var(--stock-low-color); }
+.low .cardValue { color: var(--stock-low-color); }
+.bar_low { background: linear-gradient(90deg, var(--stock-low-color), transparent); opacity: 0.6; }
+
+/* Out (Sin Stock) */
+.out .cardIcon { background: var(--stock-out-bg); color: var(--stock-out-color); }
+.out .cardValue { color: var(--stock-out-color); }
+.bar_out { background: linear-gradient(90deg, var(--stock-out-color), transparent); opacity: 0.6; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

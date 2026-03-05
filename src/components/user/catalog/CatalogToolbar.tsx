@@ -1,49 +1,31 @@
 "use client";
 
+/**
+ * src/components/user/catalog/CatalogToolbar.tsx
+ *
+ * Barra de herramientas del catálogo público.
+ * Usa el componente compartido SearchInput (variante "catalog")
+ * en lugar de tener el input inline.
+ */
+
 import { useRef, useState } from "react";
+import { SearchInput }      from "@/components/shared/ui/SearchInput";
 import { ActiveFilters, SortKey, SORT_OPTIONS } from "@/types/catalog";
 
 interface CatalogToolbarProps {
-  filters: ActiveFilters;
-  total: number;
+  filters:  ActiveFilters;
+  total:    number;
   onChange: (next: Partial<ActiveFilters>) => void;
 }
 
-/* ─── Search Icon ────────────────────────────────────────────────── */
-function SearchIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ flexShrink: 0 }}
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-/* ─── Chevron Icon ───────────────────────────────────────────────── */
 function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      width="13" height="13" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
       style={{
         transition: "transform 0.25s ease",
-        transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        transform:  open ? "rotate(180deg)" : "rotate(0deg)",
         flexShrink: 0,
       }}
     >
@@ -52,17 +34,11 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
-/* ─── Main Component ─────────────────────────────────────────────── */
-export function CatalogToolbar({
-  filters,
-  total,
-  onChange,
-}: CatalogToolbarProps) {
+export function CatalogToolbar({ filters, total, onChange }: CatalogToolbarProps) {
   const [sortOpen, setSortOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentSort =
-    SORT_OPTIONS.find((o) => o.key === filters.sort) ?? SORT_OPTIONS[0];
+  const currentSort = SORT_OPTIONS.find((o) => o.key === filters.sort) ?? SORT_OPTIONS[0];
 
   const selectSort = (key: SortKey) => {
     onChange({ sort: key });
@@ -72,79 +48,23 @@ export function CatalogToolbar({
   return (
     <div
       style={{
-        display: "flex",
+        display:    "flex",
         alignItems: "center",
-        gap: "0.75rem",
+        gap:        "0.75rem",
         marginBottom: "1.5rem",
-        position: "relative",
+        position:   "relative",
       }}
       className="catalog-toolbar"
     >
-      {/* ── Search Input ── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          gap: "0.6rem",
-          padding: "0 0.9rem",
-          height: "2.6rem",
-          borderRadius: "10px",
-          border: "1px solid var(--border)",
-          backgroundColor: "var(--bg-card)",
-          transition:
-            "border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.3s ease",
-          color: "var(--text-secondary)",
-        }}
-        className="search-wrapper"
-      >
-        <SearchIcon />
-        <input
-          type="text"
-          placeholder="Buscar producto..."
+      {/* ── Search ── */}
+      <div style={{ flex: 1 }}>
+        <SearchInput
+          variant="catalog"
           value={filters.search}
           onChange={(e) => onChange({ search: e.target.value })}
-          style={{
-            flex: 1,
-            border: "none",
-            outline: "none",
-            background: "transparent",
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-jost), sans-serif",
-            fontSize: "0.82rem",
-            letterSpacing: "0.03em",
-          }}
+          onClear={() => onChange({ search: "" })}
+          placeholder="Buscar producto..."
         />
-        {/* Clear button */}
-        {filters.search && (
-          <button
-            onClick={() => onChange({ search: "" })}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--text-secondary)",
-              padding: "0 0.1rem",
-              display: "flex",
-              alignItems: "center",
-              transition: "color 0.2s ease",
-            }}
-            aria-label="Limpiar búsqueda"
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        )}
       </div>
 
       {/* ── Sort Dropdown ── */}
@@ -152,70 +72,52 @@ export function CatalogToolbar({
         <button
           onClick={() => setSortOpen((o) => !o)}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            height: "2.6rem",
-            padding: "0 0.9rem",
-            borderRadius: "10px",
-            border: "1px solid",
-            borderColor: sortOpen ? "var(--coragem-teal)" : "var(--border)",
-            backgroundColor: sortOpen
-              ? "rgba(78,196,196,0.08)"
-              : "var(--bg-card)",
-            color: sortOpen ? "var(--coragem-teal)" : "var(--text-secondary)",
-            fontFamily: "var(--font-jost), sans-serif",
-            fontSize: "0.75rem",
-            letterSpacing: "0.04em",
-            cursor: "pointer",
-            transition: "all 0.25s ease",
-            whiteSpace: "nowrap",
+            display:         "flex",
+            alignItems:      "center",
+            gap:             "0.5rem",
+            height:          "2.6rem",
+            padding:         "0 0.9rem",
+            borderRadius:    "10px",
+            border:          "1px solid",
+            borderColor:     sortOpen ? "var(--coragem-teal)" : "var(--border)",
+            backgroundColor: sortOpen ? "rgba(78,196,196,0.08)" : "var(--bg-card)",
+            color:           sortOpen ? "var(--coragem-teal)" : "var(--text-secondary)",
+            fontFamily:      "var(--font-jost), sans-serif",
+            fontSize:        "0.75rem",
+            letterSpacing:   "0.04em",
+            cursor:          "pointer",
+            transition:      "all 0.25s ease",
+            whiteSpace:      "nowrap",
           }}
         >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6"  x2="21" y2="6"  />
             <line x1="3" y1="12" x2="15" y2="12" />
-            <line x1="3" y1="18" x2="9" y2="18" />
+            <line x1="3" y1="18" x2="9"  y2="18" />
           </svg>
           <span className="sort-label">{currentSort.label}</span>
           <ChevronIcon open={sortOpen} />
         </button>
 
-        {/* Dropdown menu */}
         {sortOpen && (
           <>
-            {/* Backdrop to close */}
             <div
-              style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 10,
-              }}
+              style={{ position: "fixed", inset: 0, zIndex: 10 }}
               onClick={() => setSortOpen(false)}
             />
             <div
               style={{
-                position: "absolute",
-                top: "calc(100% + 0.5rem)",
-                right: 0,
-                zIndex: 20,
-                minWidth: "200px",
+                position:        "absolute",
+                top:             "calc(100% + 0.5rem)",
+                right:           0,
+                zIndex:          20,
+                minWidth:        "200px",
                 backgroundColor: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                borderRadius: "12px",
-                boxShadow:
-                  "0 8px 24px rgba(15,26,42,0.12), 0 2px 6px rgba(0,0,0,0.06)",
-                overflow: "hidden",
-                animation: "dropdownIn 0.2s cubic-bezier(0.4,0,0.2,1)",
+                border:          "1px solid var(--border)",
+                borderRadius:    "12px",
+                boxShadow:       "0 8px 24px rgba(15,26,42,0.12), 0 2px 6px rgba(0,0,0,0.06)",
+                overflow:        "hidden",
+                animation:       "dropdownIn 0.2s cubic-bezier(0.4,0,0.2,1)",
               }}
             >
               {SORT_OPTIONS.map((opt) => {
@@ -225,53 +127,37 @@ export function CatalogToolbar({
                     key={opt.key}
                     onClick={() => selectSort(opt.key)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
+                      display:        "flex",
+                      alignItems:     "center",
                       justifyContent: "space-between",
-                      width: "100%",
-                      padding: "0.65rem 1rem",
-                      border: "none",
-                      background: active
-                        ? "rgba(78,196,196,0.08)"
-                        : "transparent",
-                      color: active
-                        ? "var(--coragem-teal)"
-                        : "var(--text-secondary)",
-                      fontFamily: "var(--font-jost), sans-serif",
-                      fontSize: "0.78rem",
-                      letterSpacing: "0.04em",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "background 0.15s ease, color 0.15s ease",
+                      width:          "100%",
+                      padding:        "0.65rem 1rem",
+                      border:         "none",
+                      background:     active ? "rgba(78,196,196,0.08)" : "transparent",
+                      color:          active ? "var(--coragem-teal)" : "var(--text-secondary)",
+                      fontFamily:     "var(--font-jost), sans-serif",
+                      fontSize:       "0.78rem",
+                      letterSpacing:  "0.04em",
+                      cursor:         "pointer",
+                      textAlign:      "left",
+                      transition:     "background 0.15s ease, color 0.15s ease",
                     }}
                     onMouseEnter={(e) => {
                       if (!active) {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(78,196,196,0.05)";
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          "var(--text-primary)";
+                        (e.currentTarget as HTMLButtonElement).style.background = "rgba(78,196,196,0.05)";
+                        (e.currentTarget as HTMLButtonElement).style.color      = "var(--text-primary)";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!active) {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "transparent";
-                        (e.currentTarget as HTMLButtonElement).style.color =
-                          "var(--text-secondary)";
+                        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                        (e.currentTarget as HTMLButtonElement).style.color      = "var(--text-secondary)";
                       }
                     }}
                   >
                     {opt.label}
                     {active && (
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="var(--coragem-teal)"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
@@ -285,31 +171,26 @@ export function CatalogToolbar({
 
       {/* Results count */}
       <span
-        style={{
-          fontFamily: "var(--font-jost), sans-serif",
-          fontSize: "0.7rem",
-          color: "var(--text-secondary)",
-          letterSpacing: "0.06em",
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-        }}
         className="results-count"
+        style={{
+          fontFamily:    "var(--font-jost), sans-serif",
+          fontSize:      "0.7rem",
+          color:         "var(--text-secondary)",
+          letterSpacing: "0.06em",
+          whiteSpace:    "nowrap",
+          flexShrink:    0,
+        }}
       >
         {total} {total === 1 ? "producto" : "productos"}
       </span>
 
-      {/* Styles */}
       <style>{`
-        .search-wrapper:focus-within {
-          border-color: var(--coragem-teal) !important;
-          box-shadow: 0 0 0 3px rgba(78,196,196,0.12);
-        }
         @keyframes dropdownIn {
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         @media (max-width: 520px) {
-          .sort-label { display: none; }
+          .sort-label    { display: none; }
           .results-count { display: none; }
         }
       `}</style>

@@ -2,7 +2,6 @@
  * src/types/admin.ts
  *
  * Tipos compartidos del panel administrativo.
- * Ampliar con las entidades de producto, imagen, etc. cuando el backend esté listo.
  */
 
 /* ─── Pattern Lock ──────────────────────────────────────────────── */
@@ -12,16 +11,8 @@ export interface Point {
   y: number;
 }
 
-/**
- * Estados del ciclo de vida del patrón de desbloqueo:
- * - idle     → sin actividad, esperando que el usuario empiece
- * - drawing  → el usuario está arrastrando actualmente
- * - success  → patrón aceptado (suficientes nodos)
- * - error    → patrón rechazado (muy pocos nodos u otro fallo)
- */
 export type PatternState = "idle" | "drawing" | "success" | "error";
 
-/** Resultado que devuelve usePatternLock al componente visual */
 export interface PatternLockState {
   pattern:    number[];
   state:      PatternState;
@@ -29,12 +20,45 @@ export interface PatternLockState {
   statusMsg:  string;
 }
 
-/** Handlers que expone usePatternLock para conectar al wrapper y al SVG */
 export interface PatternLockHandlers {
   wrapperRef:             React.RefObject<HTMLDivElement | null>;
   svgRef:                 React.RefObject<SVGSVGElement | null>;
   handleWrapperMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleWrapperMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
-  /** Centros de los 9 nodos en coordenadas relativas al wrapper */
   nodeCenters:            React.RefObject<Point[]>;
+}
+
+/* ─── Dashboard ─────────────────────────────────────────────────── */
+
+/**
+ * Umbrales para clasificar el estado de stock de un producto.
+ * Ajustar según las necesidades del negocio.
+ */
+export const STOCK_THRESHOLDS = {
+  LOW: 3, // stock > 0 && stock <= LOW  → Stock Bajo
+} as const;
+
+export type StockStatus = "ok" | "low" | "out";
+
+export interface DashboardStats {
+  total:    number;
+  inStock:  number;
+  lowStock: number;
+  outStock: number;
+}
+
+/**
+ * Fila enriquecida de la tabla de productos del dashboard.
+ * Extiende el Product del catálogo con el estado de stock calculado.
+ */
+export interface ProductRow {
+  id:          number;
+  name:        string;
+  category:    string;
+  price:       number;
+  stock:       number;
+  stockStatus: StockStatus;
+  ventas:      number;
+  image:       string;
+  color:       string;
 }

@@ -13,15 +13,13 @@
  */
 
 import { useMemo, useState, useCallback } from "react";
-import type { StockStatus }       from "@/types/admin";
+import type { StockFilter }           from "@/types/admin";
 import { StatsCards }             from "@/components/admin/dashboard/StatsCards";
 import { ProductsTable }          from "@/components/admin/dashboard/ProductsTable";
 import { useDashboardSearch }     from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
 import products from "@/data/products.json";
 import styles   from "./css/DashboardPage.module.css";
-
-export type StockFilter = StockStatus | "all";
 
 export default function DashboardPage() {
   const { searchQuery } = useDashboardSearch();

@@ -13,8 +13,7 @@
  *   - La tarjeta "Total" no tiene checkbox (no es un filtro de estado).
  */
 
-import type { DashboardStats, StockStatus } from "@/types/admin";
-import type { StockFilter }                 from "@/app/(admin)/admin/dashboard/page";
+import type { DashboardStats, StockStatus, StockFilter } from "@/types/admin";
 import styles from "@/components/admin/css/StatsCards.module.css";
 
 /* ─── Checkbox visual ────────────────────────────────────────────── */

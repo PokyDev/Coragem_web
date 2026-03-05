@@ -12,8 +12,7 @@
  */
 
 import { useState, useEffect } from "react";
-import type { ProductRow }     from "@/types/admin";
-import type { StockFilter }    from "@/app/(admin)/admin/dashboard/page";
+import type { ProductRow, StockFilter } from "@/types/admin";
 import styles from "@/components/admin/css/ProductsTable.module.css";
 
 const PAGE_SIZE = 10;

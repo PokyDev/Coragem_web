@@ -62,3 +62,7 @@ export interface ProductRow {
   image:       string;
   color:       string;
 }
+
+/* ─── Dashboard filters ─────────────────────────────────────────── */
+
+export type StockFilter = StockStatus | "all";

@@ -13,7 +13,7 @@
 import type { Point, PatternState } from "@/types/admin";
 import styles from "@/components/admin/css/PatternLock.module.css";
 
-/* ─── Types ─────────────────────────────────────────────────────── */
+/* ──── Types ────────────────────────────────────────────────────── */
 
 interface PatternLockProps {
   pattern:     number[];

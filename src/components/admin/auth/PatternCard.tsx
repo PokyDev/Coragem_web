@@ -133,7 +133,7 @@ export function PatternCard({
         <span>{visibleMsg}</span>
       </div>
       <style>{`
-        .pc-card { width:100%; background:var(--admin-bg-card); border:1px solid var(--admin-border); border-radius:20px; padding:1.5rem 2rem 1.25rem; display:flex; flex-direction:column; align-items:center; box-shadow:var(--admin-shadow-card); }
+        .pc-card { width:100%; background:transparent; border:1px solid var(--admin-border); border-radius:20px; padding:1.5rem 2rem 1.25rem; display:flex; flex-direction:column; align-items:center; box-shadow:none; border-color:transparent; }
         .pc-brand { display:flex; flex-direction:column; align-items:center; gap:0.3rem; margin-bottom:1rem; }
         .pc-brand__logo { font-family:var(--font-jost),sans-serif; font-size:1.05rem; font-weight:800; letter-spacing:0.2em; text-transform:uppercase; color:var(--admin-text); }
         .pc-brand__logo span { color:var(--admin-accent); }
@@ -158,11 +158,6 @@ export function PatternCard({
         .pc-status__dot { width:5px; height:5px; border-radius:50%; background:var(--admin-text-dim); flex-shrink:0; }
         .pc-status__icon { font-size:0.7rem; font-weight:700; color:var(--admin-danger); }
         .pc-status__icon--ok { color:var(--admin-accent); }
-
-        /* ── Responsive: ocultar borde en móvil ── */
-        @media (max-width: 600px) {
-          .pc-card { border-color: transparent; box-shadow: none; background: transparent; }
-        } 
       `}</style>
     </div>
   );

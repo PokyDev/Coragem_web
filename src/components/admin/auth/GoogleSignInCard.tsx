@@ -73,7 +73,9 @@ export function GoogleSignInCard() {
           flex-direction: column;
           align-items: center;
           gap: 0;
-          box-shadow: var(--admin-shadow-card-subtle);
+          box-shadow: none;
+          border-color: transparent;
+          background: transparent;
         }
         .gc-logo-wrap {
           display: flex;
@@ -138,11 +140,6 @@ export function GoogleSignInCard() {
         .gc-btn:active { transform: translateY(0); box-shadow: none; }
         .gc-btn__icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .gc-btn__label { flex: 1; text-align: center; }
-
-        /* ── Responsive: ocultar borde en móvil ── */
-        @media (max-width: 600px) {
-          .gc-card { border-color: transparent; box-shadow: none; background: transparent; }
-        }
       `}</style>
     </div>
   );

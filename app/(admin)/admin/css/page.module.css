@@ -1,11 +1,8 @@
 /**
  * app/(admin)/admin/css/page.module.css
- *
- * Estilos de la pantalla de autenticación del panel administrativo.
- * Usa los tokens de "Slate Command" definidos en globals.css bajo .admin
  */
 
-/* ── Root: centra vertical y horizontalmente ── */
+/* ── Root ── */
 .root {
   min-height: 100dvh;
   display: flex;
@@ -35,7 +32,7 @@
   background: radial-gradient(circle, rgba(196,122,158,0.05) 0%, transparent 70%);
 }
 
-/* ── Ruido de textura ── */
+/* ── Ruido ── */
 .noise {
   position: absolute;
   inset: 0;
@@ -45,7 +42,7 @@
   background-size: 200px;
 }
 
-/* ── Stage: fija ancho, sin overflow ── */
+/* ── Stage ── */
 .stage {
   position: relative;
   z-index: 1;
@@ -53,12 +50,6 @@
   max-width: 420px;
 }
 
-/*
- * ── Clip ──
- * overflow:hidden para contener la animación de deslizamiento.
- * padding:16px + margin:-16px: da espacio generoso a border y
- * box-shadow en los cuatro lados sin desplazar el layout.
- */
 .clip {
   position: relative;
   overflow: hidden;
@@ -67,12 +58,6 @@
   border-radius: 28px;
 }
 
-/*
- * ── Spacer ──
- * Elemento en flujo normal que le da altura al clip.
- * visibility:hidden en lugar de display:none para que siga
- * ocupando espacio en el layout.
- */
 .spacer {
   visibility: hidden;
   pointer-events: none;
@@ -80,11 +65,7 @@
   width: 100%;
 }
 
-/*
- * ── Slot de tarjeta ──
- * Ambos slots son absolute con inset:0.
- * flex + align/justify centra la tarjeta en ambos ejes.
- */
+/* ── Card slots ── */
 .cardSlot {
   position: absolute;
   inset: 0;
@@ -100,25 +81,46 @@
   will-change: transform, opacity;
 }
 
-/* Tarjeta de Google: oculta, desplazada a la izquierda */
 .cardSlotGoogle {
   transform: translateX(-80px);
   opacity: 0;
   pointer-events: none;
 }
 
-/* PatternCard sale hacia la derecha */
 .cardSlotExitRight {
   transform: translateX(80px);
   opacity: 0;
   pointer-events: none;
 }
 
-/* GoogleSignInCard entra al centro */
 .cardSlotEnter {
   transform: translateX(0);
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ── Loader puntitos ── */
+.loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loaderDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--admin-accent);
+  opacity: 0.3;
+  animation: loaderPulse 1.2s ease-in-out infinite;
+}
+
+.loaderDot:nth-child(2) { animation-delay: 0.2s; }
+.loaderDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loaderPulse {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1);    }
 }
 
 /* ── Footer ── */

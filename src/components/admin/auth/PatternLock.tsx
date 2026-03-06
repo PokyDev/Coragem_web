@@ -3,11 +3,11 @@
 /**
  * src/components/admin/auth/PatternLock.tsx
  *
- * Componente visual del patrón de desbloqueo.
- * Responsabilidad única: renderizar el grid de nodos y las líneas SVG.
+ * Componente visual del grid de patrón.
+ * Responsabilidad única: renderizar los nodos y las líneas SVG.
  *
- * No contiene lógica de estado ni gestión de eventos propia.
- * Recibe todo lo necesario a través de props provenientes de usePatternLock.
+ * Prop adicional `disabled`: cuando true, el grid se muestra
+ * atenuado y no acepta eventos de puntero (fase "locked").
  */
 
 import type { Point, PatternState } from "@/types/admin";
@@ -22,8 +22,10 @@ interface PatternLockProps {
   nodeCenters: Point[];
   svgRef:      React.RefObject<SVGSVGElement | null>;
   wrapperRef:  React.RefObject<HTMLDivElement | null>;
-  onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseMove?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  /** Cuando true, deshabilita toda interacción y atenúa el grid */
+  disabled?:   boolean;
 }
 
 /* ─── Color map por estado ──────────────────────────────────────── */
@@ -46,17 +48,16 @@ export function PatternLock({
   wrapperRef,
   onMouseDown,
   onMouseMove,
+  disabled = false,
 }: PatternLockProps) {
   const C = STATE_COLORS[state];
 
-  /* SVG: polyline de los nodos conectados */
   const linePoints = pattern
     .map(i => nodeCenters[i])
     .filter(Boolean)
     .map(p => `${p.x},${p.y}`)
     .join(" ");
 
-  /* SVG: línea punteada desde el último nodo hasta el cursor */
   const lastCenter = pattern.length > 0 ? nodeCenters[pattern[pattern.length - 1]] : null;
   const trailPath  = lastCenter && cursor && state === "drawing"
     ? `M${lastCenter.x},${lastCenter.y} L${cursor.x},${cursor.y}`
@@ -65,18 +66,13 @@ export function PatternLock({
   return (
     <div
       ref={wrapperRef}
-      className={styles.wrapper}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      style={{ userSelect: "none", cursor: "crosshair" }}
+      className={`${styles.wrapper} ${disabled ? styles.wrapperDisabled : ""}`}
+      onMouseDown={disabled ? undefined : onMouseDown}
+      onMouseMove={disabled ? undefined : onMouseMove}
+      style={{ userSelect: "none", cursor: disabled ? "not-allowed" : "crosshair" }}
     >
-      {/*
-       * SVG: pointer-events none — solo dibuja líneas y puntos.
-       * Sus coordenadas son relativas al wrapper (mismo sistema que nodeCenters).
-       */}
       <svg ref={svgRef} className={styles.svg} style={{ pointerEvents: "none" }}>
 
-        {/* Líneas entre nodos del patrón */}
         {linePoints && (
           <polyline
             points={linePoints}
@@ -88,7 +84,6 @@ export function PatternLock({
           />
         )}
 
-        {/* Línea punteada cursor → último nodo */}
         {trailPath && (
           <path
             d={trailPath}
@@ -101,7 +96,6 @@ export function PatternLock({
           />
         )}
 
-        {/* Puntos sobre cada nodo activo */}
         {pattern.map((idx, order) => {
           const p = nodeCenters[idx];
           if (!p) return null;
@@ -116,7 +110,6 @@ export function PatternLock({
         })}
       </svg>
 
-      {/* Grid de nodos — puramente visuales, sin event handlers propios */}
       <div className={styles.grid}>
         {Array.from({ length: 9 }).map((_, i) => {
           const selected = pattern.includes(i);
@@ -127,8 +120,9 @@ export function PatternLock({
               key={i}
               className={[
                 styles.node,
-                selected ? styles.nodeOn    : "",
-                isFirst  ? styles.nodeFirst : "",
+                selected  ? styles.nodeOn    : "",
+                isFirst   ? styles.nodeFirst : "",
+                disabled  ? styles.nodeDisabled : "",
               ].join(" ").trim()}
               data-state={state}
               aria-label={`Nodo ${i + 1}`}

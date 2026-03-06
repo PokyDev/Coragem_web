@@ -28,6 +28,36 @@ export interface PatternLockHandlers {
   nodeCenters:            React.RefObject<Point[]>;
 }
 
+/* ─── Auth flow ─────────────────────────────────────────────────── */
+
+/**
+ * Fases del flujo de autenticación por patrón.
+ *
+ * loading        — consultando GET /api/pattern/exists
+ * setup-define   — no hay patrón: el usuario dibuja su patrón nuevo
+ * setup-confirm  — el usuario repite el patrón para confirmar
+ * verify         — hay patrón: el usuario ingresa el patrón existente
+ * locked         — rate limit activo, grid deshabilitado
+ * authenticated  — patrón correcto, mostrar GoogleSignInCard
+ */
+export type PatternAuthPhase =
+  | "loading"
+  | "setup-define"
+  | "setup-confirm"
+  | "verify"
+  | "locked"
+  | "authenticated";
+
+export interface PatternAuthState {
+  phase:        PatternAuthPhase;
+  /** Mensaje de estado visible bajo el grid */
+  statusMsg:    string;
+  /** Número de intentos fallidos en el flujo de verificación */
+  failedAttempts: number;
+  /** Solo en fase "locked": segundos restantes según retryAfter del backend */
+  lockedUntil?: number;
+}
+
 /* ─── Dashboard ─────────────────────────────────────────────────── */
 
 export const STOCK_THRESHOLDS = {

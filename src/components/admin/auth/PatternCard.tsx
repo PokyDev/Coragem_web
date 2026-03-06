@@ -2,61 +2,116 @@
 
 /**
  * src/components/admin/auth/PatternCard.tsx
- *
- * Tarjeta de autenticación por patrón de desbloqueo.
- *
- * Extraída de app/(admin)/admin/page.tsx para permitir que el page
- * orqueste múltiples tarjetas en secuencia.
- *
- * Props:
- *   onPatternSuccess — se invoca cuando el patrón es válido (≥ MIN_NODES).
- *   onPatternReset   — se invoca cuando el patrón se resetea a idle.
  */
 
 import { useEffect, useRef } from "react";
 import { usePatternLock } from "@/hooks/admin/usePatternLock";
 import { PatternLock }    from "@/components/admin/auth/PatternLock";
+import type { PatternAuthPhase } from "@/types/admin";
 
 interface PatternCardProps {
-  onPatternSuccess: () => void;
-  onPatternReset:   () => void;
+  phase:             PatternAuthPhase;
+  externalStatusMsg: string;
+  onPatternComplete: (nodes: number[]) => Promise<void>;
+  onPatternReset:    () => void;
+  /** Ref del hook de auth — PatternCard conecta su resetPattern() aquí */
+  gridResetRef:      React.MutableRefObject<(() => void) | null>;
 }
 
-export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardProps) {
+const PHASE_COPY: Partial<Record<PatternAuthPhase, { title: string; sub: string }>> = {
+  "setup-define":  {
+    title: "Configura tu acceso",
+    sub:   "Dibuja el patrón que usarás para ingresar al panel",
+  },
+  "setup-confirm": {
+    title: "Confirma el patrón",
+    sub:   "Repite el mismo patrón para verificar",
+  },
+  "verify": {
+    title: "Autenticación por patrón",
+    sub:   "Ingresa tu patrón de acceso para continuar",
+  },
+  "locked": {
+    title: "Acceso bloqueado",
+    sub:   "Demasiados intentos fallidos. Intenta de nuevo en unos minutos.",
+  },
+};
+
+function SetupProgress({ phase }: { phase: PatternAuthPhase }) {
+  if (phase !== "setup-define" && phase !== "setup-confirm") return null;
+  return (
+    <div className="pc-progress">
+      <div className={`pc-progress__step ${phase === "setup-define" ? "pc-progress__step--active" : "pc-progress__step--done"}`}>
+        <span>1</span>
+        <span>Define</span>
+      </div>
+      <div className="pc-progress__line" />
+      <div className={`pc-progress__step ${phase === "setup-confirm" ? "pc-progress__step--active" : ""}`}>
+        <span>2</span>
+        <span>Confirma</span>
+      </div>
+    </div>
+  );
+}
+
+export function PatternCard({
+  phase,
+  externalStatusMsg,
+  onPatternComplete,
+  onPatternReset,
+  gridResetRef,
+}: PatternCardProps) {
   const {
     pattern,
     state,
     cursor,
-    statusMsg,
+    statusMsg: internalStatusMsg,
     nodeCenters,
     wrapperRef,
     svgRef,
     handleWrapperMouseDown,
     handleWrapperMouseMove,
+    resetPattern,
   } = usePatternLock();
 
+  const isLocked = phase === "locked";
+
+  const onCompleteRef = useRef(onPatternComplete);
+  const onResetRef    = useRef(onPatternReset);
+
+  useEffect(() => { onCompleteRef.current = onPatternComplete; }, [onPatternComplete]);
+  useEffect(() => { onResetRef.current    = onPatternReset;    }, [onPatternReset]);
+
   /*
-   * Elevar eventos de ciclo de vida al page.
-   * Usamos refs para evitar que las callbacks queden en closures viejos.
+   * Conectar resetPattern() al ref del hook de auth para que pueda
+   * forzar un reset del grid desde fuera (ej: patrones no coinciden).
    */
-  const onSuccessRef = useRef(onPatternSuccess);
-  const onResetRef   = useRef(onPatternReset);
+  useEffect(() => {
+    gridResetRef.current = resetPattern;
+  }, [gridResetRef, resetPattern]);
 
-  useEffect(() => { onSuccessRef.current = onPatternSuccess; }, [onPatternSuccess]);
-  useEffect(() => { onResetRef.current   = onPatternReset;   }, [onPatternReset]);
-
+  /*
+   * Cuando el grid llega a "success": notificar al hook y resetear.
+   * Cuando vuelve a "idle" por timer interno: notificar al hook.
+   */
   useEffect(() => {
     if (state === "success") {
-      onSuccessRef.current();
+      onCompleteRef.current(pattern).finally(() => {
+        resetPattern();
+      });
     }
     if (state === "idle") {
       onResetRef.current();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+
+  const visibleMsg = externalStatusMsg || internalStatusMsg;
+  const gridState  = isLocked ? "error" : state;
+  const copy       = PHASE_COPY[phase];
 
   return (
     <div className="pc-card">
-      {/* Marca */}
       <div className="pc-brand">
         <span className="pc-brand__logo">CORA<span>GEM</span></span>
         <span className="pc-brand__sub">Panel Administrativo</span>
@@ -64,32 +119,35 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
 
       <div className="pc-divider" />
 
-      <p className="pc-label">Autenticación por patrón</p>
+      {copy && (
+        <div className="pc-titles">
+          <p className="pc-label">{copy.title}</p>
+          <p className="pc-sub">{copy.sub}</p>
+        </div>
+      )}
 
-      {/* Grid interactivo */}
+      <SetupProgress phase={phase} />
+
       <PatternLock
         pattern={pattern}
-        state={state}
+        state={gridState}
         cursor={cursor}
         nodeCenters={nodeCenters.current}
         svgRef={svgRef}
         wrapperRef={wrapperRef}
-        onMouseDown={handleWrapperMouseDown}
-        onMouseMove={handleWrapperMouseMove}
+        onMouseDown={isLocked ? undefined : handleWrapperMouseDown}
+        onMouseMove={isLocked ? undefined : handleWrapperMouseMove}
+        disabled={isLocked}
       />
 
-      {/* Feedback de estado */}
-      <div className={`pc-status pc-status--${state}`}>
-        {state === "idle"    && <span className="pc-status__dot" />}
-        {state === "error"   && <span className="pc-status__icon">✕</span>}
-        {state === "success" && <span className="pc-status__icon pc-status__icon--ok">✓</span>}
-        <span>{statusMsg}</span>
+      <div className={`pc-status pc-status--${isLocked ? "error" : state}`}>
+        {state === "idle"    && !isLocked && <span className="pc-status__dot" />}
+        {(state === "error" || isLocked)  && <span className="pc-status__icon">✕</span>}
+        {state === "success" && !isLocked && <span className="pc-status__icon pc-status__icon--ok">✓</span>}
+        <span>{visibleMsg}</span>
       </div>
 
-      { /* <p className="pc-hint">Mantén el click y arrastra para conectar los puntos</p> */}
-
       <style>{`
-        /* ── Card ── */
         .pc-card {
           width: 100%;
           background: var(--admin-bg-card);
@@ -101,8 +159,6 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           align-items: center;
           box-shadow: var(--admin-shadow-card);
         }
-
-        /* ── Marca ── */
         .pc-brand {
           display: flex;
           flex-direction: column;
@@ -127,8 +183,6 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           text-transform: uppercase;
           color: var(--admin-text-dim);
         }
-
-        /* ── Divider decorativo ── */
         .pc-divider {
           width: 100%;
           height: 1px;
@@ -142,18 +196,79 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           );
           margin-bottom: 1rem;
         }
-
-        /* ── Label ── */
+        .pc-titles {
+          text-align: center;
+          margin-bottom: 0.75rem;
+        }
         .pc-label {
           font-family: var(--font-cormorant), serif;
           font-size: 1.2rem;
           font-weight: 600;
           color: var(--admin-text);
           letter-spacing: 0.02em;
-          margin-bottom: 1rem;
+          margin-bottom: 0.3rem;
         }
-
-        /* ── Estado ── */
+        .pc-sub {
+          font-family: var(--font-jost), sans-serif;
+          font-size: 0.65rem;
+          color: var(--admin-text-muted);
+          letter-spacing: 0.03em;
+          line-height: 1.6;
+          max-width: 260px;
+          margin: 0 auto;
+        }
+        .pc-progress {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.85rem;
+        }
+        .pc-progress__step {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-family: var(--font-jost), sans-serif;
+          font-size: 0.62rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--admin-text-dim);
+          transition: color 0.2s ease;
+        }
+        .pc-progress__step span:first-child {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: 1.5px solid var(--admin-border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.6rem;
+          transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+        .pc-progress__step--active {
+          color: var(--admin-accent);
+        }
+        .pc-progress__step--active span:first-child {
+          border-color: var(--admin-accent);
+          background: rgba(78,196,196,0.12);
+          color: var(--admin-accent);
+        }
+        .pc-progress__step--done {
+          color: var(--admin-accent);
+          opacity: 0.6;
+        }
+        .pc-progress__step--done span:first-child {
+          border-color: var(--admin-accent);
+          background: rgba(78,196,196,0.08);
+          color: var(--admin-accent);
+        }
+        .pc-progress__line {
+          flex: 1;
+          height: 1px;
+          background: var(--admin-border);
+          width: 24px;
+        }
         .pc-status {
           display: flex;
           align-items: center;
@@ -162,15 +277,15 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           font-size: 0.72rem;
           font-weight: 500;
           letter-spacing: 0.04em;
-          height: 1.4rem;
+          min-height: 1.4rem;
           transition: color 0.2s ease;
           margin-bottom: 0.6rem;
+          text-align: center;
         }
         .pc-status--idle    { color: var(--admin-text-muted); }
         .pc-status--drawing { color: var(--admin-accent);     }
         .pc-status--success { color: var(--admin-accent);     }
         .pc-status--error   { color: var(--admin-danger);     }
-
         .pc-status__dot {
           width: 5px; height: 5px;
           border-radius: 50%;
@@ -183,15 +298,6 @@ export function PatternCard({ onPatternSuccess, onPatternReset }: PatternCardPro
           color: var(--admin-danger);
         }
         .pc-status__icon--ok { color: var(--admin-accent); }
-
-        /* ── Hint ── */
-        .pc-hint {
-          font-family: var(--font-jost), sans-serif;
-          font-size: 0.62rem;
-          color: var(--admin-text-dim);
-          letter-spacing: 0.05em;
-          text-align: center;
-        }
       `}</style>
     </div>
   );

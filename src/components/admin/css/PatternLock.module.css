@@ -1,14 +1,8 @@
 /**
  * src/components/admin/css/PatternLock.module.css
- *
- * Estilos del componente PatternLock.
- * Scoped automáticamente por CSS Modules — sin riesgo de colisión.
- *
- * Usa las variables del design system "Slate Command" definidas en
- * globals.css bajo la clase .admin (y su variante [data-admin-theme="light"]).
  */
 
-/* ── Wrapper: recibe todos los eventos de puntero ────────────────── */
+/* ── Wrapper ─────────────────────────────────────────────────────── */
 .wrapper {
   position: relative;
   width: 240px;
@@ -16,7 +10,12 @@
   margin-bottom: 1rem;
 }
 
-/* ── SVG: solo visual, sin captura de eventos ────────────────────── */
+.wrapperDisabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ── SVG ─────────────────────────────────────────────────────────── */
 .svg {
   position: absolute;
   inset: 0;
@@ -36,7 +35,7 @@
   z-index: 1;
 }
 
-/* ── Nodo base (div puro — puramente visual) ─────────────────────── */
+/* ── Nodo base ───────────────────────────────────────────────────── */
 .node {
   display: flex;
   align-items: center;
@@ -58,25 +57,33 @@
     box-shadow    0.15s ease;
 }
 
-/* ── Nodo activo (en el patrón) ──────────────────────────────────── */
+/* ── Nodo activo ─────────────────────────────────────────────────── */
 .nodeOn::after {
   transform: scale(1.1);
   box-shadow: var(--admin-shadow-node-active);
 }
 
-/* ── Primer nodo — halo de inicio ────────────────────────────────── */
+/* ── Primer nodo ─────────────────────────────────────────────────── */
 .nodeFirst::after {
   box-shadow: var(--admin-shadow-node-first);
 }
 
-/* ── Estado error: nodos activos en pink ─────────────────────────── */
+/* ── Estado error ────────────────────────────────────────────────── */
 .nodeOn[data-state="error"]::after {
   box-shadow: var(--admin-shadow-node-error);
 }
 
-/* ── Estado success: pulso de confirmación ───────────────────────── */
+/* ── Estado success ──────────────────────────────────────────────── */
 .nodeOn[data-state="success"]::after {
   animation: patternPulse 0.45s ease forwards;
+}
+
+/* ── Nodo deshabilitado (fase locked) ────────────────────────────── */
+.nodeDisabled::after {
+  background: var(--admin-surface) !important;
+  border-color: var(--admin-border) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 @keyframes patternPulse {

@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * src/hooks/admin/usePatternAuth.ts
- *
- * Orquesta el flujo completo de autenticación por patrón.
- * Expone un `gridResetRef` que PatternCard conecta con su resetPattern(),
- * permitiendo que el hook fuerce un reset del grid sin prop drilling.
- */
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/lib/api";
 import type { PatternAuthPhase, PatternAuthState } from "@/types/admin";
@@ -17,24 +9,20 @@ interface PatternSaveResponse   { message: string }
 interface PatternVerifyResponse { match: boolean }
 
 const MESSAGES: Record<PatternAuthPhase, string> = {
-  "loading":        "Verificando sistema…",
-  "setup-define":   "Dibuja el patrón que usarás para ingresar",
-  "setup-confirm":  "Repite el mismo patrón para confirmar",
-  "verify":         "Ingresa tu patrón para continuar",
-  "locked":         "Demasiados intentos fallidos. Intenta de nuevo más tarde.",
-  "authenticated":  "Patrón correcto ✓",
+  "loading":       "Verificando sistema…",
+  "setup-define":  "Dibuja el patrón que usarás para ingresar",
+  "setup-confirm": "Repite el mismo patrón para confirmar",
+  "verify":        "Ingresa tu patrón para continuar",
+  "locked":        "Demasiados intentos fallidos. Intenta de nuevo más tarde.",
+  "authenticated": "Patrón correcto ✓",
 };
 
 export interface UsePatternAuthReturn {
   auth:              PatternAuthState;
   onPatternComplete: (nodes: number[]) => Promise<void>;
   onPatternReset:    () => void;
-  /**
-   * PatternCard debe asignar su función resetPattern() a este ref
-   * para que el hook pueda forzar un reset del grid cuando lo necesite
-   * (ej: patrones no coinciden en setup-confirm).
-   */
-  gridResetRef: React.MutableRefObject<(() => void) | null>;
+  gridResetRef:         React.MutableRefObject<(() => void) | null>;
+  intentionalResetRef:  React.MutableRefObject<boolean>;
 }
 
 export function usePatternAuth(): UsePatternAuthReturn {
@@ -44,40 +32,37 @@ export function usePatternAuth(): UsePatternAuthReturn {
     failedAttempts: 0,
   });
 
+  const phaseRef        = useRef<PatternAuthPhase>("loading");
   const firstPatternRef = useRef<number[] | null>(null);
-  /** Conectado por PatternCard con su resetPattern() */
   const gridResetRef    = useRef<(() => void) | null>(null);
-
-  /* ── Helpers ── */
+  /**
+   * Cuando nosotros llamamos resetPattern() intencionalmente (después de
+   * procesar un patrón), activamos este flag para que onPatternReset
+   * ignore el evento idle que genera ese reset y no revierta la fase.
+   */
+  const intentionalResetRef = useRef(false);
 
   function setPhase(phase: PatternAuthPhase, overrideMsg?: string) {
-    setAuth((prev) => ({
-      ...prev,
-      phase,
-      statusMsg: overrideMsg ?? MESSAGES[phase],
-    }));
+    console.log(`[PatternAuth] setPhase: ${phaseRef.current} → ${phase}`, overrideMsg ?? "");
+    phaseRef.current = phase;
+    setAuth((prev) => ({ ...prev, phase, statusMsg: overrideMsg ?? MESSAGES[phase] }));
   }
 
   function setError(msg: string) {
-    setAuth((prev) => ({
-      ...prev,
-      statusMsg:      msg,
-      failedAttempts: prev.failedAttempts + 1,
-    }));
+    console.log("[PatternAuth] setError:", msg);
+    setAuth((prev) => ({ ...prev, statusMsg: msg, failedAttempts: prev.failedAttempts + 1 }));
   }
 
   /* ── 1. Consultar existencia del patrón al montar ── */
-
   useEffect(() => {
     let cancelled = false;
+    console.log("[PatternAuth] montado — consultando GET /api/pattern/exists");
 
     async function checkExists() {
       const res = await api.get<PatternExistsResponse>("/api/pattern/exists");
+      console.log("[PatternAuth] /api/pattern/exists respuesta:", res);
       if (cancelled) return;
-      if (res.error) {
-        setPhase("setup-define");
-        return;
-      }
+      if (res.error) { setPhase("setup-define"); return; }
       setPhase(res.data!.exists ? "verify" : "setup-define");
     }
 
@@ -85,36 +70,39 @@ export function usePatternAuth(): UsePatternAuthReturn {
     return () => { cancelled = true; };
   }, []);
 
-  /* ── 2. Callback principal: el usuario completó un patrón ── */
-
+  /* ── 2. Callback principal ── */
   const onPatternComplete = useCallback(async (nodes: number[]) => {
-    const currentPhase = auth.phase;
+    const currentPhase = phaseRef.current;
+    console.log(`[PatternAuth] onPatternComplete — phase: ${currentPhase} | nodes:`, nodes);
 
-    /* ── setup-define: guardar el primer patrón y pedir confirmación ── */
     if (currentPhase === "setup-define") {
+      console.log("[PatternAuth] setup-define: guardando primer patrón, pasando a setup-confirm");
       firstPatternRef.current = nodes;
-      // Actualizar solo el mensaje del status, la fase cambia a setup-confirm.
-      // El grid se reseteará desde el .finally() en PatternCard.
       setPhase("setup-confirm");
       return;
     }
 
-    /* ── setup-confirm: comparar con el primero ── */
     if (currentPhase === "setup-confirm") {
       const first = firstPatternRef.current;
+      console.log("[PatternAuth] setup-confirm: comparando", nodes.join("-"), "vs", first?.join("-"));
 
       if (!first || nodes.join("-") !== first.join("-")) {
+        console.log("[PatternAuth] setup-confirm: NO coinciden → volviendo a setup-define");
         firstPatternRef.current = null;
+        // El grid se resetea solo desde el .finally() de PatternCard —
+        // ese reset también es intencional, marcarlo para que onPatternReset lo ignore.
+        intentionalResetRef.current = true;
         setPhase("setup-define", "Los patrones no coinciden. Empieza de nuevo.");
-        // El grid ya se reseteará desde el .finally() en PatternCard
         return;
       }
 
-      // Coinciden → enviar al backend
+      console.log("[PatternAuth] setup-confirm: coinciden → POST /api/pattern");
       const res = await api.post<PatternSaveResponse>("/api/pattern", { nodes });
+      console.log("[PatternAuth] POST /api/pattern respuesta:", res);
 
       if (res.error) {
         firstPatternRef.current = null;
+        intentionalResetRef.current = true;
         setPhase("setup-define", res.error);
         return;
       }
@@ -124,45 +112,47 @@ export function usePatternAuth(): UsePatternAuthReturn {
       return;
     }
 
-    /* ── verify: comparar contra el patrón almacenado en el backend ── */
     if (currentPhase === "verify") {
+      console.log("[PatternAuth] verify → POST /api/pattern/verify");
       const res = await api.post<PatternVerifyResponse>("/api/pattern/verify", { nodes });
+      console.log("[PatternAuth] POST /api/pattern/verify respuesta:", res);
 
       if (res.retryAfter !== undefined) {
-        setAuth((prev) => ({
-          ...prev,
-          phase:       "locked",
-          statusMsg:   MESSAGES["locked"],
-          lockedUntil: res.retryAfter,
-        }));
+        phaseRef.current = "locked";
+        setAuth((prev) => ({ ...prev, phase: "locked", statusMsg: MESSAGES["locked"], lockedUntil: res.retryAfter }));
         return;
       }
-
-      if (res.error) {
-        setError(res.error);
-        return;
-      }
-
-      if (!res.data?.match) {
-        setError("Patrón incorrecto. Inténtalo de nuevo.");
-        return;
-      }
+      if (res.error) { setError(res.error); return; }
+      if (!res.data?.match) { setError("Patrón incorrecto. Inténtalo de nuevo."); return; }
 
       setPhase("authenticated");
       return;
     }
-  }, [auth.phase]);
+
+    console.warn("[PatternAuth] onPatternComplete llamado en fase inesperada:", currentPhase);
+  }, []);
 
   /* ── 3. Reset del grid ── */
-
   const onPatternReset = useCallback(() => {
-    // Solo aplica si estamos en setup-confirm y el grid vuelve a idle
-    // por el timer interno (MIN_NODES no alcanzado, etc.)
-    if (auth.phase === "setup-confirm") {
+    const currentPhase = phaseRef.current;
+
+    // Si el reset fue intencional (lo provocamos nosotros desde onPatternComplete
+    // o desde resetPattern tras procesar el patrón), ignorarlo y limpiar el flag.
+    if (intentionalResetRef.current) {
+      console.log("[PatternAuth] onPatternReset — reset intencional, ignorando. phase:", currentPhase);
+      intentionalResetRef.current = false;
+      return;
+    }
+
+    console.log("[PatternAuth] onPatternReset — reset orgánico, phase:", currentPhase);
+
+    // Solo revertir a setup-define si el usuario abandonó el paso de confirmación
+    // (ej: dibujó menos de MIN_NODES y el grid se reseteó solo por el timer interno)
+    if (currentPhase === "setup-confirm") {
       firstPatternRef.current = null;
       setPhase("setup-define");
     }
-  }, [auth.phase]);
+  }, []);
 
-  return { auth, onPatternComplete, onPatternReset, gridResetRef };
+  return { auth, onPatternComplete, onPatternReset, gridResetRef, intentionalResetRef };
 }

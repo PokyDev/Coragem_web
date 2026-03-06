@@ -26,6 +26,7 @@ export interface PatternLockHandlers {
   handleWrapperMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleWrapperMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   nodeCenters:            React.RefObject<Point[]>;
+  patternRef:             React.RefObject<number[]>;
 }
 
 /* ─── Auth flow ─────────────────────────────────────────────────── */

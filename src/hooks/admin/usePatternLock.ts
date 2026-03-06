@@ -1,27 +1,10 @@
 "use client";
 
-/**
- * src/hooks/admin/usePatternLock.ts
- *
- * Encapsula toda la lógica de interacción del grid visual del patrón:
- *   - Cálculo de posiciones de nodos relativas al wrapper
- *   - Detección de hit por proximidad
- *   - Gestión del estado del grid (idle → drawing → success/error)
- *   - Listeners globales de mouseup y touchend
- *   - Timer de reset automático
- *
- * Expone resetPattern() para que PatternCard pueda forzar un reset
- * desde el exterior (al cambiar de fase o tras procesar un patrón).
- */
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { Point, PatternState, PatternLockState, PatternLockHandlers } from "@/types/admin";
 
-/* ─── Constants ─────────────────────────────────────────────────── */
 const MIN_NODES  = 4;
-const HIT_RADIUS = 28; // px
-
-/* ─── Pure helpers ──────────────────────────────────────────────── */
+const HIT_RADIUS = 28;
 
 function dist(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
@@ -36,14 +19,10 @@ function calcNodeCenters(wrapperEl: HTMLDivElement): Point[] {
   return centers;
 }
 
-/* ─── Extended return type ──────────────────────────────────────── */
-
 export type UsePatternLockReturn = PatternLockState & PatternLockHandlers & {
-  /** Resetea el grid a idle inmediatamente, sin esperar el timer */
   resetPattern: () => void;
+  patternRef: React.RefObject<number[]>;
 };
-
-/* ─── Hook ──────────────────────────────────────────────────────── */
 
 export function usePatternLock(): UsePatternLockReturn {
   const [pattern,   setPattern]   = useState<number[]>([]);
@@ -55,32 +34,28 @@ export function usePatternLock(): UsePatternLockReturn {
   const nodeCenters = useRef<Point[]>([]);
   const isDrawing   = useRef(false);
   const resetTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef  = useRef<HTMLDivElement>(null);
+  const svgRef      = useRef<SVGSVGElement>(null);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const svgRef     = useRef<SVGSVGElement>(null);
-
-  /* ── Calcular centros al montar y en resize ── */
   const recalc = useCallback(() => {
     if (wrapperRef.current) {
       nodeCenters.current = calcNodeCenters(wrapperRef.current);
+      console.log("[PatternLock] nodeCenters recalculados:", nodeCenters.current.length, "nodos");
     }
   }, []);
 
   useEffect(() => {
     const t = setTimeout(recalc, 50);
     window.addEventListener("resize", recalc);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("resize", recalc);
-    };
+    return () => { clearTimeout(t); window.removeEventListener("resize", recalc); };
   }, [recalc]);
 
-  /* ── Reset helpers ── */
   const clearScheduledReset = useCallback(() => {
     if (resetTimer.current) clearTimeout(resetTimer.current);
   }, []);
 
   const doReset = useCallback(() => {
+    console.log("[PatternLock] doReset() — limpiando grid");
     isDrawing.current  = false;
     patternRef.current = [];
     setPattern([]);
@@ -89,24 +64,23 @@ export function usePatternLock(): UsePatternLockReturn {
     setStatusMsg("Dibuja tu patrón para continuar");
   }, []);
 
-  /** Reset inmediato expuesto hacia PatternCard */
   const resetPattern = useCallback(() => {
+    console.log("[PatternLock] resetPattern() llamado externamente");
     clearScheduledReset();
     doReset();
   }, [clearScheduledReset, doReset]);
 
   const scheduleReset = useCallback((delay: number) => {
+    console.log(`[PatternLock] scheduleReset() en ${delay}ms`);
     clearScheduledReset();
     resetTimer.current = setTimeout(doReset, delay);
   }, [clearScheduledReset, doReset]);
 
-  /* ── Coordenadas relativas al wrapper ── */
   const relCoords = useCallback((e: MouseEvent | React.MouseEvent | Touch): Point => {
     const rect = wrapperRef.current!.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }, []);
 
-  /* ── Nodo más cercano dentro del radio de hit ── */
   const hitNode = useCallback((pos: Point): number | null => {
     for (let i = 0; i < nodeCenters.current.length; i++) {
       if (dist(pos, nodeCenters.current[i]) < HIT_RADIUS) return i;
@@ -114,30 +88,32 @@ export function usePatternLock(): UsePatternLockReturn {
     return null;
   }, []);
 
-  /* ── Finalizar dibujo ── */
   const finishDraw = useCallback(() => {
+    console.log("[PatternLock] finishDraw() — patternRef.current:", [...patternRef.current]);
     isDrawing.current = false;
     setCursor(null);
 
     const current = patternRef.current;
 
     if (current.length < MIN_NODES) {
+      console.log(`[PatternLock] finishDraw() — INSUFICIENTE (${current.length} < ${MIN_NODES}), estado → error`);
       setState("error");
       setStatusMsg(`Conecta al menos ${MIN_NODES} puntos`);
       scheduleReset(1300);
       return;
     }
 
+    console.log(`[PatternLock] finishDraw() — OK (${current.length} nodos), estado → success`);
     setState("success");
     setStatusMsg("Patrón registrado ✓");
-    // No hacemos scheduleReset aquí: PatternCard llama resetPattern()
-    // después de procesar el patrón con onPatternComplete.
   }, [scheduleReset]);
 
-  /* ── Listeners globales: mouseup + touchend ── */
   useEffect(() => {
     const onEnd = () => {
-      if (isDrawing.current) finishDraw();
+      if (isDrawing.current) {
+        console.log("[PatternLock] mouseup/touchend detectado mientras dibujaba");
+        finishDraw();
+      }
     };
     window.addEventListener("mouseup",  onEnd);
     window.addEventListener("touchend", onEnd);
@@ -147,7 +123,6 @@ export function usePatternLock(): UsePatternLockReturn {
     };
   }, [finishDraw]);
 
-  /* ── Handler: mousedown en el wrapper ── */
   const handleWrapperMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (state === "drawing") return;
@@ -160,13 +135,14 @@ export function usePatternLock(): UsePatternLockReturn {
     isDrawing.current  = true;
     patternRef.current = node !== null ? [node] : [];
 
+    console.log("[PatternLock] mousedown — nodo inicial:", node, "pos:", pos);
+
     setState("drawing");
     setStatusMsg("");
     setCursor(pos);
     setPattern([...patternRef.current]);
   }, [state, clearScheduledReset, relCoords, hitNode]);
 
-  /* ── Handler: mousemove en el wrapper ── */
   const handleWrapperMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDrawing.current) return;
 
@@ -178,6 +154,7 @@ export function usePatternLock(): UsePatternLockReturn {
     if (node !== null && !patternRef.current.includes(node)) {
       patternRef.current = [...patternRef.current, node];
       setPattern([...patternRef.current]);
+      console.log("[PatternLock] mousemove — nuevo nodo:", node, "patrón:", [...patternRef.current]);
     }
   }, [relCoords, hitNode]);
 
@@ -192,5 +169,6 @@ export function usePatternLock(): UsePatternLockReturn {
     handleWrapperMouseDown,
     handleWrapperMouseMove,
     resetPattern,
+    patternRef,
   };
 }

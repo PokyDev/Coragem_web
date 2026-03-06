@@ -1,16 +1,12 @@
 "use client";
 
-/**
- * app/(admin)/admin/page.tsx
- */
-
 import { usePatternAuth } from "@/hooks/admin/usePatternAuth";
 import { PatternCard }      from "@/components/admin/auth/PatternCard";
 import { GoogleSignInCard } from "@/components/admin/auth/GoogleSignInCard";
 import styles from "./css/page.module.css";
 
 export default function AdminPage() {
-  const { auth, onPatternComplete, onPatternReset, gridResetRef } = usePatternAuth();
+  const { auth, onPatternComplete, onPatternReset, gridResetRef, intentionalResetRef } = usePatternAuth();
 
   const showGoogle = auth.phase === "authenticated";
   const showLoader = auth.phase === "loading";
@@ -36,6 +32,7 @@ export default function AdminPage() {
                 onPatternComplete={onPatternComplete}
                 onPatternReset={onPatternReset}
                 gridResetRef={gridResetRef}
+                intentionalResetRef={intentionalResetRef}
               />
             )}
             {showLoader && (

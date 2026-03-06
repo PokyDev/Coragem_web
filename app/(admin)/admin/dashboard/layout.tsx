@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/layout/AdminShell";
+import { AdminGuard } from "@/components/admin/layout/AdminGuard";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -8,18 +9,18 @@ export const metadata: Metadata = {
 /**
  * app/(admin)/admin/dashboard/layout.tsx
  *
- * Layout de las rutas del dashboard.
- * Envuelve todas las páginas bajo /admin/dashboard/* con el
- * chrome del panel: sidebar de navegación + topbar con avatar.
- *
- * AdminShell es un Client Component (necesita usePathname para
- * el estado activo del sidebar), por lo que este layout puede
- * seguir siendo un Server Component sin problemas.
+ * AdminGuard verifica GET /api/auth/me en el cliente antes de
+ * renderizar el shell. Si no hay sesión redirige a /admin.
+ * La ruta /admin (login) queda siempre accesible.
  */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <AdminGuard>
+      <AdminShell>{children}</AdminShell>
+    </AdminGuard>
+  );
 }

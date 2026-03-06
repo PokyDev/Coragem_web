@@ -158,6 +158,11 @@ export function PatternCard({
         .pc-status__dot { width:5px; height:5px; border-radius:50%; background:var(--admin-text-dim); flex-shrink:0; }
         .pc-status__icon { font-size:0.7rem; font-weight:700; color:var(--admin-danger); }
         .pc-status__icon--ok { color:var(--admin-accent); }
+
+        /* ── Responsive: ocultar borde en móvil ── */
+        @media (max-width: 600px) {
+          .pc-card { border-color: transparent; box-shadow: none; }
+        } 
       `}</style>
     </div>
   );

@@ -138,6 +138,11 @@ export function GoogleSignInCard() {
         .gc-btn:active { transform: translateY(0); box-shadow: none; }
         .gc-btn__icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .gc-btn__label { flex: 1; text-align: center; }
+
+        /* ── Responsive: ocultar borde en móvil ── */
+        @media (max-width: 600px) {
+          .gc-card { border-color: transparent; box-shadow: none; }
+        }
       `}</style>
     </div>
   );

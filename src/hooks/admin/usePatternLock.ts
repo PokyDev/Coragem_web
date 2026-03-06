@@ -40,7 +40,6 @@ export function usePatternLock(): UsePatternLockReturn {
   const recalc = useCallback(() => {
     if (wrapperRef.current) {
       nodeCenters.current = calcNodeCenters(wrapperRef.current);
-      console.log("[PatternLock] nodeCenters recalculados:", nodeCenters.current.length, "nodos");
     }
   }, []);
 
@@ -55,7 +54,6 @@ export function usePatternLock(): UsePatternLockReturn {
   }, []);
 
   const doReset = useCallback(() => {
-    console.log("[PatternLock] doReset() — limpiando grid");
     isDrawing.current  = false;
     patternRef.current = [];
     setPattern([]);
@@ -65,18 +63,17 @@ export function usePatternLock(): UsePatternLockReturn {
   }, []);
 
   const resetPattern = useCallback(() => {
-    console.log("[PatternLock] resetPattern() llamado externamente");
     clearScheduledReset();
     doReset();
   }, [clearScheduledReset, doReset]);
 
   const scheduleReset = useCallback((delay: number) => {
-    console.log(`[PatternLock] scheduleReset() en ${delay}ms`);
     clearScheduledReset();
     resetTimer.current = setTimeout(doReset, delay);
   }, [clearScheduledReset, doReset]);
 
-  const relCoords = useCallback((e: MouseEvent | React.MouseEvent | Touch): Point => {
+  // Coordenadas relativas al wrapper — acepta MouseEvent, React.MouseEvent o Touch
+  const relCoords = useCallback((e: { clientX: number; clientY: number }): Point => {
     const rect = wrapperRef.current!.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }, []);
@@ -89,31 +86,26 @@ export function usePatternLock(): UsePatternLockReturn {
   }, []);
 
   const finishDraw = useCallback(() => {
-    console.log("[PatternLock] finishDraw() — patternRef.current:", [...patternRef.current]);
     isDrawing.current = false;
     setCursor(null);
 
     const current = patternRef.current;
 
     if (current.length < MIN_NODES) {
-      console.log(`[PatternLock] finishDraw() — INSUFICIENTE (${current.length} < ${MIN_NODES}), estado → error`);
       setState("error");
       setStatusMsg(`Conecta al menos ${MIN_NODES} puntos`);
       scheduleReset(1300);
       return;
     }
 
-    console.log(`[PatternLock] finishDraw() — OK (${current.length} nodos), estado → success`);
     setState("success");
     setStatusMsg("Patrón registrado ✓");
   }, [scheduleReset]);
 
+  // ── Eventos globales: mouseup + touchend ──────────────────────────
   useEffect(() => {
     const onEnd = () => {
-      if (isDrawing.current) {
-        console.log("[PatternLock] mouseup/touchend detectado mientras dibujaba");
-        finishDraw();
-      }
+      if (isDrawing.current) finishDraw();
     };
     window.addEventListener("mouseup",  onEnd);
     window.addEventListener("touchend", onEnd);
@@ -123,6 +115,62 @@ export function usePatternLock(): UsePatternLockReturn {
     };
   }, [finishDraw]);
 
+  // ── Eventos táctiles registrados directamente en el wrapper ──────
+  // Se usa { passive: false } para poder llamar preventDefault() y
+  // evitar que el scroll de la página interfiera con el trazado.
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      // Solo un toque activo; ignorar multi-touch
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+
+      clearScheduledReset();
+
+      const touch = e.touches[0];
+      const pos   = relCoords(touch);
+      const node  = hitNode(pos);
+
+      isDrawing.current  = true;
+      patternRef.current = node !== null ? [node] : [];
+
+      setState("drawing");
+      setStatusMsg("");
+      setCursor(pos);
+      setPattern([...patternRef.current]);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDrawing.current || e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const pos   = relCoords(touch);
+      const node  = hitNode(pos);
+
+      setCursor(pos);
+
+      if (node !== null && !patternRef.current.includes(node)) {
+        patternRef.current = [...patternRef.current, node];
+        setPattern([...patternRef.current]);
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove",  onTouchMove,  { passive: false });
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove",  onTouchMove);
+    };
+  // relCoords y hitNode son estables (useCallback sin deps cambiantes),
+  // pero incluirlos garantiza que el efecto se rehidrate si el wrapper
+  // se desmonta y remonta (ej. hot reload en dev).
+  }, [relCoords, hitNode, clearScheduledReset]);
+
+  // ── Handlers mouse (desktop) ─────────────────────────────────────
   const handleWrapperMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (state === "drawing") return;
@@ -134,8 +182,6 @@ export function usePatternLock(): UsePatternLockReturn {
 
     isDrawing.current  = true;
     patternRef.current = node !== null ? [node] : [];
-
-    console.log("[PatternLock] mousedown — nodo inicial:", node, "pos:", pos);
 
     setState("drawing");
     setStatusMsg("");
@@ -154,7 +200,6 @@ export function usePatternLock(): UsePatternLockReturn {
     if (node !== null && !patternRef.current.includes(node)) {
       patternRef.current = [...patternRef.current, node];
       setPattern([...patternRef.current]);
-      console.log("[PatternLock] mousemove — nuevo nodo:", node, "patrón:", [...patternRef.current]);
     }
   }, [relCoords, hitNode]);
 

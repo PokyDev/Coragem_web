@@ -141,7 +141,7 @@ export function GoogleSignInCard() {
 
         /* ── Responsive: ocultar borde en móvil ── */
         @media (max-width: 600px) {
-          .gc-card { border-color: transparent; box-shadow: none; }
+          .gc-card { border-color: transparent; box-shadow: none; background: transparent; }
         }
       `}</style>
     </div>

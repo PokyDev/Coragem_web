@@ -161,7 +161,7 @@ export function PatternCard({
 
         /* ── Responsive: ocultar borde en móvil ── */
         @media (max-width: 600px) {
-          .pc-card { border-color: transparent; box-shadow: none; }
+          .pc-card { border-color: transparent; box-shadow: none; background: transparent; }
         } 
       `}</style>
     </div>

@@ -2,21 +2,14 @@
 
 /**
  * app/(admin)/admin/auth/callback/page.tsx
- *
- * Página intermedia del flujo OAuth.
- * Google → backend → aquí (con ?token=...) → POST /api/auth/session → dashboard
- *
- * El backend redirige aquí con el JWT en el query param.
- * Esta página lo intercambia por una cookie HttpOnly via una request
- * CORS normal (no redirect), que el browser acepta correctamente.
  */
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import styles from "./page.module.css";
 
-export default function AuthCallbackPage() {
+function AuthCallbackInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
@@ -45,5 +38,23 @@ export default function AuthCallbackPage() {
         <span className={styles.dot} />
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={styles.root}>
+          <div className={styles.loader}>
+            <span className={styles.dot} />
+            <span className={styles.dot} />
+            <span className={styles.dot} />
+          </div>
+        </div>
+      }
+    >
+      <AuthCallbackInner />
+    </Suspense>
   );
 }

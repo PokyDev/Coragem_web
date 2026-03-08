@@ -11,6 +11,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SearchInput }       from "@/components/shared/ui/SearchInput";
+import { useAdminLogout } from "@/hooks/admin/useAdminLogout";
 import { useProductSearch }  from "@/hooks/shared/useProductSearch";
 import { useDashboardActions } from "@/components/admin/layout/AdminShell";
 import styles from "@/components/admin/css/AdminShell.module.css";
@@ -41,6 +42,7 @@ function getInitials(name: string): string {
 /* ─── Profile Menu ───────────────────────────────────────────────── */
 
 function ProfileMenu({ onClose }: { onClose: () => void }) {
+  const logout = useAdminLogout();
   const router = useRouter();
   return (
     <div className={styles.profileMenu} role="menu">
@@ -57,7 +59,7 @@ function ProfileMenu({ onClose }: { onClose: () => void }) {
         className={`${styles.profileMenuItem} ${styles.profileMenuItemDanger}`}
         type="button"
         role="menuitem"
-        onClick={() => { onClose(); router.push("/admin"); }}
+        onClick={logout}
       >
         Cerrar sesión
       </button>

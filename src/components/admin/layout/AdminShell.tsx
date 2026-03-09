@@ -7,11 +7,17 @@
  * Expone dos contextos para evitar prop-drilling:
  *   - DashboardSearchContext  → búsqueda del topbar hacia DashboardPage
  *   - DashboardActionsContext → acciones del topbar (onNewProduct) hacia DashboardPage
+ *
+ * Responsivo (breakpoint ≤ 1100px):
+ *   - El sidebar se oculta con CSS (display: none).
+ *   - AdminTopbar muestra el botón hamburguesa.
+ *   - AdminMobileMenu se renderiza en su lugar.
  */
 
 import { useState, useCallback, createContext, useContext } from "react";
-import { AdminSidebar } from "@/components/admin/layout/AdminSidebar";
-import { AdminTopbar }  from "@/components/admin/layout/AdminTopbar";
+import { AdminSidebar }    from "@/components/admin/layout/AdminSidebar";
+import { AdminTopbar }     from "@/components/admin/layout/AdminTopbar";
+import { AdminMobileMenu } from "@/components/admin/layout/AdminMobileMenu";
 import styles from "@/components/admin/css/AdminShell.module.css";
 
 /* ─── Contexto de búsqueda ───────────────────────────────────────── */
@@ -31,7 +37,7 @@ export function useDashboardSearch() {
 /* ─── Contexto de acciones ───────────────────────────────────────── */
 
 interface DashboardActionsContextValue {
-  onNewProduct: (() => void) | null;
+  onNewProduct:             (() => void) | null;
   registerNewProductAction: (fn: () => void) => void;
 }
 
@@ -51,8 +57,9 @@ interface AdminShellProps {
 }
 
 export function AdminShell({ children }: AdminShellProps) {
-  const [searchQuery,    setSearchQuery]    = useState("");
-  const [newProductFn,   setNewProductFn]   = useState<(() => void) | null>(null);
+  const [searchQuery,  setSearchQuery]  = useState("");
+  const [newProductFn, setNewProductFn] = useState<(() => void) | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearchQuery(query);
@@ -65,16 +72,29 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <DashboardSearchContext.Provider value={{ searchQuery }}>
-      <DashboardActionsContext.Provider value={{ onNewProduct: newProductFn, registerNewProductAction }}>
+      <DashboardActionsContext.Provider
+        value={{ onNewProduct: newProductFn, registerNewProductAction }}
+      >
         <div className={styles.shell}>
+          {/* Sidebar — oculto en ≤ 1100px via CSS */}
           <AdminSidebar />
+
           <div className={styles.body}>
-            <AdminTopbar onSearchChange={handleSearchChange} />
+            <AdminTopbar
+              onSearchChange={handleSearchChange}
+              onMenuOpen={() => setMobileMenuOpen(true)}
+            />
             <main className={styles.main}>
               {children}
             </main>
           </div>
         </div>
+
+        {/* Menú móvil — solo visible cuando mobileMenuOpen = true */}
+        <AdminMobileMenu
+          isOpen={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        />
       </DashboardActionsContext.Provider>
     </DashboardSearchContext.Provider>
   );

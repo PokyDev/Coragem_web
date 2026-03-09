@@ -1,0 +1,40 @@
+/**
+ * src/components/layout/SlideMenu/CloseButton.module.css
+ */
+
+.btn {
+  width:           2.25rem;
+  height:          2.25rem;
+  border-radius:   50%;
+  background:      transparent;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+  transition:      border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+/* ── Variante pública ──────────────────────────────────────────── */
+.btn--public {
+  border: 1.5px solid var(--border);
+  color:  var(--text-secondary);
+}
+
+.btn--public:hover {
+  border-color:     var(--coragem-pink);
+  color:            var(--coragem-pink);
+  background-color: rgba(196, 122, 158, 0.08);
+}
+
+/* ── Variante admin ────────────────────────────────────────────── */
+.btn--admin {
+  border: 1px solid var(--admin-border);
+  color:  var(--admin-text-muted);
+}
+
+.btn--admin:hover {
+  border-color:     var(--admin-accent);
+  color:            var(--admin-accent);
+  background-color: rgba(78, 196, 196, 0.08);
+}

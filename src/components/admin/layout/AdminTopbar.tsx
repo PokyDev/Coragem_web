@@ -4,15 +4,18 @@
  * src/components/admin/layout/AdminTopbar.tsx
  *
  * Barra superior del panel administrativo.
- * El botón "+ Nuevo Producto" invoca onNewProduct del DashboardActionsContext,
- * que es registrado por DashboardPage al montar.
+ *
+ * Cambios responsivos (≤ 1100px):
+ *   - Se muestra el botón hamburguesa (oculto en desktop).
+ *   - El botón "+ Nuevo Producto" colapsa a solo el ícono "+" en móvil.
+ *   - El campo de búsqueda se comprime o se oculta según espacio.
  */
 
 import { useState, useRef, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { SearchInput }       from "@/components/shared/ui/SearchInput";
-import { useAdminLogout } from "@/hooks/admin/useAdminLogout";
-import { useProductSearch }  from "@/hooks/shared/useProductSearch";
+import { usePathname } from "next/navigation";
+import { SearchInput }         from "@/components/shared/ui/SearchInput";
+import { useAdminLogout }      from "@/hooks/admin/useAdminLogout";
+import { useProductSearch }    from "@/hooks/shared/useProductSearch";
 import { useDashboardActions } from "@/components/admin/layout/AdminShell";
 import styles from "@/components/admin/css/AdminShell.module.css";
 
@@ -43,7 +46,7 @@ function getInitials(name: string): string {
 
 function ProfileMenu({ onClose }: { onClose: () => void }) {
   const logout = useAdminLogout();
-  const router = useRouter();
+
   return (
     <div className={styles.profileMenu} role="menu">
       <div className={styles.profileMenuHeader}>
@@ -51,7 +54,12 @@ function ProfileMenu({ onClose }: { onClose: () => void }) {
         <span className={styles.profileMenuEmail}>admin@coragem.co</span>
       </div>
       <div className={styles.profileMenuDivider} />
-      <button className={styles.profileMenuItem} type="button" role="menuitem" onClick={onClose}>
+      <button
+        className={styles.profileMenuItem}
+        type="button"
+        role="menuitem"
+        onClick={onClose}
+      >
         <span aria-hidden="true">⊙</span> Preferencias
       </button>
       <div className={styles.profileMenuDivider} />
@@ -67,16 +75,43 @@ function ProfileMenu({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ─── Hamburger icon ─────────────────────────────────────────────── */
+
+function HamburgerIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <line x1="3" y1="6"  x2="21" y2="6"  />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
 /* ─── Props ──────────────────────────────────────────────────────── */
 
 interface AdminTopbarProps {
   userName?:       string;
   onSearchChange?: (query: string) => void;
+  /** Abre el AdminMobileMenu — invocado desde el botón hamburguesa */
+  onMenuOpen?:     () => void;
 }
 
 /* ─── Component ──────────────────────────────────────────────────── */
 
-export function AdminTopbar({ userName = "Coragem Admin", onSearchChange }: AdminTopbarProps) {
+export function AdminTopbar({
+  userName = "Coragem Admin",
+  onSearchChange,
+  onMenuOpen,
+}: AdminTopbarProps) {
   const pathname    = usePathname();
   const pageTitle   = resolvePageTitle(pathname);
   const isDashboard = pathname === "/admin/dashboard";
@@ -88,6 +123,7 @@ export function AdminTopbar({ userName = "Coragem Admin", onSearchChange }: Admi
   const { query, clearQuery, inputProps } = useProductSearch({ onChange: onSearchChange });
   const { onNewProduct } = useDashboardActions();
 
+  /* Cerrar menú de perfil al hacer click fuera */
   useEffect(() => {
     if (!menuOpen) return;
     const onClickOutside = (e: MouseEvent) => {
@@ -102,13 +138,26 @@ export function AdminTopbar({ userName = "Coragem Admin", onSearchChange }: Admi
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [menuOpen]);
 
   return (
     <header className={`${styles.topbar} ${isDashboard ? styles.topbarExpanded : ""}`}>
+
+      {/* ── Hamburger button — solo visible en ≤ 1100px ── */}
+      <button
+        className={styles.hamburgerBtn}
+        type="button"
+        aria-label="Abrir menú de navegación"
+        onClick={onMenuOpen}
+      >
+        <HamburgerIcon />
+      </button>
+
       <h1 className={styles.topbarTitle}>{pageTitle}</h1>
 
       {isDashboard && (
@@ -130,11 +179,21 @@ export function AdminTopbar({ userName = "Coragem Admin", onSearchChange }: Admi
             type="button"
             onClick={() => onNewProduct?.()}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            <span>Nuevo Producto</span>
+            {/* El texto se oculta en móvil via CSS, queda solo el ícono */}
+            <span className={styles.btnNewProductLabel}>Nuevo Producto</span>
           </button>
         )}
 

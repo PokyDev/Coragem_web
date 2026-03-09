@@ -1,67 +1,63 @@
 /**
  * src/components/admin/css/AdminShell.module.css
  *
- * Estilos del layout principal del panel administrativo.
- * Cubre: shell grid, sidebar, topbar y clases de navegación.
+ * Layout del panel administrativo — sidebar + body + topbar.
  *
- * Usa los tokens de "Slate Command" definidos en globals.css bajo .admin
- * (y su variante [data-admin-theme="light"]).
+ * Breakpoint ≤ 1100px:
+ *   - El sidebar se oculta (display: none).
+ *   - El botón hamburguesa del topbar se muestra.
+ *   - El campo de búsqueda y el label de "Nuevo Producto" se ajustan.
  */
 
-/* ── Shell: layout de dos columnas ──────────────────────────────── */
+/* ════════════════════════════════════════════════════
+   SHELL — layout raíz (sidebar + body)
+   ════════════════════════════════════════════════════ */
+
 .shell {
-  display: flex;
+  display:    flex;
   min-height: 100dvh;
-  background-color: var(--admin-bg);
+  background: var(--admin-bg);
 }
 
-/* ── Body: topbar + contenido principal ─────────────────────────── */
-.body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  background-color: var(--admin-bg);
-}
-
-/* ── Main: área de contenido de la página ───────────────────────── */
-.main {
-  flex: 1;
-  padding: 2rem 2.25rem;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--admin-surface) var(--admin-bg);
-}
-
-/* ─────────────────────────────────────────────────────────────────
+/* ════════════════════════════════════════════════════
    SIDEBAR
-───────────────────────────────────────────────────────────────── */
+   ════════════════════════════════════════════════════ */
 
 .sidebar {
-  width: 216px;
-  flex-shrink: 0;
-  background: var(--admin-sidebar-bg);
-  border-right: 1px solid var(--admin-border);
-  display: flex;
-  flex-direction: column;
+  width:            200px;
+  flex-shrink:      0;
+  background:       var(--admin-sidebar-bg);
+  border-right:     1px solid var(--admin-border);
+  display:          flex;
+  flex-direction:   column;
+  position:         sticky;
+  top:              0;
+  height:           100dvh;
+  overflow-y:       auto;
 }
 
+/* Ocultar sidebar en móvil — el AdminMobileMenu lo reemplaza */
+@media (max-width: 1100px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* ── Sidebar Header ── */
 .sidebarHeader {
-  padding: 1.5rem 1.25rem 1.1rem;
-  border-bottom: 1px solid var(--admin-border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  padding:        1.25rem 1.125rem 1rem;
+  border-bottom:  1px solid var(--admin-border);
+  flex-shrink:    0;
 }
 
 .sidebarBrand {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
+  display:        block;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.8rem;
+  font-weight:    800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--admin-text);
-  line-height: 1;
+  color:          var(--admin-text);
 }
 
 .sidebarBrand span {
@@ -69,301 +65,342 @@
 }
 
 .sidebarRole {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.58rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
+  display:        block;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--admin-text-dim);
+  color:          var(--admin-text-dim);
+  margin-top:     3px;
 }
 
+/* ── Sidebar Nav ── */
 .sidebarNav {
-  flex: 1;
+  flex:    1;
   padding: 0.75rem 0.625rem;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  overflow-y: auto;
-  scrollbar-width: none;
+  gap:     2px;
 }
 
-.sidebarNav::-webkit-scrollbar { display: none; }
-
 .navSectionLabel {
-  display: block;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.6rem;
-  font-weight: 700;
+  display:        block;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.6rem;
+  font-weight:    700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--admin-text-dim);
-  padding: 0.75rem 0.625rem 0.35rem;
+  color:          var(--admin-text-dim);
+  padding:        0.5rem 0.625rem 0.25rem;
 }
 
 .navItem {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.55rem 0.625rem;
-  border-radius: 8px;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--admin-text-muted);
+  display:         flex;
+  align-items:     center;
+  gap:             0.55rem;
+  padding:         0.5rem 0.625rem;
+  border-radius:   7px;
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.775rem;
+  font-weight:     500;
+  letter-spacing:  0.02em;
+  color:           var(--admin-text-muted);
   text-decoration: none;
-  transition:
-    background   0.15s ease,
-    color        0.15s ease;
+  transition:      background-color 0.15s ease, color 0.15s ease;
 }
 
 .navItem:hover {
-  background: var(--admin-hover-bg);
-  color: var(--admin-text);
+  background-color: var(--admin-hover-bg);
+  color:            var(--admin-text);
 }
 
 .navItemActive {
-  background: var(--admin-nav-active-bg) !important;
-  color: var(--admin-nav-active-color) !important;
-  font-weight: 600;
+  background-color: var(--admin-nav-active-bg);
+  color:            var(--admin-nav-active-color);
+  font-weight:      600;
+}
+
+.navItemActive:hover {
+  background-color: var(--admin-nav-active-bg);
+  color:            var(--admin-nav-active-color);
 }
 
 .navIcon {
-  font-size: 0.85rem;
-  width: 1rem;
-  text-align: center;
+  font-size:   0.8rem;
+  width:       16px;
+  text-align:  center;
   flex-shrink: 0;
 }
 
+/* ── Sidebar Footer ── */
 .sidebarFooter {
-  padding: 0.75rem 0.625rem;
+  padding:    0.75rem 0.625rem;
   border-top: 1px solid var(--admin-border);
+  flex-shrink: 0;
 }
 
 .navItemLogout {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  width: 100%;
-  padding: 0.55rem 0.625rem;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--admin-danger);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
+  display:         flex;
+  align-items:     center;
+  gap:             0.5rem;
+  width:           100%;
+  padding:         0.5rem 0.625rem;
+  border-radius:   7px;
+  border:          none;
+  background:      transparent;
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.75rem;
+  font-weight:     500;
+  letter-spacing:  0.03em;
+  color:           var(--admin-danger);
+  cursor:          pointer;
+  text-align:      left;
+  transition:      background-color 0.15s ease;
 }
 
 .navItemLogout:hover {
-  background: var(--stock-out-bg);
+  background-color: rgba(196, 122, 158, 0.08);
 }
 
-/* ─────────────────────────────────────────────────────────────────
+/* ════════════════════════════════════════════════════
+   BODY — columna derecha (topbar + main)
+   ════════════════════════════════════════════════════ */
+
+.body {
+  flex:           1;
+  display:        flex;
+  flex-direction: column;
+  min-width:      0; /* evita overflow en flex */
+  overflow:       hidden;
+}
+
+/* ════════════════════════════════════════════════════
    TOPBAR
-───────────────────────────────────────────────────────────────── */
+   ════════════════════════════════════════════════════ */
 
 .topbar {
-  height: 56px;
-  background: var(--admin-bg-card);
-  border-bottom: 1px solid var(--admin-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.75rem;
-  flex-shrink: 0;
-  gap: 1rem;
+  height:          56px;
+  flex-shrink:     0;
+  background:      var(--admin-bg-card);
+  border-bottom:   1px solid var(--admin-border);
+  display:         flex;
+  align-items:     center;
+  gap:             0.75rem;
+  padding:         0 1.25rem;
+  position:        sticky;
+  top:             0;
+  z-index:         40;
 }
 
-/*
- * Layout extendido para el dashboard:
- * Título | [flex: SearchInput] | Nuevo Producto + Avatar
- */
+/* Cuando estamos en /admin/dashboard el topbar tiene búsqueda */
 .topbarExpanded {
-  /* El SearchInput ocupa el espacio central gracias a flex */
+  gap: 0.875rem;
 }
 
-.topbarSearch {
-  flex: 1;
-  max-width: 380px;
+/* ── Hamburger button — oculto en desktop, visible en ≤ 1100px ── */
+.hamburgerBtn {
+  display:         none; /* se muestra solo en móvil */
+  align-items:     center;
+  justify-content: center;
+  width:           2rem;
+  height:          2rem;
+  border-radius:   7px;
+  border:          1px solid var(--admin-border);
+  background:      transparent;
+  color:           var(--admin-text-muted);
+  cursor:          pointer;
+  flex-shrink:     0;
+  transition:      border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
 }
 
-.topbarRight {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
+.hamburgerBtn:hover {
+  border-color:     var(--admin-accent);
+  color:            var(--admin-accent);
+  background-color: rgba(78, 196, 196, 0.06);
 }
 
-/* ── Título de la página activa ── */
+@media (max-width: 1100px) {
+  .hamburgerBtn {
+    display: flex;
+  }
+}
+
+/* ── Title ── */
 .topbarTitle {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--admin-text);
-  text-transform: uppercase;
-  flex-shrink: 0;
-  white-space: nowrap;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.875rem;
+  font-weight:    700;
+  letter-spacing: 0.02em;
+  color:          var(--admin-text);
+  white-space:    nowrap;
+  flex-shrink:    0;
 }
 
-/* ── Botón Nuevo Producto ── */
-.btnNewProduct {
-  display: flex;
+/* ── Search ── */
+.topbarSearch {
+  flex:      1;
+  min-width: 0;
+  max-width: 320px;
+}
+
+/* Comprimir la búsqueda en pantallas intermedias */
+@media (max-width: 700px) {
+  .topbarSearch {
+    display: none;
+  }
+}
+
+/* ── Right group ── */
+.topbarRight {
+  display:     flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0 0.85rem;
-  height: 2.05rem;
-  border-radius: 8px;
-  border: none;
-  background: var(--admin-accent);
-  color: #0d1520;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    opacity     0.15s ease,
-    transform   0.12s ease,
-    box-shadow  0.15s ease;
+  gap:         0.625rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── New product button ── */
+.btnNewProduct {
+  display:         flex;
+  align-items:     center;
+  gap:             0.375rem;
+  padding:         0.4rem 0.875rem;
+  border-radius:   7px;
+  border:          none;
+  background:      var(--admin-accent);
+  color:           #0d1520;
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.75rem;
+  font-weight:     700;
+  letter-spacing:  0.04em;
+  cursor:          pointer;
+  white-space:     nowrap;
+  transition:      opacity 0.15s ease, transform 0.15s ease;
+  flex-shrink:     0;
 }
 
 .btnNewProduct:hover {
-  opacity: 0.88;
+  opacity:   0.88;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(78, 196, 196, 0.28);
 }
 
 .btnNewProduct:active {
   transform: translateY(0);
-  opacity: 1;
 }
 
-/* ── Avatar / Perfil ── */
+/* En móvil pequeño, ocultar el label y dejar solo el ícono "+" */
+.btnNewProductLabel {
+  display: inline;
+}
+
+@media (max-width: 520px) {
+  .btnNewProduct {
+    padding: 0.4rem 0.5rem;
+  }
+  .btnNewProductLabel {
+    display: none;
+  }
+}
+
+/* ── Avatar button ── */
 .profileWrap {
   position: relative;
 }
 
 .avatarBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    var(--admin-accent) 0%,
-    var(--admin-danger) 100%
-  );
-  border: 2px solid var(--admin-border);
-  display: flex;
-  align-items: center;
+  width:           2rem;
+  height:          2rem;
+  border-radius:   50%;
+  border:          none;
+  background:      linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-danger) 100%);
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
   justify-content: center;
-  cursor: pointer;
-  transition:
-    border-color  0.2s ease,
-    box-shadow    0.2s ease,
-    transform     0.15s ease;
-  padding: 0;
+  flex-shrink:     0;
+  transition:      opacity 0.15s ease, transform 0.15s ease;
 }
 
 .avatarBtn:hover {
-  border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px rgba(78, 196, 196, 0.15);
-  transform: scale(1.05);
-}
-
-.avatarBtn:active {
-  transform: scale(0.98);
+  opacity:   0.88;
+  transform: scale(1.06);
 }
 
 .avatarInitials {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #fff;
-  line-height: 1;
-  pointer-events: none;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.65rem;
+  font-weight:    700;
+  letter-spacing: 0.04em;
+  color:          #0d1520;
+  line-height:    1;
 }
 
-/* ── Menú desplegable de perfil ── */
+/* ── Profile menu dropdown ── */
 .profileMenuWrap {
   position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 100;
-  animation: menuDropIn 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes menuDropIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  top:      calc(100% + 8px);
+  right:    0;
+  z-index:  60;
 }
 
 .profileMenu {
-  min-width: 210px;
-  background: var(--admin-bg-card);
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  overflow: hidden;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 10px;
+  padding:       0.375rem;
+  min-width:     180px;
   box-shadow:
-    0 0 0 1px rgba(78, 196, 196, 0.06),
-    0 16px 40px rgba(0, 0, 0, 0.28),
-    0 4px 8px rgba(0, 0, 0, 0.12);
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 2px 8px  rgba(0, 0, 0, 0.15);
 }
 
 .profileMenuHeader {
-  padding: 0.85rem 1rem 0.75rem;
-  display: flex;
+  padding:        0.625rem 0.75rem 0.5rem;
+  display:        flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap:            2px;
 }
 
 .profileMenuName {
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--admin-text);
-  letter-spacing: 0.02em;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.775rem;
+  font-weight:    600;
+  color:          var(--admin-text);
 }
 
 .profileMenuEmail {
   font-family: var(--font-jost), sans-serif;
-  font-size: 0.68rem;
-  color: var(--admin-text-muted);
-  letter-spacing: 0.03em;
+  font-size:   0.68rem;
+  color:       var(--admin-text-muted);
 }
 
 .profileMenuDivider {
-  height: 1px;
+  height:     1px;
   background: var(--admin-border);
-  margin: 0;
+  margin:     0.25rem 0;
 }
 
 .profileMenuItem {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border: none;
-  background: transparent;
-  font-family: var(--font-jost), sans-serif;
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: var(--admin-text-muted);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease, color 0.15s ease;
-  letter-spacing: 0.02em;
+  display:         flex;
+  align-items:     center;
+  gap:             0.5rem;
+  width:           100%;
+  padding:         0.5rem 0.75rem;
+  border-radius:   6px;
+  border:          none;
+  background:      transparent;
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.75rem;
+  font-weight:     500;
+  color:           var(--admin-text-muted);
+  cursor:          pointer;
+  text-align:      left;
+  transition:      background-color 0.15s ease, color 0.15s ease;
 }
 
 .profileMenuItem:hover {
-  background: var(--admin-hover-bg);
-  color: var(--admin-text);
+  background-color: var(--admin-hover-bg);
+  color:            var(--admin-text);
 }
 
 .profileMenuItemDanger {
@@ -371,32 +408,25 @@
 }
 
 .profileMenuItemDanger:hover {
-  background: var(--stock-out-bg);
-  color: var(--admin-danger);
+  background-color: rgba(196, 122, 158, 0.08);
+  color:            var(--admin-danger);
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   TEMA CLARO — overrides para .btnNewProduct
-   :global permite referenciar el atributo del wrapper .admin
-   que vive fuera de este CSS Module.
-───────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════
+   MAIN — área de contenido
+   ════════════════════════════════════════════════════ */
 
-:global(.admin[data-admin-theme="light"]) .btnNewProduct {
-  background: var(--admin-accent);  /* #3aafaf — teal más saturado en claro */
-  color:      #ffffff;              /* blanco: contraste legible sobre teal claro */
+.main {
+  flex:       1;
+  overflow-y: auto;
+  padding:    2rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg);
 }
 
-:global(.admin[data-admin-theme="light"]) .btnNewProduct:hover {
-  box-shadow: 0 4px 12px rgba(58, 175, 175, 0.35);
-}
-
-/* Responsive */
-@media (max-width: 1100px) {
-  .sidebar {
-    display: none;
-  }
-  .AdminShell-module__vtmniq__topbar {
-    opacity: 0;
-    pointer-events: none;
+/* Reducir padding en pantallas pequeñas */
+@media (max-width: 640px) {
+  .main {
+    padding: 1.25rem 1rem;
   }
 }

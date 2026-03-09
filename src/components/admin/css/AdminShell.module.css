@@ -395,4 +395,8 @@
   .sidebar {
     display: none;
   }
+  .AdminShell-module__vtmniq__topbar {
+    opacity: 0;
+    pointer-events: none;
+  }
 }

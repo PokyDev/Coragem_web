@@ -389,3 +389,10 @@
 :global(.admin[data-admin-theme="light"]) .btnNewProduct:hover {
   box-shadow: 0 4px 12px rgba(58, 175, 175, 0.35);
 }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .sidebar {
+    display: none;
+  }
+}

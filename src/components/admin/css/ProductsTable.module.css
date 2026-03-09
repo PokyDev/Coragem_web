@@ -422,7 +422,150 @@
   flex-wrap:   wrap;
 }
 
-/* Badge de filtro de estado */
 .filterBadge_ok  strong { color: var(--stock-ok-color);  }
 .filterBadge_low strong { color: var(--stock-low-color); }
 .filterBadge_out strong { color: var(--stock-out-color); }
+
+/* ════════════════════════════════════════════════
+   MOBILE CARD LAYOUT — breakpoint ≤ 500px
+════════════════════════════════════════════════ */
+
+.cardList { display: none; }
+
+@media (max-width: 500px) {
+  .tableScroll { display: none !important; }
+  .cardList    { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.625rem; }
+}
+
+/* ── Tarjeta individual ── */
+.productCard {
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-border);
+  border-radius: 10px;
+  overflow:      hidden;
+  transition:    border-color 0.15s ease;
+  animation:     cardSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.productCard:hover { border-color: rgba(78, 196, 196, 0.25); }
+
+.cardMain {
+  display:     flex;
+  align-items: center;
+  gap:         0.625rem;
+  padding:     0.625rem 0.75rem;
+}
+
+.cardThumb {
+  width:           34px;
+  height:          34px;
+  border-radius:   7px;
+  background:      var(--admin-bg-card);
+  border:          1px solid var(--admin-border);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+}
+
+.cardId {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.04em;
+}
+
+.cardNameGroup {
+  flex:      1;
+  min-width: 0;
+}
+
+.cardName {
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.8rem;
+  font-weight:   600;
+  color:         var(--admin-text);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.cardCategory {
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.68rem;
+  color:       var(--admin-text-muted);
+  margin-top:  1px;
+}
+
+.cardMeta {
+  display:     flex;
+  align-items: center;
+  border-top:  1px solid rgba(30, 58, 95, 0.5);
+}
+
+.cardMetaItem {
+  flex:           1;
+  padding:        0.5rem 0.625rem;
+  border-right:   1px solid rgba(30, 58, 95, 0.5);
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+}
+
+.cardMetaItem:last-child { border-right: none; }
+
+.cardMetaLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+}
+
+.cardMetaValue {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.8rem;
+  font-weight:    700;
+  color:          var(--admin-text);
+  letter-spacing: -0.01em;
+}
+
+.cardActions {
+  display:    flex;
+  border-top: 1px solid rgba(30, 58, 95, 0.5);
+}
+
+.cardActionBtn {
+  flex:           1;
+  padding:        0.5rem 0;
+  border:         none;
+  background:     transparent;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  font-weight:    700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor:         pointer;
+  transition:     background 0.14s ease;
+  color:          var(--admin-accent);
+}
+
+.cardActionBtn:first-child       { border-right: 1px solid rgba(30, 58, 95, 0.5); }
+.cardActionBtn:first-child:hover { background: var(--admin-nav-active-bg); }
+
+.cardActionBtnDanger       { color: var(--admin-danger); }
+.cardActionBtnDanger:hover { background: var(--stock-out-bg); }
+
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* Tema claro */
+:global(.admin[data-admin-theme="light"]) .productCard        { background: var(--admin-bg-card); }
+:global(.admin[data-admin-theme="light"]) .cardMeta,
+:global(.admin[data-admin-theme="light"]) .cardMetaItem,
+:global(.admin[data-admin-theme="light"]) .cardActions,
+:global(.admin[data-admin-theme="light"]) .cardActionBtn:first-child { border-color: var(--admin-border); }

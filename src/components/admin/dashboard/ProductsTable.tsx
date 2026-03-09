@@ -86,7 +86,7 @@ function Pagination({ current, total, onChange }: PaginationProps) {
   );
 }
 
-/* ─── Empty State ────────────────────────────────────────────────── */
+/* ─── Empty States ────────────────────────────────────────────────── */
 
 const STOCK_FILTER_LABELS: Record<string, string> = {
   ok: "con stock", low: "con stock bajo", out: "sin stock",
@@ -108,6 +108,13 @@ function EmptyState({ hasSearch, stockFilter }: { hasSearch: boolean; stockFilte
       </td>
     </tr>
   );
+}
+
+function EmptyStateDesc({ hasSearch, stockFilter }: { hasSearch: boolean; stockFilter: StockFilter }) {
+  const filterLabel = stockFilter !== "all" ? STOCK_FILTER_LABELS[stockFilter] : "";
+  return hasSearch
+    ? `Ningún producto ${filterLabel ? `${filterLabel} ` : ""}coincide con la búsqueda.`
+    : `No hay productos ${filterLabel}.`;
 }
 
 /* ─── Props ─────────────────────────────────────────────────────── */
@@ -221,6 +228,76 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Card list (móvil ≤ 500px) ── */}
+      <div className={styles.cardList}>
+        {pageItems.length > 0 ? (
+          pageItems.map((product, index) => (
+            <div
+              key={product.id}
+              className={styles.productCard}
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              <div className={styles.cardMain}>
+                <div className={styles.cardThumb}>
+                  <span className={styles.cardId}>#{product.id}</span>
+                </div>
+                <div className={styles.cardNameGroup}>
+                  <p className={styles.cardName}>{product.name}</p>
+                  <p className={styles.cardCategory}>
+                    {CATEGORY_LABELS[product.category] ?? product.category}
+                  </p>
+                </div>
+                <StockBadge status={product.stockStatus} />
+              </div>
+
+              <div className={styles.cardMeta}>
+                <div className={styles.cardMetaItem}>
+                  <span className={styles.cardMetaLabel}>Precio</span>
+                  <span className={styles.cardMetaValue}>{formatPrice(product.price)}</span>
+                </div>
+                <div className={styles.cardMetaItem}>
+                  <span className={styles.cardMetaLabel}>Stock</span>
+                  <span className={styles.cardMetaValue}>
+                    <StockCount status={product.stockStatus} stock={product.stock} />
+                  </span>
+                </div>
+                <div className={styles.cardMetaItem}>
+                  <span className={styles.cardMetaLabel}>Ventas</span>
+                  <span className={styles.cardMetaValue}>{product.ventas}</span>
+                </div>
+              </div>
+
+              <div className={styles.cardActions}>
+                <button
+                  className={styles.cardActionBtn}
+                  type="button"
+                  onClick={() => onEdit(product)}
+                  aria-label={`Editar ${product.name}`}
+                >
+                  Editar
+                </button>
+                <button
+                  className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`}
+                  type="button"
+                  onClick={() => onDelete(product)}
+                  aria-label={`Eliminar ${product.name}`}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className={styles.emptyState}>
+            <span className={styles.emptyIcon} aria-hidden="true">◈</span>
+            <p className={styles.emptyTitle}>Sin resultados</p>
+            <p className={styles.emptyDesc}>
+              <EmptyStateDesc hasSearch={!!searchQuery} stockFilter={stockFilter} />
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

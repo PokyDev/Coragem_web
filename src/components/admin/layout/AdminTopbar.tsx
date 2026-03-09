@@ -150,7 +150,7 @@ export function AdminTopbar({
 
       {/* ── Hamburger button — solo visible en ≤ 1100px ── */}
       <button
-        className="hamburgerBtn"
+        className={styles.hamburgerBtn}
         type="button"
         aria-label="Abrir menú de navegación"
         onClick={onMenuOpen}

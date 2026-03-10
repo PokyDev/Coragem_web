@@ -1,23 +1,14 @@
 "use client";
 
-/**
- * app/(admin)/admin/dashboard/page.tsx
- *
- * Orquesta el dashboard: búsqueda + filtro de stock + tabla + modal de producto.
- *
- * Al montar, registra openNewModal en DashboardActionsContext para que
- * AdminTopbar pueda invocarla desde el botón "+ Nuevo Producto".
- */
-
 import { useMemo, useState, useCallback, useEffect } from "react";
 import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
-import { StatsCards }          from "@/components/admin/dashboard/StatsCards";
-import { ProductsTable }       from "@/components/admin/dashboard/ProductsTable";
-import { ProductFormModal }    from "@/components/admin/dashboard/ProductFormModal";
+import { StatsCards }       from "@/components/admin/dashboard/StatsCards";
+import { ProductsTable }    from "@/components/admin/dashboard/ProductsTable";
+import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
 import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
-import products from "@/data/products.json";
-import styles   from "./css/DashboardPage.module.css";
+import { useProducts } from "@/hooks/user/useProducts";
+import styles from "./css/DashboardPage.module.css";
 
 async function getSwal() {
   const Swal = (await import("sweetalert2")).default;
@@ -25,8 +16,11 @@ async function getSwal() {
 }
 
 export default function DashboardPage() {
-  const { searchQuery }           = useDashboardSearch();
+  const { searchQuery }              = useDashboardSearch();
   const { registerNewProductAction } = useDashboardActions();
+
+  // ── Datos reales desde la API ──────────────────────────────────
+  const { products: allProducts, loading, error } = useProducts();
 
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [modalState,  setModalState]  = useState<ProductModalState>({
@@ -34,11 +28,10 @@ export default function DashboardPage() {
   });
 
   /* ── Handlers del modal ── */
-  const openNewModal  = useCallback(() => setModalState({ isOpen: true, product: null }), []);
+  const openNewModal  = useCallback(() => setModalState({ isOpen: true,  product: null }), []);
   const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
   const closeModal    = useCallback(() => setModalState((prev) => ({ ...prev, isOpen: false })), []);
 
-  /* ── Registrar openNewModal en el contexto del shell para el topbar ── */
   useEffect(() => {
     registerNewProductAction(openNewModal);
   }, [registerNewProductAction, openNewModal]);
@@ -48,17 +41,16 @@ export default function DashboardPage() {
     setStockFilter((prev) => (prev === next ? "all" : next));
   }, []);
 
-  const stats = useMemo(() => computeStats(products), []);
+  const stats = useMemo(() => computeStats(allProducts), [allProducts]);
 
   const filteredRows = useMemo(() => {
-    const bySearch = filterProductRows(products, searchQuery);
+    const bySearch = filterProductRows(allProducts, searchQuery);
     if (stockFilter === "all") return bySearch;
     return bySearch.filter((p) => p.stockStatus === stockFilter);
-  }, [searchQuery, stockFilter]);
+  }, [allProducts, searchQuery, stockFilter]);
 
   /* ── Callback post-guardado ── */
   const handleSaved = useCallback((mode: "new" | "edit") => {
-    // Pendiente integración API — aquí se refrescará la lista
     console.log(`Producto ${mode === "new" ? "creado" : "editado"} — pendiente integración API`);
   }, []);
 
@@ -80,18 +72,35 @@ export default function DashboardPage() {
 
     if (isConfirmed) {
       await Swal.fire({
-        title:             "Producto eliminado",
-        text:              `"${product.name}" fue eliminado del catálogo.`,
-        icon:              "success",
-        confirmButtonText: "Aceptar",
+        title:              "Producto eliminado",
+        text:               `"${product.name}" fue eliminado del catálogo.`,
+        icon:               "success",
+        confirmButtonText:  "Aceptar",
         confirmButtonColor: "#4ec4c4",
-        timer:             2200,
-        timerProgressBar:  true,
-        background:        "#111827",
-        color:             "#e2e8f0",
+        timer:              2200,
+        timerProgressBar:   true,
+        background:         "#111827",
+        color:              "#e2e8f0",
       });
     }
   }, []);
+
+  // ── Loading / error del dashboard ─────────────────────────────
+  if (loading) return (
+    <div className={styles.root} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+      <span style={{ color: "var(--admin-text-muted)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.85rem", letterSpacing: "0.06em" }}>
+        Cargando productos…
+      </span>
+    </div>
+  );
+
+  if (error) return (
+    <div className={styles.root} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+      <span style={{ color: "var(--admin-danger)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.85rem" }}>
+        {error}
+      </span>
+    </div>
+  );
 
   return (
     <>

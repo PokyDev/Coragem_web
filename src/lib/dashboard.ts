@@ -35,7 +35,7 @@ export function toProductRow(product: Product): ProductRow {
     stock:       product.stock,
     stockStatus: getStockStatus(product.stock),
     ventas:      product.ventas,
-    image:       product.image,
+    images:      product.images,
     color:       product.color,
   };
 }

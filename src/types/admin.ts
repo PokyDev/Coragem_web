@@ -75,17 +75,16 @@ export interface DashboardStats {
 }
 
 export interface ProductRow {
-  id:          number;
+  id:          string;
   name:        string;
   category:    string;
   price:       number;
   stock:       number;
   stockStatus: StockStatus;
   ventas:      number;
-  image:       string;
+  images:      { id: string; url: string; order: number }[]; // reemplaza image: string
   color:       string;
 }
-
 export type StockFilter = StockStatus | "all";
 
 /* ─── Product Form ──────────────────────────────────────────────── */

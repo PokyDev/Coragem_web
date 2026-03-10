@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import products from "@/data/products.json";
+import { useProducts } from "@/hooks/user/useProducts";
 import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
 import { ProductModal } from "@/components/shared/product/ProductModal";
 import { LoadMoreButton } from "@/components/shared/ui/LoadMoreButton";
@@ -76,7 +76,7 @@ function ProductCard({
           }}
         >
           <Image
-            src={`/images/products/${product.image}`}
+            src={product.images[0]?.url ?? "/placeholder.jpg"}
             alt={product.name}
             fill
             sizes="(max-width: 400px) 50vw, (max-width: 600px) 50vw, 25vw"
@@ -180,6 +180,7 @@ function ProductCard({
 
 /* ─── Main Grid Component ───────────────────────────────────────── */
 export function ProductsGrid() {
+  const { products, loading, error } = useProducts();
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 

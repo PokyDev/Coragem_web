@@ -227,7 +227,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
 
   if (!product) return null;
 
-  const imageSrc = `/images/products/${product.image}`;
+  const imageSrc = `/images/products/${product.images[0]?.url ?? "/placeholder.jpg"}`;
   const isVisible = mounted && !closing;
 
   return (

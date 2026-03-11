@@ -188,23 +188,27 @@
 }
 
 .productThumb {
-  width:         30px;
-  height:        30px;
-  border-radius: 7px;
-  background:    var(--admin-surface);
-  border:        1px solid var(--admin-border);
-  display:       flex;
-  align-items:   center;
+  position:        relative;
+  width:           30px;
+  height:          30px;
+  border-radius:   7px;
+  background:      var(--admin-surface);
+  border:          1px solid var(--admin-border);
+  overflow:        hidden;
+  display:         flex;
+  align-items:     center;
   justify-content: center;
-  flex-shrink:   0;
+  flex-shrink:     0;
 }
 
-.productId {
-  font-family:    var(--font-jost), sans-serif;
-  font-size:      0.58rem;
-  font-weight:    700;
-  color:          var(--admin-text-dim);
-  letter-spacing: 0.05em;
+.productThumbImg {
+  border-radius: 6px;
+}
+
+.productThumbPlaceholder {
+  font-size:   0.65rem;
+  color:       var(--admin-text-dim);
+  line-height: 1;
 }
 
 .productName {
@@ -457,23 +461,28 @@
 }
 
 .cardThumb {
+  position:        relative;
   width:           34px;
   height:          34px;
   border-radius:   7px;
   background:      var(--admin-bg-card);
   border:          1px solid var(--admin-border);
+  overflow:        hidden;
   display:         flex;
   align-items:     center;
   justify-content: center;
   flex-shrink:     0;
 }
 
+.cardThumbImg {
+  border-radius: 6px;
+}
+
 .cardId {
   font-family:    var(--font-jost), sans-serif;
-  font-size:      0.58rem;
-  font-weight:    700;
+  font-size:      0.75rem;
   color:          var(--admin-text-dim);
-  letter-spacing: 0.04em;
+  line-height:    1;
 }
 
 .cardNameGroup {

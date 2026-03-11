@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { ProductRow, StockFilter } from "@/types/admin";
 import styles from "@/components/admin/css/ProductsTable.module.css";
 
@@ -183,7 +184,18 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
                   <td className={styles.td}>
                     <div className={styles.productCell}>
                       <div className={styles.productThumb}>
-                        <span className={styles.productId}>#{product.id}</span>
+                        {product.images[0]?.url ? (
+                          <Image
+                            src={product.images[0].url}
+                            alt={product.name}
+                            fill
+                            sizes="30px"
+                            className={styles.productThumbImg}
+                            style={{ objectFit: "cover" }}
+                          />
+                        ) : (
+                          <span className={styles.productThumbPlaceholder}>◈</span>
+                        )}
                       </div>
                       <span className={styles.productName}>{product.name}</span>
                     </div>
@@ -241,7 +253,18 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
             >
               <div className={styles.cardMain}>
                 <div className={styles.cardThumb}>
-                  <span className={styles.cardId}>#{product.id}</span>
+                  {product.images[0]?.url ? (
+                    <Image
+                      src={product.images[0].url}
+                      alt={product.name}
+                      fill
+                      sizes="34px"
+                      className={styles.cardThumbImg}
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : (
+                    <span className={styles.cardId}>◈</span>
+                  )}
                 </div>
                 <div className={styles.cardNameGroup}>
                   <p className={styles.cardName}>{product.name}</p>

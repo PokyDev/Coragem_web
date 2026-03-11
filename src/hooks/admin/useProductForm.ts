@@ -86,7 +86,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
   useEffect(() => {
     if (product) {
       setFormData(productRowToFormData(product));
-      setImagePreview(`/images/products/${product.images[0]?.url ?? "/placeholder.jpg"}`);
+      setImagePreview(product.images[0]?.url ?? null);
     } else {
       setFormData(EMPTY_FORM);
       setImagePreview(null);

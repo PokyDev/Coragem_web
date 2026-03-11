@@ -2,27 +2,8 @@
 
 /* ─── ProductMobileSheet ─────────────────────────────────────────────
  * Bottom sheet para pantallas móviles (≤ 600px).
- * Layout:
- *   ┌──────────────────────────────┐
- *   │  [imagen 50%] | [zoom 50%]  │  ← fila fija, ambos misma altura
- *   ├──────────────────────────────┤
- *   │  info scrollable             │
- *   │  (nombre, precio, detalles,  │
- *   │   stock bar, CTA WhatsApp)   │
- *   └──────────────────────────────┘
- *
- * Gestos:
- *   - Swipe hacia abajo → cierra
- *   - Tap en backdrop   → cierra
- *   - Botón X           → cierra
- *
- * Zoom:
- *   - Touch sobre la imagen activa el zoom en el panel derecho.
- *   - Ambos paneles son siempre visibles y del mismo tamaño.
- *   - El overlay de zoom NO cubre la imagen original.
  * ──────────────────────────────────────────────────────────────────── */
 
-// Config import
 import { buildWhatsAppUrl } from "@/lib/config";
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -38,6 +19,15 @@ function formatPrice(price: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
+}
+
+/**
+ * Devuelve la URL de la primera imagen del producto.
+ * Las imágenes provienen de Cloudinary y ya son URLs absolutas,
+ * por lo que se usan directamente sin ningún prefijo de ruta local.
+ */
+function getImageSrc(product: Product): string {
+  return product.images[0]?.url ?? "/placeholder.jpg";
 }
 
 const ZOOM_SCALE = 2.8;
@@ -96,24 +86,16 @@ interface ProductMobileSheetProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps) {
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const sheetRef     = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
 
-  // Animación de entrada/salida
-  const [mounted, setMounted] = useState(false);
-  const [closing, setClosing] = useState(false);
+  const [mounted,  setMounted]  = useState(false);
+  const [closing,  setClosing]  = useState(false);
+  const [dragY,    setDragY]    = useState(0);
+  const [zoomState, setZoomState] = useState<ZoomState>({ active: false, bgX: 50, bgY: 50 });
 
-  // Swipe-to-dismiss
-  const [dragY, setDragY] = useState(0);
-  const dragStartY = useRef(0);
-  const isDragging = useRef(false);
-
-  // Zoom
-  const [zoomState, setZoomState] = useState<ZoomState>({
-    active: false,
-    bgX: 50,
-    bgY: 50,
-  });
+  const dragStartY  = useRef(0);
+  const isDragging  = useRef(false);
 
   const outOfStock = product?.stock === 0;
 
@@ -130,19 +112,13 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
 
   /* ── Bloquear scroll del body ── */
   useEffect(() => {
-    if (product) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (product) document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
   }, [product]);
 
   /* ── Cerrar con Escape ── */
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,7 +145,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
     [handleClose]
   );
 
-  /* ── Swipe-to-dismiss: touch en el drag handle ── */
+  /* ── Swipe-to-dismiss ── */
   const handleHandleTouchStart = useCallback((e: React.TouchEvent) => {
     isDragging.current = true;
     dragStartY.current = e.touches[0].clientY;
@@ -178,20 +154,13 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
   const handleHandleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging.current) return;
     const delta = e.touches[0].clientY - dragStartY.current;
-    // Solo arrastrar hacia abajo (delta positivo)
-    if (delta > 0) {
-      setDragY(delta);
-    }
+    if (delta > 0) setDragY(delta);
   }, []);
 
   const handleHandleTouchEnd = useCallback(() => {
     isDragging.current = false;
-    // Si arrastró más de 100px → cerrar, si no → volver a posición original
-    if (dragY > 100) {
-      handleClose();
-    } else {
-      setDragY(0);
-    }
+    if (dragY > 100) handleClose();
+    else setDragY(0);
   }, [dragY, handleClose]);
 
   /* ── Zoom: touch sobre la imagen ── */
@@ -199,9 +168,9 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
     (e: React.TouchEvent<HTMLDivElement>) => {
       if (outOfStock) return;
       const touch = e.touches[0];
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width) * 100;
-      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+      const rect  = e.currentTarget.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width)  * 100;
+      const y = ((touch.clientY - rect.top)  / rect.height) * 100;
       setZoomState({ active: true, bgX: x, bgY: y });
     },
     [outOfStock]
@@ -213,9 +182,9 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
       e.preventDefault();
       e.stopPropagation();
       const touch = e.touches[0];
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width) * 100;
-      const y = ((touch.clientY - rect.top) / rect.height) * 100;
+      const rect  = e.currentTarget.getBoundingClientRect();
+      const x = ((touch.clientX - rect.left) / rect.width)  * 100;
+      const y = ((touch.clientY - rect.top)  / rect.height) * 100;
       setZoomState({ active: true, bgX: x, bgY: y });
     },
     [outOfStock, zoomState.active]
@@ -227,7 +196,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
 
   if (!product) return null;
 
-  const imageSrc = `/images/products/${product.images[0]?.url ?? "/placeholder.jpg"}`;
+  // URL directa de Cloudinary — sin prefijo local
+  const imageSrc  = getImageSrc(product);
   const isVisible = mounted && !closing;
 
   return (
@@ -255,16 +225,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
         aria-label={`Detalle: ${product.name}`}
         className={`ms-sheet ${isVisible ? "ms-sheet--visible" : ""}`}
         style={{
-          /*
-           * translateY base: 100% (oculto debajo del viewport).
-           * Al abrir: translateY(0). Al hacer swipe: translateY(dragY px).
-           * El dragY se suma en el style inline para que sea instantáneo
-           * durante el arrastre (sin transition), pero al soltar se
-           * restaura con transition via la clase CSS.
-           */
-          transform: isVisible
-            ? `translateY(${dragY}px)`
-            : "translateY(100%)",
+          transform: isVisible ? `translateY(${dragY}px)` : "translateY(100%)",
           transition: isDragging.current
             ? "none"
             : "transform 0.36s cubic-bezier(0.4,0,0.2,1)",
@@ -310,7 +271,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           />
         </div>
 
-        {/* ── Header: nombre + botón X ── */}
+        {/* ── Header: nombre ── */}
         <div
           style={{
             flexShrink: 0,
@@ -374,7 +335,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             />
             {outOfStock && <NoStockRibbon />}
 
-            {/* Hint de zoom */}
             {!outOfStock && (
               <div
                 className={`ms-zoom-hint ${zoomState.active ? "ms-zoom-hint--hidden" : ""}`}
@@ -427,7 +387,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             }}
           >
             {outOfStock ? (
-              /* Sin stock: placeholder */
               <div
                 style={{
                   width: "100%",
@@ -460,7 +419,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               </div>
             ) : (
               <>
-                {/* Zoom activo: fondo con la imagen ampliada */}
                 <div
                   style={{
                     position: "absolute",
@@ -477,7 +435,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                   aria-label={`Vista ampliada: ${product.name}`}
                 />
 
-                {/* Estado inactivo: instrucción */}
                 <div
                   style={{
                     position: "absolute",
@@ -495,8 +452,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="1.5" strokeLinecap="round" style={{ opacity: 0.6 }}>
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    <line x1="11" y1="8" x2="11" y2="14" />
-                    <line x1="8" y1="11" x2="14" y2="11" />
+                    <line x1="11" y1="8"  x2="11"    y2="14"    />
+                    <line x1="8"  y1="11" x2="14"    y2="11"    />
                   </svg>
                   <span
                     style={{
@@ -514,7 +471,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                   </span>
                 </div>
 
-                {/* Header "Vista ampliada" cuando zoom activo */}
                 <div
                   style={{
                     position: "absolute",
@@ -537,8 +493,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.2" strokeLinecap="round">
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    <line x1="11" y1="8" x2="11" y2="14" />
-                    <line x1="8" y1="11" x2="14" y2="11" />
+                    <line x1="11" y1="8"  x2="11"    y2="14"    />
+                    <line x1="8"  y1="11" x2="14"    y2="11"    />
                   </svg>
                   <span
                     style={{
@@ -564,18 +520,15 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             flex: 1,
             overflowY: "auto",
             padding: "0.9rem 1rem 2rem",
-            /* Deshabilitar scroll durante el zoom para no interferir */
             touchAction: zoomState.active ? "none" : "pan-y",
           }}
         >
-          {/* Precio */}
           <p
             style={{
               fontFamily: "var(--font-jost), sans-serif",
               fontSize: "1.15rem",
               fontWeight: 500,
-              background:
-                "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+              background: "linear-gradient(135deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -585,18 +538,15 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             {formatPrice(product.price)}
           </p>
 
-          {/* Divider */}
           <div
             style={{
               height: "1px",
-              background:
-                "linear-gradient(90deg, var(--coragem-teal) 0%, transparent 80%)",
+              background: "linear-gradient(90deg, var(--coragem-teal) 0%, transparent 80%)",
               opacity: 0.25,
               marginBottom: "0.9rem",
             }}
           />
 
-          {/* Details grid */}
           <div
             style={{
               display: "grid",
@@ -606,8 +556,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             }}
           >
             <DetailItem label="Categoría" value={product.category} />
-            <DetailItem label="Color" value={product.color} />
-            <DetailItem label="Ventas" value={`${product.ventas} unidades`} />
+            <DetailItem label="Color"     value={product.color}    />
+            <DetailItem label="Ventas"    value={`${product.ventas} unidades`} />
             <DetailItem
               label="Disponibilidad"
               value={outOfStock ? "Sin stock" : "Disponible"}
@@ -615,53 +565,23 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             />
           </div>
 
-          {/* Stock bar */}
           {!outOfStock && (
             <div style={{ marginBottom: "1.1rem" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.35rem",
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "var(--font-jost), sans-serif",
-                    fontSize: "0.58rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--text-secondary)",
-                  }}
-                >
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.35rem" }}>
+                <span style={{ fontFamily: "var(--font-jost), sans-serif", fontSize: "0.58rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-secondary)" }}>
                   Stock
                 </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-jost), sans-serif",
-                    fontSize: "0.62rem",
-                    color: "var(--coragem-teal)",
-                    fontWeight: 500,
-                  }}
-                >
+                <span style={{ fontFamily: "var(--font-jost), sans-serif", fontSize: "0.62rem", color: "var(--coragem-teal)", fontWeight: 500 }}>
                   {product.stock} uds.
                 </span>
               </div>
-              <div
-                style={{
-                  height: "3px",
-                  borderRadius: "999px",
-                  background: "var(--border)",
-                  overflow: "hidden",
-                }}
-              >
+              <div style={{ height: "3px", borderRadius: "999px", background: "var(--border)", overflow: "hidden" }}>
                 <div
                   style={{
                     height: "100%",
                     width: `${Math.min((product.stock / 15) * 100, 100)}%`,
                     borderRadius: "999px",
-                    background:
-                      "linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
+                    background: "linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 100%)",
                     transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
                   }}
                 />
@@ -669,7 +589,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             </div>
           )}
 
-          {/* CTA WhatsApp */}
           <a
             href={buildWhatsAppUrl(`Hola, me interesa el producto: ${product.name}`)}
             target="_blank"
@@ -711,40 +630,22 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
         </div>
       </div>
 
-      {/* ── Styles ── */}
       <style>{`
         .ms-backdrop--visible {
           background-color: rgba(0, 0, 0, 0.55) !important;
           backdrop-filter: blur(6px) !important;
         }
-
-        .ms-close-btn:hover {
-          background: var(--coragem-pink) !important;
-          border-color: var(--coragem-pink) !important;
-          color: #fff !important;
-        }
-
         .ms-cta:not(.ms-cta--disabled):hover {
           opacity: 0.88;
           transform: translateY(-1px);
         }
-
         .ms-zoom-hint--hidden {
           opacity: 0 !important;
           pointer-events: none !important;
         }
-
-        /* Scrollbar dentro del panel de info */
-        .ms-info-scroll::-webkit-scrollbar {
-          width: 3px;
-        }
-        .ms-info-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .ms-info-scroll::-webkit-scrollbar-thumb {
-          background: var(--border);
-          border-radius: 999px;
-        }
+        .ms-info-scroll::-webkit-scrollbar        { width: 3px; }
+        .ms-info-scroll::-webkit-scrollbar-track  { background: transparent; }
+        .ms-info-scroll::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 999px; }
       `}</style>
     </>
   );

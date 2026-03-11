@@ -2,42 +2,16 @@
 
 import { useState } from 'react';
 import Image        from 'next/image';
-import { NoStockRibbon } from '@/components/shared/ui/NoStockRibbon';
-import { ProductModal  } from '@/components/shared/product/ProductModal';
-import type { Product  } from '@/types/catalog';
+import { NoStockRibbon }        from '@/components/shared/ui/NoStockRibbon';
+import { ProductModal }         from '@/components/shared/product/ProductModal';
+import { ProductCardSkeleton }  from '@/components/shared/ui/ProductCardSkeleton';
+import type { Product }         from '@/types/catalog';
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency', currency: 'COP',
     minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(price);
-}
-
-/* ─── Loading skeleton ───────────────────────────────────────────── */
-function GridSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            borderRadius: '16px',
-            border: '1px solid var(--border)',
-            backgroundColor: 'var(--bg-card)',
-            overflow: 'hidden',
-            animation: 'skeletonPulse 1.4s ease-in-out infinite',
-            animationDelay: `${i * 0.1}s`,
-          }}
-        >
-          <div style={{ width: '100%', aspectRatio: '1 / 1', backgroundColor: 'var(--border)' }} />
-          <div style={{ padding: '0.9rem 1rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ height: '1rem', width: '70%', borderRadius: '4px', backgroundColor: 'var(--border)' }} />
-            <div style={{ height: '0.85rem', width: '40%', borderRadius: '4px', backgroundColor: 'var(--border)' }} />
-          </div>
-        </div>
-      ))}
-    </>
-  );
 }
 
 /* ─── Error state ────────────────────────────────────────────────── */
@@ -70,8 +44,8 @@ function EmptyState() {
 
 /* ─── Product Card ───────────────────────────────────────────────── */
 function ProductCard({ product, index, onClick }: { product: Product; index: number; onClick: (p: Product) => void }) {
-  const outOfStock   = product.stock === 0;
-  const firstImage   = product.images[0];
+  const outOfStock = product.stock === 0;
+  const firstImage = product.images[0];
 
   return (
     <button
@@ -91,9 +65,6 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
               alt={product.name}
               fill
               sizes="(max-width: 400px) 50vw, (max-width: 600px) 50vw, 33vw"
-              {...(firstImage.width  && firstImage.height
-                ? { width: firstImage.width, height: firstImage.height }
-                : {})}
               style={{ objectFit: 'cover', transition: 'transform 0.45s cubic-bezier(0.4,0,0.2,1)' }}
               className="catalog-card-img"
             />
@@ -139,7 +110,7 @@ export function CatalogGrid({ products, loading, error }: CatalogGridProps) {
         style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem', alignItems: 'stretch' }}
         className="catalog-grid"
       >
-        {loading && <GridSkeleton />}
+        {loading && <ProductCardSkeleton count={6} delay={0.1} />}
         {!loading && error    && <ErrorState message={error} />}
         {!loading && !error && products.length === 0 && <EmptyState />}
         {!loading && !error && products.map((p, i) => (
@@ -165,17 +136,13 @@ export function CatalogGrid({ products, loading, error }: CatalogGridProps) {
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0);    }
         }
-        @keyframes skeletonPulse {
-          0%, 100% { opacity: 1;   }
-          50%       { opacity: 0.5; }
-        }
 
         @media (max-width: 900px) { .catalog-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 400px) {
-          .catalog-grid  { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
-          .catalog-card  { border-radius: 10px !important; }
-          .catalog-card-info  { padding: 0.55rem 0.65rem 0.65rem !important; gap: 0.25rem !important; }
-          .catalog-card-name  { font-size: 0.82rem !important; line-height: 1.2 !important; }
+          .catalog-grid      { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+          .catalog-card      { border-radius: 10px !important; }
+          .catalog-card-info { padding: 0.55rem 0.65rem 0.65rem !important; gap: 0.25rem !important; }
+          .catalog-card-name { font-size: 0.82rem !important; line-height: 1.2 !important; }
           .catalog-card-price { font-size: 0.75rem !important; }
           .catalog-card-stock { font-size: 0.52rem !important; letter-spacing: 0.06em !important; }
         }

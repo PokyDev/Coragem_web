@@ -13,7 +13,6 @@
  * interacción del usuario, por lo que no hay CLS).
  * ──────────────────────────────────────────────────────────────────── */
 
-// Config import
 import { buildWhatsAppUrl } from "@/lib/config";
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -26,11 +25,6 @@ import { Product } from "@/types/catalog";
 const MOBILE_BREAKPOINT = 600;
 
 function useIsMobile(): boolean | null {
-  /*
-   * null = no resuelto aún (SSR / primera hidratación).
-   * true  = móvil.
-   * false = desktop/tablet.
-   */
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -53,6 +47,15 @@ function formatPrice(price: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(price);
+}
+
+/**
+ * Devuelve la URL de la primera imagen del producto.
+ * Las imágenes provienen de Cloudinary y ya son URLs absolutas,
+ * por lo que se usan directamente sin ningún prefijo de ruta local.
+ */
+function getImageSrc(product: Product): string {
+  return product.images[0]?.url ?? "/placeholder.jpg";
 }
 
 const ZOOM_SCALE = 2.5;
@@ -129,18 +132,14 @@ function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
           }}
         >
           <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--coragem-teal)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
+            width="12" height="12" viewBox="0 0 24 24"
+            fill="none" stroke="var(--coragem-teal)"
+            strokeWidth="2.2" strokeLinecap="round"
           >
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            <line x1="11" y1="8" x2="11" y2="14" />
-            <line x1="8" y1="11" x2="14" y2="11" />
+            <line x1="11" y1="8"  x2="11"    y2="14"    />
+            <line x1="8"  y1="11" x2="14"    y2="11"    />
           </svg>
           <span
             style={{
@@ -227,12 +226,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
   }, [product]);
 
   useEffect(() => {
-    if (product) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (product) document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
   }, [product]);
 
   useEffect(() => {
@@ -279,7 +274,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
 
   if (!product) return null;
 
-  const imageSrc = `/images/products/${product.images[0]?.url ?? "/placeholder.jpg"}`;
+  // URL directa de Cloudinary — sin prefijo local
+  const imageSrc = getImageSrc(product);
   const isVisible = mounted && !closing;
 
   return (
@@ -349,8 +345,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
             }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="18" y1="6"  x2="6"  y2="18" />
+              <line x1="6"  y1="6"  x2="18" y2="18" />
             </svg>
           </button>
 
@@ -466,8 +462,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem 1rem", marginBottom: "1.4rem" }}>
                 <DetailItem label="Categoría" value={product.category} />
-                <DetailItem label="Color" value={product.color} />
-                <DetailItem label="Ventas" value={`${product.ventas} unidades`} />
+                <DetailItem label="Color"     value={product.color}    />
+                <DetailItem label="Ventas"    value={`${product.ventas} unidades`} />
                 <DetailItem
                   label="Disponibilidad"
                   value={outOfStock ? "Sin stock" : "Disponible"}
@@ -582,9 +578,6 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const isMobile = useIsMobile();
 
-  // Mientras no se resuelve el tamaño (SSR), no renderizar nada.
-  // Como el modal solo se abre por interacción del usuario, no hay
-  // impacto visible ni CLS.
   if (isMobile === null) return null;
 
   return isMobile ? (

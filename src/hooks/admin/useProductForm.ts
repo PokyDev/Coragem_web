@@ -9,6 +9,9 @@
  *   - Drag & drop de imagen
  *   - Reset al abrir/cerrar modal
  *   - Modo "nuevo" vs "editar" según si se recibe un ProductRow
+ *   - Integración con el backend:
+ *       edit → PATCH /api/admin/products/:id  (multipart/form-data)
+ *       new  → POST  /api/admin/products       (pendiente de implementación)
  *
  * No contiene UI — solo estado y handlers.
  */
@@ -21,9 +24,32 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from "react";
+import { api }  from "@/lib/api";
 import type { ProductRow, ProductFormData, ProductFormErrors } from "@/types/admin";
 
-/* ─── Initial state ─────────────────────────────────────────────── */
+/* ─── Tipos de respuesta del backend ────────────────────────────── */
+
+interface PatchProductResponse {
+  product: {
+    id:        string;
+    name:      string;
+    price:     number;
+    category:  string;
+    color:     string;
+    stock:     number;
+    ventas:    number;
+    isVisible: boolean;
+    images: Array<{
+      id:     string;
+      url:    string;
+      order:  number;
+      width:  number | null;
+      height: number | null;
+    }>;
+  };
+}
+
+/* ─── Estado inicial ────────────────────────────────────────────── */
 
 const EMPTY_FORM: ProductFormData = {
   name:     "",
@@ -47,7 +73,7 @@ function productRowToFormData(product: ProductRow): ProductFormData {
   };
 }
 
-/* ─── Validation ────────────────────────────────────────────────── */
+/* ─── Validación ────────────────────────────────────────────────── */
 
 function validate(data: ProductFormData, isEdit: boolean): ProductFormErrors {
   const errors: ProductFormErrors = {};
@@ -59,6 +85,9 @@ function validate(data: ProductFormData, isEdit: boolean): ProductFormErrors {
   else if (Number(data.stock) < 0) errors.stock    = "El stock no puede ser negativo";
   if (!data.category)              errors.category = "Selecciona una categoría";
   if (!data.color)                 errors.color    = "Selecciona un color";
+
+  // En modo "nuevo" la imagen es obligatoria.
+  // En modo "editar" es opcional: si no se sube una nueva se conserva la existente.
   if (!isEdit && !data.image)      errors.image    = "Agrega una imagen al producto";
 
   return errors;
@@ -79,6 +108,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging,   setIsDragging]   = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError,     setApiError]     = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +122,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       setImagePreview(null);
     }
     setErrors({});
+    setApiError(null);
     setIsSubmitting(false);
   }, [product]);
 
@@ -107,6 +138,8 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
           delete next[field as keyof ProductFormErrors];
           return next;
         });
+        // Limpiar error de API al editar cualquier campo
+        setApiError(null);
       },
     []
   );
@@ -122,10 +155,12 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       delete next.image;
       return next;
     });
+    setApiError(null);
   }, []);
 
-  const handleImageClick        = useCallback(() => { fileInputRef.current?.click(); }, []);
-  const handleFileInputChange   = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageClick = useCallback(() => { fileInputRef.current?.click(); }, []);
+
+  const handleFileInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) processImageFile(file);
     e.target.value = "";
@@ -145,26 +180,83 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     setFormData((prev) => ({ ...prev, image: null }));
   }, []);
 
-  /* ── Submit simulado ── */
+  /* ── Submit real ── */
   const handleSubmit = useCallback(async (): Promise<boolean> => {
+    // 1. Validación local
     const validationErrors = validate(formData, isEdit);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return false;
     }
+
     setIsSubmitting(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 800));
-    setIsSubmitting(false);
-    return true;
-  }, [formData, isEdit]);
+    setApiError(null);
+
+    try {
+      if (isEdit && product) {
+        // ── Modo editar: PATCH /api/admin/products/:id ────────────
+        //
+        // El backend espera multipart/form-data. Solo se envían los
+        // campos que el usuario puede haber modificado. La imagen es
+        // opcional: si no se seleccionó una nueva, se conserva la actual.
+        const body = new FormData();
+        body.append("name",     formData.name.trim());
+        body.append("price",    formData.price);
+        body.append("stock",    formData.stock);
+        body.append("ventas",   formData.ventas || "0");
+        body.append("category", formData.category);
+        body.append("color",    formData.color);
+
+        // Solo adjuntar imagen si el usuario seleccionó una nueva
+        if (formData.image) {
+          body.append("image", formData.image);
+        }
+
+        const res = await api.multipart<PatchProductResponse>(
+          `/api/admin/products/${product.id}`,
+          "PATCH",
+          body,
+        );
+
+        if (res.error || !res.data) {
+          setApiError(res.error ?? "Error al guardar el producto");
+          return false;
+        }
+
+        return true;
+      }
+
+      // ── Modo nuevo: POST /api/admin/products ──────────────────
+      // El endpoint aún no está implementado en el backend (devuelve 501).
+      // TODO: implementar cuando el backend exponga POST /api/admin/products.
+      setApiError("La creación de productos aún no está disponible.");
+      return false;
+
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData, isEdit, product]);
 
   const handleCancel = useCallback(() => { onClose(); }, [onClose]);
 
   return {
-    formData, errors, imagePreview, isDragging, isSubmitting, isEdit,
+    formData,
+    errors,
+    imagePreview,
+    isDragging,
+    isSubmitting,
+    isEdit,
+    apiError,
     fileInputRef,
-    handleFieldChange, handleImageClick, handleFileInputChange,
-    handleDragEnter, handleDragLeave, handleDragOver, handleDrop,
-    handleRemoveImage, handleSubmit, handleCancel,
+    handleFieldChange,
+    handleImageClick,
+    handleFileInputChange,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop,
+    handleRemoveImage,
+    handleSubmit,
+    handleCancel,
   };
 }

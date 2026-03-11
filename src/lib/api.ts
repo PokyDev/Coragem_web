@@ -51,9 +51,55 @@ async function request<T>(
   }
 }
 
+/**
+ * Petición multipart/form-data.
+ *
+ * NO se establece el header Content-Type manualmente: el navegador lo
+ * genera automáticamente con el boundary correcto al recibir un FormData.
+ * Forzar "Content-Type: multipart/form-data" sin boundary rompe el parsing
+ * del servidor.
+ */
+async function multipartRequest<T>(
+  path:    string,
+  method:  "POST" | "PATCH" | "PUT",
+  body:    FormData,
+): Promise<ApiResponse<T>> {
+  try {
+    const res = await fetch(`${getApiBase()}${path}`, {
+      method,
+      credentials: "include",
+      body,
+      // Sin headers: el browser pone "Content-Type: multipart/form-data; boundary=..."
+    });
+
+    if (res.status === 429) {
+      const resBody = await res.json().catch(() => ({}));
+      return {
+        data:       null,
+        error:      resBody.error ?? "Demasiados intentos fallidos",
+        retryAfter: resBody.retryAfter,
+      };
+    }
+
+    const resBody = await res.json();
+
+    if (!res.ok) {
+      return { data: null, error: resBody.error ?? "Error desconocido" };
+    }
+
+    return { data: resBody as T, error: null };
+  } catch {
+    return { data: null, error: "No se pudo conectar con el servidor" };
+  }
+}
+
 export const api = {
-  get:   <T>(path: string)                        => request<T>(path),
-  post:  <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",  body: JSON.stringify(body) }),
-  put:   <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
-  patch: <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+  get:        <T>(path: string)                        => request<T>(path),
+  post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",  body: JSON.stringify(body) }),
+  put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
+  patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+
+  /** Subida de archivos — omite Content-Type para preservar el multipart boundary */
+  multipart:  <T>(path: string, method: "POST" | "PATCH" | "PUT", body: FormData) =>
+    multipartRequest<T>(path, method, body),
 };

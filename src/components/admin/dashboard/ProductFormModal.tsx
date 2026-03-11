@@ -178,7 +178,7 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
 
   const {
     formData, errors, imagePreview, isDragging, isSubmitting,
-    fileInputRef,
+    fileInputRef, apiError,
     handleFieldChange, handleImageClick, handleFileInputChange,
     handleDragEnter, handleDragLeave, handleDragOver, handleDrop,
     handleRemoveImage, handleSubmit, handleCancel,
@@ -449,6 +449,20 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
 
         {/* ── Footer ── */}
         <div className={styles.footer}>
+          {/* Error de API — visible si el backend rechaza la operación */}
+          {apiError && (
+            <span
+              style={{
+                fontFamily:    "var(--font-jost), sans-serif",
+                fontSize:      "0.72rem",
+                color:         "var(--admin-danger)",
+                letterSpacing: "0.02em",
+                flex:          1,
+              }}
+            >
+              {apiError}
+            </span>
+          )}
           <button
             type="button"
             className={styles.btnCancel}

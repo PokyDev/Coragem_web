@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const { registerNewProductAction } = useDashboardActions();
 
   // ── Datos reales desde la API ──────────────────────────────────
-  const { products: allProducts, loading, error } = useProducts();
+  const { products: allProducts, loading, error, refetch } = useProducts();
 
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [modalState,  setModalState]  = useState<ProductModalState>({
@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
   /* ── Callback post-guardado ── */
   const handleSaved = useCallback((mode: "new" | "edit") => {
-    console.log(`Producto ${mode === "new" ? "creado" : "editado"} — pendiente integración API`);
+    refetch();
   }, []);
 
   /* ── Eliminar con confirmación ── */

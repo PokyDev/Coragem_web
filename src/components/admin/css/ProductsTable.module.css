@@ -578,3 +578,127 @@
 :global(.admin[data-admin-theme="light"]) .cardMetaItem,
 :global(.admin[data-admin-theme="light"]) .cardActions,
 :global(.admin[data-admin-theme="light"]) .cardActionBtn:first-child { border-color: var(--admin-border); }
+/* ════════════════════════════════════════════════
+   DESKTOP IMAGE TOOLTIP — portal en document.body
+   position: fixed, encima de todo (z-index 9999).
+   El timer de 1 s lo maneja JS (setTimeout).
+════════════════════════════════════════════════ */
+
+.desktopTooltip {
+  position:      fixed;
+  z-index:       9999;
+  border-radius: 14px;
+  overflow:      hidden;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.2),
+    0 24px 64px rgba(0, 0, 0, 0.7),
+    0 6px 20px  rgba(0, 0, 0, 0.4);
+  animation: desktopTooltipIn 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes desktopTooltipIn {
+  from {
+    opacity:   0;
+    transform: scale(0.92) translateY(6px);
+  }
+  to {
+    opacity:   1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.desktopTooltipImg {
+  border-radius: 14px;
+}
+
+/* Ocultar el tooltip en móvil (no debería llegar a renderizarse,
+   pero por seguridad lo ocultamos también con CSS) */
+@media (max-width: 500px) {
+  .desktopTooltip { display: none; }
+}
+
+/* ════════════════════════════════════════════════
+   MOBILE IMAGE PREVIEW MODAL
+════════════════════════════════════════════════ */
+
+.mobilePreviewBackdrop {
+  display:         none;
+  position:        fixed;
+  inset:           0;
+  z-index:         300;
+  background:      rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
+  align-items:     center;
+  justify-content: center;
+  padding:         1.5rem;
+  animation:       mobileBackdropIn 0.22s ease forwards;
+}
+
+@media (max-width: 500px) {
+  .mobilePreviewBackdrop { display: flex; }
+}
+
+@keyframes mobileBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mobilePreviewPanel {
+  position:      relative;
+  width:         88vw;
+  max-width:     300px;
+  aspect-ratio:  1 / 1;
+  border-radius: 16px;
+  overflow:      hidden;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.2),
+    0 24px 72px rgba(0, 0, 0, 0.7);
+  animation: mobilePanelIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes mobilePanelIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.mobilePreviewImgWrap {
+  position: relative;
+  width:    100%;
+  height:   100%;
+}
+
+.mobilePreviewImg {
+  border-radius: 16px;
+}
+
+.mobilePreviewClose {
+  position:        absolute;
+  top:             0.6rem;
+  right:           0.6rem;
+  z-index:         1;
+  width:           30px;
+  height:          30px;
+  border-radius:   8px;
+  border:          1px solid rgba(255, 255, 255, 0.2);
+  background:      rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  color:           white;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  transition:      background 0.18s;
+}
+
+.mobilePreviewClose:hover {
+  background:   var(--admin-danger);
+  border-color: rgba(196, 122, 158, 0.4);
+}
+
+/* Reset para el cardThumb convertido a <button> */
+button.cardThumb {
+  padding:    0;
+  background: none;
+  border:     1px solid var(--admin-border);
+}

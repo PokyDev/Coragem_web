@@ -4,11 +4,19 @@
  * src/components/admin/dashboard/ProductsTable.tsx
  *
  * Tabla de productos del dashboard.
- * Ahora expone onEdit y onDelete para que DashboardPage
- * controle el modal y las acciones.
+ * Expone onEdit y onDelete para que DashboardPage controle el modal.
+ *
+ * Comportamientos de preview de imagen:
+ *   Desktop — portal React montado en document.body, posicionado con
+ *             getBoundingClientRect(). Aparece 1 s después del mouseenter
+ *             sobre la fila. Al salir de la fila se cancela o se oculta.
+ *             Al estar fuera del árbol de la tabla no hay stacking context
+ *             que lo tape (sidebar, thead sticky, etc.).
+ *   Móvil   — tap sobre el cardThumb abre un backdrop fullscreen.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { ProductRow, StockFilter } from "@/types/admin";
 import styles from "@/components/admin/css/ProductsTable.module.css";
@@ -56,6 +64,96 @@ const CATEGORY_LABELS: Record<string, string> = {
   EARCUFF: "Earcuff", ANILLO: "Anillo", DIJE: "Dije",
   CADENA: "Cadena", TOPOS: "Topos", CANDONGAS: "Candongas", CONJUNTOS: "Conjuntos",
 };
+
+/* ─── Desktop Image Tooltip (portal en document.body) ───────────── */
+
+interface TooltipPortalProps {
+  url:        string;
+  name:       string;
+  anchorRect: DOMRect;
+}
+
+function TooltipPortal({ url, name, anchorRect }: TooltipPortalProps) {
+  const TOOLTIP_SIZE = 300;
+
+  /*
+   * position: fixed → coordenadas relativas al viewport.
+   * getBoundingClientRect() también es relativo al viewport,
+   * así que no se suma scrollY. El tooltip se centra sobre el
+   * thumb y crece hacia arriba desde su borde superior.
+   */
+  const left = anchorRect.left + anchorRect.width / 2 - TOOLTIP_SIZE / 2;
+  const top  = anchorRect.top  + anchorRect.height / 2 - TOOLTIP_SIZE / 2;
+
+  return createPortal(
+    <div
+      className={styles.desktopTooltip}
+      style={{ top, left, width: TOOLTIP_SIZE, height: TOOLTIP_SIZE }}
+      aria-hidden="true"
+    >
+      <Image
+        src={url}
+        alt={name}
+        fill
+        sizes="300px"
+        style={{ objectFit: "cover" }}
+        className={styles.desktopTooltipImg}
+        priority={false}
+      />
+    </div>,
+    document.body
+  );
+}
+
+/* ─── Mobile Image Preview ───────────────────────────────────────── */
+
+interface MobilePreviewProps {
+  url:     string;
+  name:    string;
+  onClose: () => void;
+}
+
+function MobilePreview({ url, name, onClose }: MobilePreviewProps) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className={styles.mobilePreviewBackdrop}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Vista previa de ${name}`}
+    >
+      <div className={styles.mobilePreviewPanel} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.mobilePreviewImgWrap}>
+          <Image
+            src={url}
+            alt={name}
+            fill
+            sizes="88vw"
+            style={{ objectFit: "cover" }}
+            className={styles.mobilePreviewImg}
+          />
+        </div>
+        <button
+          className={styles.mobilePreviewClose}
+          onClick={onClose}
+          aria-label="Cerrar vista previa"
+          type="button"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Pagination ─────────────────────────────────────────────────── */
 
@@ -133,7 +231,38 @@ interface ProductsTableProps {
 export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDelete }: ProductsTableProps) {
   const [page, setPage] = useState(1);
 
+  /* Desktop tooltip */
+  const [tooltip, setTooltip] = useState<{ url: string; name: string; rect: DOMRect } | null>(null);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Mobile preview */
+  const [mobilePreview, setMobilePreview] = useState<{ url: string; name: string } | null>(null);
+
   useEffect(() => { setPage(1); }, [searchQuery, stockFilter]);
+
+  /* Limpiar timer al desmontar */
+  useEffect(() => () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); }, []);
+
+  /* Desktop: iniciar contador de 1 s al entrar en la fila */
+  const handleRowMouseEnter = useCallback((product: ProductRow, e: React.MouseEvent<HTMLTableRowElement>) => {
+    if (!product.images[0]?.url) return;
+    const thumb = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(`.${styles.productThumb}`);
+    if (!thumb) return;
+    const rect = thumb.getBoundingClientRect();
+    hoverTimer.current = setTimeout(() => {
+      setTooltip({ url: product.images[0].url, name: product.name, rect });
+    }, 1000);
+  }, []);
+
+  /* Desktop: cancelar o cerrar al salir de la fila */
+  const handleRowMouseLeave = useCallback(() => {
+    if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
+    setTooltip(null);
+  }, []);
+
+  /* Móvil */
+  const openMobilePreview  = useCallback((url: string, name: string) => setMobilePreview({ url, name }), []);
+  const closeMobilePreview = useCallback(() => setMobilePreview(null), []);
 
   const totalPages = Math.ceil(products.length / PAGE_SIZE);
   const start      = (page - 1) * PAGE_SIZE;
@@ -180,7 +309,12 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
           <tbody>
             {pageItems.length > 0 ? (
               pageItems.map((product) => (
-                <tr key={product.id} className={styles.row}>
+                <tr
+                  key={product.id}
+                  className={styles.row}
+                  onMouseEnter={(e) => handleRowMouseEnter(product, e)}
+                  onMouseLeave={handleRowMouseLeave}
+                >
                   <td className={styles.td}>
                     <div className={styles.productCell}>
                       <div className={styles.productThumb}>
@@ -252,7 +386,13 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               <div className={styles.cardMain}>
-                <div className={styles.cardThumb}>
+                <button
+                  className={styles.cardThumb}
+                  type="button"
+                  aria-label={product.images[0]?.url ? `Ver imagen de ${product.name}` : undefined}
+                  onClick={() => product.images[0]?.url && openMobilePreview(product.images[0].url, product.name)}
+                  style={{ cursor: product.images[0]?.url ? "pointer" : "default" }}
+                >
                   {product.images[0]?.url ? (
                     <Image
                       src={product.images[0].url}
@@ -265,7 +405,7 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
                   ) : (
                     <span className={styles.cardId}>◈</span>
                   )}
-                </div>
+                </button>
                 <div className={styles.cardNameGroup}>
                   <p className={styles.cardName}>{product.name}</p>
                   <p className={styles.cardCategory}>
@@ -330,6 +470,24 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
         </span>
         <Pagination current={page} total={totalPages} onChange={setPage} />
       </div>
+
+      {/* ── Desktop image tooltip portal ── */}
+      {tooltip && (
+        <TooltipPortal
+          url={tooltip.url}
+          name={tooltip.name}
+          anchorRect={tooltip.rect}
+        />
+      )}
+
+      {/* ── Mobile image preview ── */}
+      {mobilePreview && (
+        <MobilePreview
+          url={mobilePreview.url}
+          name={mobilePreview.name}
+          onClose={closeMobilePreview}
+        />
+      )}
     </div>
   );
 }

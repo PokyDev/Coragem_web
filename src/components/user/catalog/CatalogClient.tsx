@@ -6,7 +6,7 @@ import { CatalogToolbar     } from '@/components/user/catalog/CatalogToolbar';
 import { CatalogGrid        } from '@/components/user/catalog/CatalogGrid';
 import { MobileFilterDrawer } from '@/components/user/catalog/MobileFilterDrawer';
 import { LoadMoreButton     } from '@/components/shared/ui/LoadMoreButton';
-import { useProducts        } from '@/hooks/user/useProducts';
+import { useProducts        } from '@/hooks/shared/useProducts';
 import type { Category, Color, ActiveFilters, Product, SortKey } from '@/types/catalog';
 
 interface CatalogClientProps {

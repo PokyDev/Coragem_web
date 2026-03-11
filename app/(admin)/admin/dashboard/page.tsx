@@ -7,7 +7,7 @@ import { ProductsTable }    from "@/components/admin/dashboard/ProductsTable";
 import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
 import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
-import { useProducts } from "@/hooks/user/useProducts";
+import { useProducts } from "@/hooks/shared/useProducts";
 import styles from "./css/DashboardPage.module.css";
 
 async function getSwal() {

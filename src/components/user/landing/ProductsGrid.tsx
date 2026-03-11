@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useProducts } from "@/hooks/user/useProducts";
+import { useProducts } from "@/hooks/shared/useProducts";
 import { NoStockRibbon } from "@/components/shared/ui/NoStockRibbon";
 import { ProductModal } from "@/components/shared/product/ProductModal";
 import { ProductCardSkeleton } from "@/components/shared/ui/ProductCardSkeleton";

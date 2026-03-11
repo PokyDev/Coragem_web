@@ -227,11 +227,28 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       }
 
       // ── Modo nuevo: POST /api/admin/products ──────────────────
-      // El endpoint aún no está implementado en el backend (devuelve 501).
-      // TODO: implementar cuando el backend exponga POST /api/admin/products.
-      setApiError("La creación de productos aún no está disponible.");
-      return false;
+      const body = new FormData();
+      body.append("name",     formData.name.trim());
+      body.append("price",    formData.price);
+      body.append("stock",    formData.stock);
+      body.append("ventas",   formData.ventas || "0");
+      body.append("category", formData.category);
+      body.append("color",    formData.color);
+      body.append("image",    formData.image!);
 
+      const res = await api.multipart<{ product: PatchProductResponse["product"] }>(
+        "/api/admin/products",
+        "POST",
+        body,
+      );
+
+      if (res.error || !res.data) {
+        setApiError(res.error ?? "Error al crear el producto");
+        return false;
+      }
+
+      return true;
+      
     } finally {
       setIsSubmitting(false);
     }

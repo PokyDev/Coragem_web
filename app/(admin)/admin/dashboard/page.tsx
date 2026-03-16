@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
     if (!isConfirmed) return;
 
-    const { error } = await api.delete(`api/admin/products/${product.id}`);
+    const { error } = await api.delete(`/api/admin/products/${product.id}`);
 
     if (error) {
       await Swal.fire({

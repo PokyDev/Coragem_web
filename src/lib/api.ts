@@ -20,9 +20,9 @@ export interface ApiResponse<T> {
 }
 
 async function request<T>(
-  path:    string,
-  options: RequestInit = {},
-  withBody = true,
+  path:     string,
+  options:  RequestInit = {},
+  withBody  = true,
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(`${getApiBase()}${path}`, {
@@ -38,6 +38,11 @@ async function request<T>(
         error:      body.error ?? "Demasiados intentos fallidos",
         retryAfter: body.retryAfter,
       };
+    }
+
+    // Respuestas sin body (204 No Content) — no intentar parsear JSON
+    if (res.status === 204 || res.headers.get("content-length") === "0") {
+      return { data: null, error: null };
     }
 
     const body = await res.json();
@@ -96,9 +101,9 @@ async function multipartRequest<T>(
 
 export const api = {
   get:        <T>(path: string)                        => request<T>(path, {}, false),
-  post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",  body: JSON.stringify(body) }),
-  put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
-  patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+  post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",   body: JSON.stringify(body) }),
+  put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",    body: JSON.stringify(body) }),
+  patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH",  body: JSON.stringify(body) }),
   delete:     <T>(path: string)                        => request<T>(path, { method: "DELETE" }, false),
 
   /** Subida de archivos — omite Content-Type para preservar el multipart boundary */

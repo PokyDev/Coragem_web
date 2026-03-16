@@ -9,6 +9,7 @@ import { useDashboardSearch, useDashboardActions } from "@/components/admin/layo
 import { computeStats, filterProductRows } from "@/lib/dashboard";
 import { useProducts } from "@/hooks/shared/useProducts";
 import styles from "./css/DashboardPage.module.css";
+import { api } from "@/lib/api";
 
 async function getSwal() {
   const Swal = (await import("sweetalert2")).default;
@@ -70,20 +71,35 @@ export default function DashboardPage() {
       color:              "#e2e8f0",
     });
 
-    if (isConfirmed) {
+    if (!isConfirmed) return;
+
+    const { error } = await api.delete(`api/admin/products/${product.id}`);
+
+    if (error) {
       await Swal.fire({
-        title:              "Producto eliminado",
-        text:               `"${product.name}" fue eliminado del catálogo.`,
-        icon:               "success",
-        confirmButtonText:  "Aceptar",
+        title: "Error al eliminar",
+        text:  error,
+        icon:  "error",
+        confirmButtonText: "Aceptar",
         confirmButtonColor: "#4ec4c4",
-        timer:              2200,
-        timerProgressBar:   true,
         background:         "#111827",
         color:              "#e2e8f0",
       });
+      return;
     }
-  }, []);
+
+    refetch();
+
+    await Swal.fire({
+      title: "Producto eliminado",
+      text:  `${product.name} ha sido eliminado del catalogo.`,
+      icon:  "success",
+      confirmButtonText: "Aceptar",
+      confirmButtonColor: "#4ec4c4",
+      background:         "#111827",
+      color:              "#e2e8f0",
+    });
+  }, [refetch]);
 
   // ── Loading / error del dashboard ─────────────────────────────
   if (loading) return (

@@ -98,6 +98,7 @@ export const api = {
   post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",  body: JSON.stringify(body) }),
   put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
   patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+  delete:     <T>(path: string)                        => request<T>(path, { method: "DELETE" }),
 
   /** Subida de archivos — omite Content-Type para preservar el multipart boundary */
   multipart:  <T>(path: string, method: "POST" | "PATCH" | "PUT", body: FormData) =>

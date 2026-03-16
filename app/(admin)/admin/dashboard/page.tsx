@@ -8,8 +8,8 @@ import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal"
 import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
 import { computeStats, filterProductRows } from "@/lib/dashboard";
 import { useProducts } from "@/hooks/shared/useProducts";
-import styles from "./css/DashboardPage.module.css";
 import { api } from "@/lib/api";
+import styles from "./css/DashboardPage.module.css";
 
 async function getSwal() {
   const Swal = (await import("sweetalert2")).default;
@@ -20,8 +20,8 @@ export default function DashboardPage() {
   const { searchQuery }              = useDashboardSearch();
   const { registerNewProductAction } = useDashboardActions();
 
-  // ── Datos reales desde la API ──────────────────────────────────
-  const { products: allProducts, loading, error, refetch } = useProducts();
+  // adminMode: true → GET /api/admin/products (todos, incluyendo isVisible = false)
+  const { products: allProducts, loading, error, refetch } = useProducts({ adminMode: true });
 
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [modalState,  setModalState]  = useState<ProductModalState>({
@@ -51,13 +51,14 @@ export default function DashboardPage() {
   }, [allProducts, searchQuery, stockFilter]);
 
   /* ── Callback post-guardado ── */
-  const handleSaved = useCallback((mode: "new" | "edit") => {
+  const handleSaved = useCallback((_mode: "new" | "edit") => {
     refetch();
-  }, []);
+  }, [refetch]);
 
   /* ── Eliminar con confirmación ── */
   const handleDelete = useCallback(async (product: ProductRow) => {
     const Swal = await getSwal();
+
     const { isConfirmed } = await Swal.fire({
       title: "¿Eliminar producto?",
       html:  `<span style="color:#94a3b8">Se eliminará permanentemente <strong style="color:#e2e8f0">${product.name}</strong>.</span>`,
@@ -73,14 +74,14 @@ export default function DashboardPage() {
 
     if (!isConfirmed) return;
 
-    const { error } = await api.delete(`/api/admin/products/${product.id}`);
+    const { error: deleteError } = await api.delete(`/api/admin/products/${product.id}`);
 
-    if (error) {
+    if (deleteError) {
       await Swal.fire({
-        title: "Error al eliminar",
-        text:  error,
-        icon:  "error",
-        confirmButtonText: "Aceptar",
+        title:              "Error al eliminar",
+        text:               deleteError,
+        icon:               "error",
+        confirmButtonText:  "Aceptar",
         confirmButtonColor: "#4ec4c4",
         background:         "#111827",
         color:              "#e2e8f0",
@@ -91,11 +92,13 @@ export default function DashboardPage() {
     refetch();
 
     await Swal.fire({
-      title: "Producto eliminado",
-      text:  `${product.name} ha sido eliminado del catalogo.`,
-      icon:  "success",
-      confirmButtonText: "Aceptar",
+      title:              "Producto eliminado",
+      text:               `"${product.name}" fue eliminado del catálogo.`,
+      icon:               "success",
+      confirmButtonText:  "Aceptar",
       confirmButtonColor: "#4ec4c4",
+      timer:              2200,
+      timerProgressBar:   true,
       background:         "#111827",
       color:              "#e2e8f0",
     });

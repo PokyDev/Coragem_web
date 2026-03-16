@@ -126,7 +126,7 @@ function ImageZone({
             <p className={styles.imageEmptyHint}>
               Haz clic para seleccionar<br />o arrastra el archivo aquí
             </p>
-            <span className={styles.imageEmptyFormats}>PNG · JPG · WEBP</span>
+            <span className={styles.imageEmptyFormats}>PNG · JPG · WEBP · HEIF</span>
           </div>
         )}
 

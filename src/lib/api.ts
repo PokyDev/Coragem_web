@@ -21,12 +21,13 @@ export interface ApiResponse<T> {
 
 async function request<T>(
   path:    string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  withBody = true,
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(`${getApiBase()}${path}`, {
-      headers:     { "Content-Type": "application/json" },
       credentials: "include",
+      ...(withBody && { headers: { "Content-Type": "application/json" } }),
       ...options,
     });
 
@@ -94,11 +95,11 @@ async function multipartRequest<T>(
 }
 
 export const api = {
-  get:        <T>(path: string)                        => request<T>(path),
+  get:        <T>(path: string)                        => request<T>(path, {}, false),
   post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",  body: JSON.stringify(body) }),
   put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",   body: JSON.stringify(body) }),
   patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
-  delete:     <T>(path: string)                        => request<T>(path, { method: "DELETE" }),
+  delete:     <T>(path: string)                        => request<T>(path, { method: "DELETE" }, false),
 
   /** Subida de archivos — omite Content-Type para preservar el multipart boundary */
   multipart:  <T>(path: string, method: "POST" | "PATCH" | "PUT", body: FormData) =>

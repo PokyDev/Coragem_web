@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect } from "react";
 import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
-import { StatsCards }       from "@/components/admin/dashboard/StatsCards";
+import { StatsCards }       from "@/components/admin/shared/StatsCards";
 import { ProductsTable }    from "@/components/admin/dashboard/ProductsTable";
 import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
 import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
@@ -20,7 +20,6 @@ export default function DashboardPage() {
   const { searchQuery }              = useDashboardSearch();
   const { registerNewProductAction } = useDashboardActions();
 
-  // adminMode: true → GET /api/admin/products (todos, incluyendo isVisible = false)
   const { products: allProducts, loading, error, refetch } = useProducts({ adminMode: true });
 
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
@@ -28,7 +27,6 @@ export default function DashboardPage() {
     isOpen: false, product: null,
   });
 
-  /* ── Handlers del modal ── */
   const openNewModal  = useCallback(() => setModalState({ isOpen: true,  product: null }), []);
   const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
   const closeModal    = useCallback(() => setModalState((prev) => ({ ...prev, isOpen: false })), []);
@@ -37,7 +35,6 @@ export default function DashboardPage() {
     registerNewProductAction(openNewModal);
   }, [registerNewProductAction, openNewModal]);
 
-  /* ── Filtros ── */
   const handleStockFilter = useCallback((next: StockFilter) => {
     setStockFilter((prev) => (prev === next ? "all" : next));
   }, []);
@@ -50,12 +47,10 @@ export default function DashboardPage() {
     return bySearch.filter((p) => p.stockStatus === stockFilter);
   }, [allProducts, searchQuery, stockFilter]);
 
-  /* ── Callback post-guardado ── */
   const handleSaved = useCallback((_mode: "new" | "edit") => {
     refetch();
   }, [refetch]);
 
-  /* ── Eliminar con confirmación ── */
   const handleDelete = useCallback(async (product: ProductRow) => {
     const Swal = await getSwal();
 
@@ -104,7 +99,6 @@ export default function DashboardPage() {
     });
   }, [refetch]);
 
-  // ── Loading / error del dashboard ─────────────────────────────
   if (loading) return (
     <div className={styles.root} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
       <span style={{ color: "var(--admin-text-muted)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.85rem", letterSpacing: "0.06em" }}>

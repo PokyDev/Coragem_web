@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * src/components/admin/dashboard/StatsCards.tsx
+ * src/components/admin/shared/StatsCards.tsx
  *
- * Cuatro tarjetas de estadísticas clickeables: Total, Con Stock, Stock Bajo, Sin Stock.
+ * Tarjetas de estadísticas de inventario reutilizables.
+ * Usadas en DashboardPage y ProductsPage.
  *
  * Comportamiento:
  *   - Click en una tarjeta de estado (ok/low/out) → activa el filtro.
@@ -13,7 +14,7 @@
  *   - La tarjeta "Total" no tiene checkbox (no es un filtro de estado).
  */
 
-import type { DashboardStats, StockStatus, StockFilter } from "@/types/admin";
+import type { DashboardStats, StockFilter } from "@/types/admin";
 import styles from "@/components/admin/css/StatsCards.module.css";
 
 /* ─── Checkbox visual ────────────────────────────────────────────── */
@@ -38,8 +39,8 @@ interface StatCardProps {
   variant:      "neutral" | "ok" | "low" | "out";
   icon:         React.ReactNode;
   isActive?:    boolean;
-  isFiltering?: boolean; // alguna otra tarjeta está activa
-  hasFilter?:   boolean; // esta tarjeta tiene filtro (no es "neutral")
+  isFiltering?: boolean;
+  hasFilter?:   boolean;
   onClick?:     () => void;
 }
 
@@ -60,9 +61,9 @@ function StatCard({
       className={[
         styles.card,
         styles[variant],
-        isActive    ? styles.cardActive  : "",
-        dimmed      ? styles.cardDimmed  : "",
-        onClick     ? styles.cardClickable : "",
+        isActive  ? styles.cardActive   : "",
+        dimmed    ? styles.cardDimmed   : "",
+        onClick   ? styles.cardClickable : "",
       ].filter(Boolean).join(" ")}
       onClick={onClick}
       type="button"
@@ -83,7 +84,7 @@ function StatCard({
 
 /* ─── Grid ───────────────────────────────────────────────────────── */
 
-interface StatsCardsProps {
+export interface StatsCardsProps {
   stats:          DashboardStats;
   activeFilter:   StockFilter;
   onFilterChange: (filter: StockFilter) => void;

@@ -5,54 +5,44 @@
  *
  * Pestaña Productos del panel administrativo.
  *
- * Muestra todos los productos (incluyendo los sin stock) como tarjetas
- * verticales con imagen grande, info del producto y controles de movimiento
- * de inventario (Compra / Venta — WIP).
+ * Muestra todos los productos como tarjetas verticales con imagen grande,
+ * info del producto y controles de movimiento de inventario (Compra / Venta — WIP).
+ * Incluye las mismas StatsCards del dashboard para filtrar por estado de stock.
  *
  * Integra las mismas acciones de CRUD que el Dashboard:
- *   · Crear  — botón "+ Nuevo Producto" en el AdminTopbar
- *   · Editar — botón en cada ProductCard → abre ProductFormModal
+ *   · Crear    — botón "+ Nuevo Producto" en el AdminTopbar
+ *   · Editar   — botón en cada ProductCard → abre ProductFormModal
  *   · Eliminar — botón en cada ProductCard → confirmación SweetAlert2
- *
- * La búsqueda se recibe desde AdminShell vía useDashboardSearch().
- * El botón de nuevo producto se registra vía useDashboardActions().
  */
 
 import { useMemo, useState, useCallback, useEffect } from "react";
-import type { ProductRow, ProductModalState } from "@/types/admin";
+import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
+import { StatsCards }       from "@/components/admin/shared/StatsCards";
 import { ProductCard }      from "@/components/admin/products/ProductCard";
 import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
 import {
   useDashboardSearch,
   useDashboardActions,
 } from "@/components/admin/layout/AdminShell";
-import { filterProductRows } from "@/lib/dashboard";
-import { useProducts }       from "@/hooks/shared/useProducts";
-import { api }               from "@/lib/api";
+import { computeStats, filterProductRows } from "@/lib/dashboard";
+import { useProducts }  from "@/hooks/shared/useProducts";
+import { api }          from "@/lib/api";
 import styles from "./css/ProductsPage.module.css";
 
-/* ─── SweetAlert2 lazy loader ──────────────────────────────────── */
 async function getSwal() {
   const Swal = (await import("sweetalert2")).default;
   return Swal;
 }
 
-/* ─── Page Component ────────────────────────────────────────────── */
-
 export default function ProductsPage() {
   const { searchQuery }              = useDashboardSearch();
   const { registerNewProductAction } = useDashboardActions();
 
-  const {
-    products: allProducts,
-    loading,
-    error,
-    refetch,
-  } = useProducts({ adminMode: true });
+  const { products: allProducts, loading, error, refetch } = useProducts({ adminMode: true });
 
-  const [modalState, setModalState] = useState<ProductModalState>({
-    isOpen: false,
-    product: null,
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [modalState,  setModalState]  = useState<ProductModalState>({
+    isOpen: false, product: null,
   });
 
   /* ── Modal handlers ── */
@@ -60,16 +50,24 @@ export default function ProductsPage() {
   const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
   const closeModal    = useCallback(() => setModalState((prev) => ({ ...prev, isOpen: false })), []);
 
-  /* Registrar openNewModal en el contexto para que AdminTopbar lo dispare */
   useEffect(() => {
     registerNewProductAction(openNewModal);
   }, [registerNewProductAction, openNewModal]);
 
-  /* ── Filtrado por búsqueda ── */
-  const filteredRows = useMemo(
-    () => filterProductRows(allProducts, searchQuery),
-    [allProducts, searchQuery],
-  );
+  /* ── Filtro de stock (toggle: mismo valor → vuelve a "all") ── */
+  const handleStockFilter = useCallback((next: StockFilter) => {
+    setStockFilter((prev) => (prev === next ? "all" : next));
+  }, []);
+
+  /* ── Stats para las tarjetas (sobre la lista completa sin filtros) ── */
+  const stats = useMemo(() => computeStats(allProducts), [allProducts]);
+
+  /* ── Filtrado combinado: búsqueda + stock ── */
+  const filteredRows = useMemo(() => {
+    const bySearch = filterProductRows(allProducts, searchQuery);
+    if (stockFilter === "all") return bySearch;
+    return bySearch.filter((p) => p.stockStatus === stockFilter);
+  }, [allProducts, searchQuery, stockFilter]);
 
   /* ── Callback post-guardado ── */
   const handleSaved = useCallback(() => { refetch(); }, [refetch]);
@@ -123,7 +121,6 @@ export default function ProductsPage() {
     });
   }, [refetch]);
 
-  /* ── States ── */
   if (loading) {
     return (
       <div className={styles.loadingWrap}>
@@ -144,19 +141,28 @@ export default function ProductsPage() {
     <>
       <div className={styles.root}>
 
-        {/* Toolbar: conteo + badges de filtro activo */}
-        <div className={styles.toolbar}>
-          <div className={styles.toolbarLeft}>
-            <span className={styles.resultCount}>
-              {filteredRows.length} producto{filteredRows.length !== 1 ? "s" : ""}
-            </span>
-            {searchQuery && (
-              <span className={styles.filterBadge}>
-                Búsqueda: <strong>{searchQuery}</strong>
+        {/* Tarjetas de estadísticas + filtro de stock */}
+        <StatsCards
+          stats={stats}
+          activeFilter={stockFilter}
+          onFilterChange={handleStockFilter}
+        />
+
+        {/* Toolbar: conteo + badge de filtros activos */}
+        {(searchQuery || stockFilter !== "all") && (
+          <div className={styles.toolbar}>
+            <div className={styles.toolbarLeft}>
+              <span className={styles.resultCount}>
+                {filteredRows.length} producto{filteredRows.length !== 1 ? "s" : ""}
               </span>
-            )}
+              {searchQuery && (
+                <span className={styles.filterBadge}>
+                  Búsqueda: <strong>{searchQuery}</strong>
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Lista de tarjetas */}
         {filteredRows.length > 0 ? (
@@ -178,14 +184,15 @@ export default function ProductsPage() {
             <p className={styles.emptyDesc}>
               {searchQuery
                 ? `Ningún producto coincide con "${searchQuery}".`
-                : "No hay productos en el catálogo aún. Crea uno con el botón de arriba."}
+                : stockFilter !== "all"
+                  ? "No hay productos con ese estado de stock."
+                  : "No hay productos en el catálogo aún. Crea uno con el botón de arriba."}
             </p>
           </div>
         )}
 
       </div>
 
-      {/* Modal reutilizado del dashboard */}
       <ProductFormModal
         isOpen={modalState.isOpen}
         product={modalState.product}

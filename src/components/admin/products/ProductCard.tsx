@@ -169,7 +169,7 @@ export function ProductCard({
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Stock</span>
               <span className={`${styles.infoValue} ${stockColorClass}`}>
-                {product.stock} uds
+                {product.stock} Unidades
               </span>
             </div>
             <div className={styles.infoItem}>
@@ -190,7 +190,7 @@ export function ProductCard({
                 onChange={(e) => setQty(e.target.value)}
                 aria-label="Cantidad de unidades"
               />
-              <span className={styles.qtyUnit}>Uds</span>
+              <span className={styles.qtyUnit}>Unidades</span>
 
               <button
                 className={`${styles.opBtn} ${styles.opBtnBuy}`}

@@ -117,6 +117,12 @@ function isHeifFile(file: File): boolean {
  * Para HEIF/HEIC convierte a JPEG primero usando heic2any (import dinámico),
  * ya que Chrome y Firefox no tienen decodificador nativo para ese formato.
  * El archivo original NO se modifica — esta conversión es solo para el preview.
+ *
+ * Casos especiales:
+ *   - Si heic2any lanza ERR_USER ("already browser readable"), el archivo tiene
+ *     extensión .heif pero su contenido es realmente PNG/JPEG — se usa ObjectURL directo.
+ *   - Si el MIME type viene vacío (común en algunos OS), la detección se hace
+ *     solo por extensión via isHeifFile().
  */
 async function buildPreviewUrl(file: File): Promise<string> {
   if (!isHeifFile(file)) {
@@ -126,16 +132,34 @@ async function buildPreviewUrl(file: File): Promise<string> {
   // Import dinámico: heic2any usa APIs de browser, no puede ejecutarse en SSR
   const heic2any = (await import("heic2any")).default;
 
-  const converted = await heic2any({
-    blob:    file,
-    toType:  "image/jpeg",
-    quality: 0.85,
-  });
+  try {
+    const converted = await heic2any({
+      blob:    file,
+      toType:  "image/jpeg",
+      quality: 0.85,
+    });
 
-  // heic2any devuelve Blob | Blob[] si hay múltiples imágenes en el HEIF
-  const blob = Array.isArray(converted) ? converted[0] : converted;
+    // heic2any devuelve Blob | Blob[] si hay múltiples imágenes en el HEIF
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    return URL.createObjectURL(blob);
 
-  return URL.createObjectURL(blob);
+  } catch (err: unknown) {
+    // ERR_USER significa que el archivo ya es legible por el navegador
+    // (extensión .heif pero contenido real PNG/JPEG) — ObjectURL directo funciona
+    const isAlreadyReadable =
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: number }).code === 1;
+
+    if (isAlreadyReadable) {
+      return URL.createObjectURL(file);
+    }
+
+    // Cualquier otro error de conversión es real — re-lanzar para que
+    // processImageFile lo capture y muestre el mensaje de error al usuario
+    throw err;
+  }
 }
 
 /* ─── Hook ──────────────────────────────────────────────────────── */
@@ -211,13 +235,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
         return next;
       });
       setApiError(null);
-    } catch (err) {
-      console.error("[HEIF preview] error:", err);
-      console.error("[HEIF preview] file info:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
+    } catch {
       setErrors((prev) => ({
         ...prev,
         image: "No se pudo procesar la imagen. Intenta con JPG o PNG.",

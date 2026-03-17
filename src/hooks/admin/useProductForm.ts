@@ -211,7 +211,13 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
         return next;
       });
       setApiError(null);
-    } catch {
+    } catch (err) {
+      console.error("[HEIF preview] error:", err);
+      console.error("[HEIF preview] file info:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
       setErrors((prev) => ({
         ...prev,
         image: "No se pudo procesar la imagen. Intenta con JPG o PNG.",

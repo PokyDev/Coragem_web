@@ -114,7 +114,11 @@ export function AdminTopbar({
 }: AdminTopbarProps) {
   const pathname    = usePathname();
   const pageTitle   = resolvePageTitle(pathname);
-  const isDashboard = pathname === "/admin/dashboard";
+  const PRODUCT_CONTROL_ROUTES = new Set([
+    "/admin/dashboard",
+    "/admin/dashboard/products",
+  ]);
+  const showProductControls = PRODUCT_CONTROL_ROUTES.has(pathname);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -146,7 +150,7 @@ export function AdminTopbar({
   }, [menuOpen]);
 
   return (
-    <header className={`${styles.topbar} ${isDashboard ? styles.topbarExpanded : ""}`}>
+    <header className={`${styles.topbar} ${showProductControls ? styles.topbarExpanded : ""}`}>
 
       {/* ── Hamburger button — solo visible en ≤ 1100px ── */}
       <button
@@ -160,7 +164,7 @@ export function AdminTopbar({
 
       <h1 className={styles.topbarTitle}>{pageTitle}</h1>
 
-      {isDashboard && (
+      {showProductControls && (
         <div className={styles.topbarSearch}>
           <SearchInput
             variant="admin"
@@ -173,7 +177,7 @@ export function AdminTopbar({
       )}
 
       <div className={styles.topbarRight}>
-        {isDashboard && (
+        {showProductControls && (
           <button
             className={styles.btnNewProduct}
             type="button"

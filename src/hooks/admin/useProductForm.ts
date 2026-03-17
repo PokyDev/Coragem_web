@@ -13,6 +13,14 @@
  *       edit → PATCH /api/admin/products/:id  (multipart/form-data)
  *       new  → POST  /api/admin/products       (pendiente de implementación)
  *
+ * Fix HEIF/HEIC:
+ *   Los navegadores (Chrome, Firefox) no tienen codec nativo para HEIF,
+ *   por lo que URL.createObjectURL() sobre un archivo .heif no genera un
+ *   preview visible. Se convierte a JPEG solo para el preview usando heic2any
+ *   (import dinámico para evitar problemas de SSR). El archivo original se
+ *   manda al backend sin modificar, ya que el servidor tiene su propio fix
+ *   para aceptar y subir HEIF a Cloudinary.
+ *
  * No contiene UI — solo estado y handlers.
  */
 
@@ -93,6 +101,43 @@ function validate(data: ProductFormData, isEdit: boolean): ProductFormErrors {
   return errors;
 }
 
+/* ─── Helper: genera URL de preview compatible con el navegador ── */
+
+function isHeifFile(file: File): boolean {
+  return (
+    file.type === "image/heif" ||
+    file.type === "image/heic" ||
+    /\.heic$/i.test(file.name) ||
+    /\.heif$/i.test(file.name)
+  );
+}
+
+/**
+ * Genera un ObjectURL previsualizable para cualquier formato de imagen.
+ * Para HEIF/HEIC convierte a JPEG primero usando heic2any (import dinámico),
+ * ya que Chrome y Firefox no tienen decodificador nativo para ese formato.
+ * El archivo original NO se modifica — esta conversión es solo para el preview.
+ */
+async function buildPreviewUrl(file: File): Promise<string> {
+  if (!isHeifFile(file)) {
+    return URL.createObjectURL(file);
+  }
+
+  // Import dinámico: heic2any usa APIs de browser, no puede ejecutarse en SSR
+  const heic2any = (await import("heic2any")).default;
+
+  const converted = await heic2any({
+    blob:    file,
+    toType:  "image/jpeg",
+    quality: 0.85,
+  });
+
+  // heic2any devuelve Blob | Blob[] si hay múltiples imágenes en el HEIF
+  const blob = Array.isArray(converted) ? converted[0] : converted;
+
+  return URL.createObjectURL(blob);
+}
+
 /* ─── Hook ──────────────────────────────────────────────────────── */
 
 interface UseProductFormOptions {
@@ -138,41 +183,58 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
           delete next[field as keyof ProductFormErrors];
           return next;
         });
-        // Limpiar error de API al editar cualquier campo
         setApiError(null);
       },
     []
   );
 
   /* ── Procesar archivo de imagen ── */
-  const processImageFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
-    setImagePreview(url);
+  const processImageFile = useCallback(async (file: File) => {
+    // Rechazar si no es imagen (ni siquiera HEIF sin MIME type correcto)
+    if (
+      !file.type.startsWith("image/") &&
+      !isHeifFile(file)
+    ) return;
+
+    // El archivo original va al backend sin modificar —
+    // el servidor tiene su propio fix para manejar HEIF en Cloudinary.
     setFormData((prev) => ({ ...prev, image: file }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.image;
-      return next;
-    });
-    setApiError(null);
+
+    // Para el preview se convierte a JPEG si es HEIF,
+    // porque Chrome y Firefox no pueden renderizar ese formato.
+    try {
+      const previewUrl = await buildPreviewUrl(file);
+      setImagePreview(previewUrl);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.image;
+        return next;
+      });
+      setApiError(null);
+    } catch {
+      setErrors((prev) => ({
+        ...prev,
+        image: "No se pudo procesar la imagen. Intenta con JPG o PNG.",
+      }));
+    }
   }, []);
 
   const handleImageClick = useCallback(() => { fileInputRef.current?.click(); }, []);
 
-  const handleFileInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) processImageFile(file);
+    if (file) await processImageFile(file);
     e.target.value = "";
   }, [processImageFile]);
 
   const handleDragEnter = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true);  }, []);
   const handleDragLeave = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }, []);
   const handleDragOver  = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
-  const handleDrop      = useCallback((e: DragEvent) => {
+
+  const handleDrop = useCallback(async (e: DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) processImageFile(file);
+    if (file) await processImageFile(file);
   }, [processImageFile]);
 
   const handleRemoveImage = useCallback(() => {
@@ -195,10 +257,6 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     try {
       if (isEdit && product) {
         // ── Modo editar: PATCH /api/admin/products/:id ────────────
-        //
-        // El backend espera multipart/form-data. Solo se envían los
-        // campos que el usuario puede haber modificado. La imagen es
-        // opcional: si no se seleccionó una nueva, se conserva la actual.
         const body = new FormData();
         body.append("name",     formData.name.trim());
         body.append("price",    formData.price);
@@ -248,7 +306,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       }
 
       return true;
-      
+
     } finally {
       setIsSubmitting(false);
     }

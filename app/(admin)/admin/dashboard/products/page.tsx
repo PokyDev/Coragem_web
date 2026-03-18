@@ -45,6 +45,13 @@ export default function ProductsPage() {
     isOpen: false, product: null,
   });
 
+  const [stockOverrides, setStockOverrides] = useState<Record<string, number>>({});
+
+  // Actualizar stock en memoria sin refetch global
+  const handleStockChange = useCallback((productId: string, newStock: number) => {
+    setStockOverrides((prev) => ({ ...prev, [productId]: newStock }));
+  }, []);
+
   /* ── Modal handlers ── */
   const openNewModal  = useCallback(() => setModalState({ isOpen: true, product: null }), []);
   const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
@@ -59,18 +66,27 @@ export default function ProductsPage() {
     setStockFilter((prev) => (prev === next ? "all" : next));
   }, []);
 
-  /* ── Stats para las tarjetas (sobre la lista completa sin filtros) ── */
-  const stats = useMemo(() => computeStats(allProducts), [allProducts]);
+  const mergedProducts = useMemo(() =>
+    allProducts.map((p) =>
+      stockOverrides[p.id] !== undefined
+        ? { ...p, stock: stockOverrides[p.id] }
+        : p
+    ),
+  [allProducts, stockOverrides]);
 
-  /* ── Filtrado combinado: búsqueda + stock ── */
+  const stats = useMemo(() => computeStats(mergedProducts), [mergedProducts]);
+
   const filteredRows = useMemo(() => {
-    const bySearch = filterProductRows(allProducts, searchQuery);
+    const bySearch = filterProductRows(mergedProducts, searchQuery);
     if (stockFilter === "all") return bySearch;
     return bySearch.filter((p) => p.stockStatus === stockFilter);
-  }, [allProducts, searchQuery, stockFilter]);
+  }, [mergedProducts, searchQuery, stockFilter]);
 
   /* ── Callback post-guardado ── */
-  const handleSaved = useCallback(() => { refetch(); }, [refetch]);
+  const handleSaved = useCallback(() => {
+    setStockOverrides({});
+    refetch();
+  }, [refetch])
 
   /* ── Eliminar con confirmación ── */
   const handleDelete = useCallback(async (product: ProductRow) => {
@@ -174,6 +190,7 @@ export default function ProductsPage() {
                 animDelay={index * 0.04}
                 onEdit={openEditModal}
                 onDelete={handleDelete}
+                onStockChange={handleStockChange}
               />
             ))}
           </div>

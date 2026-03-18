@@ -378,3 +378,12 @@
     font-size: 0.68rem;
   }
 }
+
+/* ── Error de movimiento ─────────────────────────────────────────── */
+.movementError {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.68rem;
+  color:          var(--admin-danger);
+  letter-spacing: 0.02em;
+  margin-top:     0.1rem;
+}

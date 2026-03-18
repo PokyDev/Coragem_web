@@ -19,6 +19,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
 import { getStockStatus } from "@/lib/dashboard";
+import { useProductMovement } from "@/hooks/admin/useProductMovement";
 import styles from "@/components/admin/css/ProductCard.module.css";
 
 /* ─── Formatters ────────────────────────────────────────────────── */
@@ -49,19 +50,6 @@ function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   );
 }
 
-/* ─── WIP Toast ─────────────────────────────────────────────────── */
-
-interface WipToastProps { message: string }
-
-function WipToast({ message }: WipToastProps) {
-  return (
-    <div className={styles.wipToast} role="status" aria-live="polite">
-      <span className={styles.wipIcon}>🔧</span>
-      {message}
-    </div>
-  );
-}
-
 /* ─── Category labels ────────────────────────────────────────────── */
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -77,37 +65,35 @@ const CATEGORY_LABELS: Record<string, string> = {
 /* ─── Props ─────────────────────────────────────────────────────── */
 
 interface ProductCardProps {
-  product:       ProductRow;
-  animDelay?:    number;
-  onEdit:        (product: ProductRow) => void;
-  onDelete:      (product: ProductRow) => void;
-}
+  product:        ProductRow;
+  animDelay?:     number;
+  onEdit:         (product: ProductRow) => void;
+  onDelete:       (product: ProductRow) => void;
 
+  /** Callback opcional para notificar al padre del nuevo stock tras un movimiento */
+  onStockChange?: (productId: string, newStock: number) => void;
+}
 /* ─── Component ─────────────────────────────────────────────────── */
 
-export function ProductCard({
-  product,
-  animDelay = 0,
-  onEdit,
-  onDelete,
-}: ProductCardProps) {
-  const [qty, setQty]         = useState<string>("1");
-  const [wipMsg, setWipMsg]   = useState<string | null>(null);
-  const wipTimer              = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function ProductCard({ product, animDelay = 0, onEdit, onDelete, onStockChange }: ProductCardProps) {
+  const [qty, setQty]           = useState<string>("1");
+  const [localStock, setLocalStock] = useState(product.stock);
+  const { isLoading, error, register, clearError } = useProductMovement();
 
-  const stockStatus = getStockStatus(product.stock);
+  const stockStatus = getStockStatus(localStock);
 
-  /* Limpiar timer al desmontar */
-  useEffect(() => () => { if (wipTimer.current) clearTimeout(wipTimer.current); }, []);
+  const handleMovement = useCallback(async (type: "PURCHASE" | "SALE") => {
+    const quantity = parseInt(qty, 10);
+    const result = await register(product.id, type, quantity);
+    if (result) {
+      setLocalStock(result.stockAfter);
+      setQty("1");
+      onStockChange?.(product.id, result.stockAfter);
+    }
+  }, [qty, product.id, register, onStockChange]);
 
-  const showWip = useCallback((action: string) => {
-    if (wipTimer.current) clearTimeout(wipTimer.current);
-    setWipMsg(`${action} — implementación en progreso`);
-    wipTimer.current = setTimeout(() => setWipMsg(null), 2800);
-  }, []);
-
-  const handleBuy  = useCallback(() => showWip("+ Compra"), [showWip]);
-  const handleSell = useCallback(() => showWip("- Venta"),  [showWip]);
+  const handleBuy  = useCallback(() => handleMovement("PURCHASE"), [handleMovement]);
+  const handleSell = useCallback(() => handleMovement("SALE"),     [handleMovement]);
 
   const stockColorClass = {
     ok:  styles.stockOk,
@@ -169,7 +155,7 @@ export function ProductCard({
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Stock</span>
               <span className={`${styles.infoValue} ${stockColorClass}`}>
-                {product.stock} Unidades
+                {localStock} Unidades
               </span>
             </div>
             <div className={styles.infoItem}>
@@ -187,8 +173,9 @@ export function ProductCard({
                 type="number"
                 min="1"
                 value={qty}
-                onChange={(e) => setQty(e.target.value)}
+                onChange={(e) => { setQty(e.target.value); clearError(); }}
                 aria-label="Cantidad de unidades"
+                disabled={isLoading}
               />
               <span className={styles.qtyUnit}>Unidades</span>
 
@@ -196,27 +183,36 @@ export function ProductCard({
                 className={`${styles.opBtn} ${styles.opBtnBuy}`}
                 type="button"
                 onClick={handleBuy}
+                disabled={isLoading}
                 aria-label={`Registrar compra de ${product.name}`}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5"  y1="12" x2="19" y2="12" />
                 </svg>
-                Compra
+                {isLoading ? "…" : "Compra"}
               </button>
 
               <button
                 className={`${styles.opBtn} ${styles.opBtnSell}`}
                 type="button"
                 onClick={handleSell}
+                disabled={isLoading || localStock === 0}
                 aria-label={`Registrar venta de ${product.name}`}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Venta
+                {isLoading ? "…" : "Venta"}
               </button>
             </div>
+
+            {/* Error inline bajo los controles */}
+            {error && (
+              <p className={styles.movementError} role="alert">
+                {error}
+              </p>
+            )}
           </div>
 
           <div className={styles.divider} />
@@ -253,9 +249,6 @@ export function ProductCard({
 
         </div>
       </article>
-
-      {/* WIP Toast — fuera del article para evitar stacking contexts */}
-      {wipMsg && <WipToast message={wipMsg} />}
     </>
   );
 }

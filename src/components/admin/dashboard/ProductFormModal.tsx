@@ -97,7 +97,7 @@ function ImageZone({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,image/*"
+        accept="image/*,*/*"
         style={{ display: "none" }}
         onChange={onFileChange}
       />

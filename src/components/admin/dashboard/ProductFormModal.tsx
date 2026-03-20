@@ -72,11 +72,32 @@ function ImageZone({
         Imagen <span className={styles.fieldRequired}>*</span>
       </span>
 
-      {/* Input file oculto */}
+      {/*
+        Input file oculto.
+
+        accept: lista explícita de MIME types + wildcard "image/*".
+
+        Por qué no solo "image/*":
+          En Android, "image/*" a veces solo muestra la galería local o la
+          cámara, sin opción de acceder a Google Fotos, Drive u otras fuentes.
+          Incluir los MIME types explícitos junto con el wildcard hace que el
+          sistema operativo muestre el selector de fuentes completo (sistema de
+          archivos, Google Fotos, Drive, Samsung Cloud, etc.) en lugar de
+          limitarlo a la galería predeterminada.
+
+        Por qué incluir image/heic e image/heif:
+          Necesarios para que el picker de iOS y algunos Android ofrezcan
+          imágenes nativas del carrete cuando el dispositivo usa HEIF como
+          formato de captura (iPhone por defecto desde iOS 11).
+
+        El atributo accept es solo una sugerencia al SO — el backend valida
+        el contenido real del archivo independientemente de lo que declare el
+        MIME type del multipart.
+      */}
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,image/*"
         style={{ display: "none" }}
         onChange={onFileChange}
       />

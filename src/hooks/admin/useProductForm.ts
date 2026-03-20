@@ -11,7 +11,7 @@
  *   - Modo "nuevo" vs "editar" según si se recibe un ProductRow
  *   - Integración con el backend:
  *       edit → PATCH /api/admin/products/:id  (multipart/form-data)
- *       new  → POST  /api/admin/products       (pendiente de implementación)
+ *       new  → POST  /api/admin/products       (multipart/form-data)
  *
  * Fix HEIF/HEIC:
  *   Los navegadores (Chrome, Firefox) no tienen codec nativo para HEIF,
@@ -20,6 +20,15 @@
  *   (import dinámico para evitar problemas de SSR). El archivo original se
  *   manda al backend sin modificar, ya que el servidor tiene su propio fix
  *   para aceptar y subir HEIF a Cloudinary.
+ *
+ * Fix Android Content URI (Google Fotos, Google Drive, etc.):
+ *   En Android, los File objects provenientes de proveedores externos
+ *   (Google Fotos, Drive, Files) son Content URIs resueltos de forma lazy.
+ *   Si el File no se lee completamente en el momento de selección, el fetch
+ *   puede fallar con TypeError ("Failed to fetch") porque el proveedor cierra
+ *   el stream antes del submit. materializeFile() lee el contenido completo
+ *   como ArrayBuffer en el momento de selección y produce un Blob/File estable
+ *   en memoria que puede enviarse en cualquier momento posterior.
  *
  * No contiene UI — solo estado y handlers.
  */
@@ -101,7 +110,7 @@ function validate(data: ProductFormData, isEdit: boolean): ProductFormErrors {
   return errors;
 }
 
-/* ─── Helper: genera URL de preview compatible con el navegador ── */
+/* ─── Helper: detectar HEIF ─────────────────────────────────────── */
 
 function isHeifFile(file: File): boolean {
   return (
@@ -112,11 +121,43 @@ function isHeifFile(file: File): boolean {
   );
 }
 
+/* ─── Helper: materializar archivo en memoria ────────────────────
+ *
+ * En Android, los File objects de proveedores externos (Google Fotos,
+ * Google Drive, Samsung Files, etc.) son Content URIs cuyo contenido
+ * se resuelve de forma lazy. Si el stream se cierra antes del submit
+ * — lo cual ocurre cuando el usuario tarda en confirmar el formulario
+ * o navega dentro de la SPA — el fetch lanza TypeError ("Failed to fetch")
+ * porque el browser intenta leer el body en ese momento tardío.
+ *
+ * La solución es leer el contenido completo como ArrayBuffer en el momento
+ * de la selección (aquí, síncronamente con la interacción del usuario) y
+ * construir un nuevo File con ese buffer estable en memoria del proceso.
+ * El File resultante no depende del proveedor externo y puede enviarse
+ * en cualquier momento posterior sin riesgo de stream cerrado.
+ *
+ * Consideraciones:
+ *   - El MIME type se preserva; si viene vacío (común en HEIF desde Windows/Linux)
+ *     se usa "application/octet-stream" como fallback — el backend lo acepta.
+ *   - El nombre del archivo se preserva para que FormData lo incluya correctamente.
+ *   - Esta operación es O(tamaño del archivo) en memoria, lo cual es aceptable
+ *     para imágenes de producto (típicamente < 10 MB, límite del multipart plugin).
+ * ─────────────────────────────────────────────────────────────── */
+
+async function materializeFile(file: File): Promise<File> {
+  const buffer = await file.arrayBuffer();
+  const type   = file.type || "application/octet-stream";
+  const blob   = new Blob([buffer], { type });
+  return new File([blob], file.name, { type });
+}
+
+/* ─── Helper: genera URL de preview compatible con el navegador ── */
+
 /**
  * Genera un ObjectURL previsualizable para cualquier formato de imagen.
  * Para HEIF/HEIC convierte a JPEG primero usando heic2any (import dinámico),
  * ya que Chrome y Firefox no tienen decodificador nativo para ese formato.
- * El archivo original NO se modifica — esta conversión es solo para el preview.
+ * El archivo pasado aquí ya fue materializado — es un File estable en memoria.
  *
  * Casos especiales:
  *   - Si heic2any lanza ERR_USER ("already browser readable"), el archivo tiene
@@ -220,21 +261,31 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       !isHeifFile(file)
     ) return;
 
-    // El archivo original va al backend sin modificar —
-    // el servidor tiene su propio fix para manejar HEIF en Cloudinary.
-    setFormData((prev) => ({ ...prev, image: file }));
-
-    // Para el preview se convierte a JPEG si es HEIF,
-    // porque Chrome y Firefox no pueden renderizar ese formato.
     try {
-      const previewUrl = await buildPreviewUrl(file);
+      // 1. Materializar el archivo completo en memoria ANTES de cualquier otra
+      //    operación. Esto resuelve el Content URI de Android de forma inmediata
+      //    y produce un File estable que no depende del proveedor externo.
+      //    Si el proveedor falla aquí (archivo no disponible, permisos revocados,
+      //    etc.), el error se captura y se muestra al usuario en este momento,
+      //    no más tarde durante el submit.
+      const stableFile = await materializeFile(file);
+
+      // 2. Guardar el File estable en el estado del formulario.
+      //    El archivo original (Content URI) ya no se referencia.
+      setFormData((prev) => ({ ...prev, image: stableFile }));
+
+      // 3. Generar la URL de preview con el archivo ya materializado.
+      //    Para HEIF convierte a JPEG primero (solo para el preview).
+      const previewUrl = await buildPreviewUrl(stableFile);
       setImagePreview(previewUrl);
+
       setErrors((prev) => {
         const next = { ...prev };
         delete next.image;
         return next;
       });
       setApiError(null);
+
     } catch {
       setErrors((prev) => ({
         ...prev,
@@ -248,6 +299,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
   const handleFileInputChange = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) await processImageFile(file);
+    // Resetear el input para permitir seleccionar el mismo archivo nuevamente
     e.target.value = "";
   }, [processImageFile]);
 
@@ -289,7 +341,9 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
         body.append("category", formData.category);
         body.append("color",    formData.color);
 
-        // Solo adjuntar imagen si el usuario seleccionó una nueva
+        // Solo adjuntar imagen si el usuario seleccionó una nueva.
+        // En este punto formData.image es ya un File estable en memoria
+        // (materializado en processImageFile), no un Content URI lazy.
         if (formData.image) {
           body.append("image", formData.image);
         }
@@ -316,6 +370,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       body.append("ventas",   formData.ventas || "0");
       body.append("category", formData.category);
       body.append("color",    formData.color);
+      // formData.image es un File estable en memoria — seguro de enviar
       body.append("image",    formData.image!);
 
       const res = await api.multipart<{ product: PatchProductResponse["product"] }>(

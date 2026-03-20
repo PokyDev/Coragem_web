@@ -19,6 +19,31 @@ export interface ApiResponse<T> {
   retryAfter?: number;
 }
 
+/**
+ * Convierte un error capturado en el catch de fetch en un mensaje legible.
+ *
+ * Casos relevantes:
+ *   - TypeError "Failed to fetch": sin conectividad, CORS, o el stream del
+ *     archivo fue cerrado por el proveedor antes del envío (Android Content URI).
+ *     Con el fix de materializeFile en useProductForm, este último caso ya no
+ *     debería ocurrir, pero el mensaje sigue siendo más informativo que el genérico.
+ *   - TypeError con otro mensaje: error de construcción del request (body inválido,
+ *     FormData vacío, etc.). Se incluye el mensaje para facilitar el debugging.
+ *   - Otros errores: se devuelve el mensaje si está disponible.
+ */
+function parseNetworkError(err: unknown): string {
+  if (err instanceof TypeError) {
+    if (err.message.toLowerCase().includes("failed to fetch")) {
+      return "No se pudo conectar con el servidor";
+    }
+    return `Error al enviar la solicitud: ${err.message}`;
+  }
+  if (err instanceof Error) {
+    return err.message || "Error desconocido";
+  }
+  return "No se pudo conectar con el servidor";
+}
+
 async function request<T>(
   path:     string,
   options:  RequestInit = {},
@@ -52,8 +77,8 @@ async function request<T>(
     }
 
     return { data: body as T, error: null };
-  } catch {
-    return { data: null, error: "No se pudo conectar con el servidor" };
+  } catch (err) {
+    return { data: null, error: parseNetworkError(err) };
   }
 }
 
@@ -94,8 +119,8 @@ async function multipartRequest<T>(
     }
 
     return { data: resBody as T, error: null };
-  } catch {
-    return { data: null, error: "No se pudo conectar con el servidor" };
+  } catch (err) {
+    return { data: null, error: parseNetworkError(err) };
   }
 }
 

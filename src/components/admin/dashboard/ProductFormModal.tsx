@@ -18,7 +18,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
-import { useProductForm } from "@/hooks/admin/useProductForm";
+import { useProductForm, HEIF_PREVIEW_PLACEHOLDER } from "@/hooks/admin/useProductForm";
 import categories from "@/data/categories.json";
 import colors     from "@/data/colors.json";
 import styles from "@/components/admin/css/ProductFormModal.module.css";
@@ -66,6 +66,9 @@ function ImageZone({
   onZoneClick, onDragEnter, onDragLeave, onDragOver, onDrop,
   onRemove, fileInputRef, onFileChange,
 }: ImageZoneProps) {
+  const isHeifPlaceholder = imagePreview === HEIF_PREVIEW_PLACEHOLDER;
+  const hasRealPreview    = imagePreview !== null && !isHeifPlaceholder;
+
   return (
     <div className={styles.imageSection}>
       <span className={styles.imageLabel}>
@@ -106,8 +109,8 @@ function ImageZone({
       <div
         className={[
           styles.imageDropZone,
-          isDragging  ? styles.imageDropZoneDragging : "",
-          hasError    ? styles.imageDropZoneError    : "",
+          isDragging        ? styles.imageDropZoneDragging : "",
+          hasError          ? styles.imageDropZoneError    : "",
         ].filter(Boolean).join(" ")}
         onClick={onZoneClick}
         onDragEnter={onDragEnter}
@@ -151,8 +154,43 @@ function ImageZone({
           </div>
         )}
 
-        {/* Estado: imagen cargada → preview */}
-        {imagePreview && !isDragging && (
+        {/* Estado: archivo HEIF seleccionado — sin preview visual disponible */}
+        {isHeifPlaceholder && !isDragging && (
+          <>
+            <div className={styles.imageEmpty}>
+              <div className={styles.imageEmptyIcon}>
+                {/* Ícono de check para indicar que el archivo está listo */}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <p className={styles.imageEmptyTitle} style={{ color: "var(--admin-accent)" }}>
+                Imagen HEIF lista
+              </p>
+              <p className={styles.imageEmptyHint}>
+                El archivo se enviará al servidor.<br />
+                No hay preview disponible para este formato.
+              </p>
+              <span className={styles.imageEmptyFormats} style={{ color: "var(--admin-accent)", opacity: 0.7 }}>
+                HEIF · HEIC
+              </span>
+            </div>
+            <button
+              className={styles.imageRemoveBtn}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              aria-label="Quitar imagen"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </>
+        )}
+
+        {/* Estado: imagen cargada → preview real */}
+        {hasRealPreview && !isDragging && (
           <>
             <Image
               src={imagePreview}

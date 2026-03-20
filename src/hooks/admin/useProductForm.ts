@@ -13,24 +13,35 @@
  *       edit → PATCH /api/admin/products/:id  (multipart/form-data)
  *       new  → POST  /api/admin/products       (multipart/form-data)
  *
- * Fix HEIF/HEIC:
- *   Los navegadores (Chrome, Firefox) no tienen codec nativo para HEIF,
- *   por lo que URL.createObjectURL() sobre un archivo .heif no genera un
- *   preview visible. Se convierte a JPEG solo para el preview usando heic2any
- *   (import dinámico para evitar problemas de SSR). El archivo original se
- *   manda al backend sin modificar, ya que el servidor tiene su propio fix
- *   para aceptar y subir HEIF a Cloudinary.
+ * ── Manejo de imágenes ────────────────────────────────────────────────
  *
- * Fix Android Content URI (Google Fotos, Google Drive, etc.):
- *   En Android, los File objects provenientes de proveedores externos
- *   (Google Fotos, Drive, Files) son Content URIs resueltos de forma lazy.
- *   Si el File no se lee completamente en el momento de selección, el fetch
- *   puede fallar con TypeError ("Failed to fetch") porque el proveedor cierra
- *   el stream antes del submit. materializeFile() lee el contenido completo
- *   como ArrayBuffer en el momento de selección y produce un Blob/File estable
- *   en memoria que puede enviarse en cualquier momento posterior.
+ * HEIF/HEIC — preview:
+ *   Chrome y Firefox no tienen codec nativo para HEIF, por lo que
+ *   URL.createObjectURL() no genera un preview visible. En lugar de
+ *   convertir con heic2any (bloqueante en el hilo principal, tarda 3-8 s
+ *   en móvil), se muestra un placeholder de "HEIF — se enviará al servidor"
+ *   de forma instantánea. El archivo original se sube al backend sin modificar
+ *   ya que el servidor acepta y convierte HEIC/HEIF via Cloudinary.
  *
- * No contiene UI — solo estado y handlers.
+ * HEIF/HEIC — subida:
+ *   El archivo original se envía tal cual en FormData. El backend maneja
+ *   la conversión en Cloudinary con fetch_format: 'auto'.
+ *
+ * Android Content URI (Google Fotos, Google Drive, etc.):
+ *   En Android, los File objects provenientes de proveedores externos son
+ *   Content URIs resueltos de forma lazy. Si el stream se cierra antes del
+ *   submit (el usuario tarda, navega dentro de la SPA, o heic2any tarda demasiado
+ *   y el proveedor revoca el permiso), el fetch lanza TypeError sin que el backend
+ *   lo vea siquiera.
+ *
+ *   La solución es materializeFile(): lee el contenido completo como ArrayBuffer
+ *   en el momento de la selección, con un timeout de 15 s para detectar Content
+ *   URIs colgados. El File resultante vive en la memoria del proceso y puede
+ *   enviarse en cualquier momento posterior.
+ *
+ *   El timeout de 15 s es generoso para archivos grandes (hasta ~10 MB en móvil
+ *   con conexión lenta a Drive), pero lo suficientemente corto para no dejar
+ *   al usuario esperando indefinidamente si el proveedor no responde.
  */
 
 import {
@@ -121,87 +132,70 @@ function isHeifFile(file: File): boolean {
   );
 }
 
-/* ─── Helper: materializar archivo en memoria ────────────────────
+/* ─── Helper: materializar archivo en memoria con timeout ───────────
  *
- * En Android, los File objects de proveedores externos (Google Fotos,
- * Google Drive, Samsung Files, etc.) son Content URIs cuyo contenido
- * se resuelve de forma lazy. Si el stream se cierra antes del submit
- * — lo cual ocurre cuando el usuario tarda en confirmar el formulario
- * o navega dentro de la SPA — el fetch lanza TypeError ("Failed to fetch")
- * porque el browser intenta leer el body en ese momento tardío.
+ * Lee el contenido completo del archivo como ArrayBuffer de forma inmediata,
+ * produciendo un File estable en la memoria del proceso que no depende del
+ * Content URI original de Android.
  *
- * La solución es leer el contenido completo como ArrayBuffer en el momento
- * de la selección (aquí, síncronamente con la interacción del usuario) y
- * construir un nuevo File con ese buffer estable en memoria del proceso.
- * El File resultante no depende del proveedor externo y puede enviarse
- * en cualquier momento posterior sin riesgo de stream cerrado.
+ * El timeout de MATERIALIZE_TIMEOUT_MS detecta Content URIs de proveedores
+ * externos (Drive, Fotos) que no responden — en ese caso se rechaza la promesa
+ * con un error descriptivo que se muestra al usuario.
  *
- * Consideraciones:
- *   - El MIME type se preserva; si viene vacío (común en HEIF desde Windows/Linux)
- *     se usa "application/octet-stream" como fallback — el backend lo acepta.
- *   - El nombre del archivo se preserva para que FormData lo incluya correctamente.
- *   - Esta operación es O(tamaño del archivo) en memoria, lo cual es aceptable
- *     para imágenes de producto (típicamente < 10 MB, límite del multipart plugin).
+ * Sin este timeout, arrayBuffer() puede quedar pendiente indefinidamente en
+ * ciertos dispositivos Android, lo que provoca que el submit posterior falle
+ * con TypeError ("Failed to fetch") sin que el backend lo vea.
  * ─────────────────────────────────────────────────────────────── */
 
+const MATERIALIZE_TIMEOUT_MS = 15_000;
+
 async function materializeFile(file: File): Promise<File> {
-  const buffer = await file.arrayBuffer();
+  const bufferPromise = file.arrayBuffer();
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(
+      () => reject(new Error("TIMEOUT")),
+      MATERIALIZE_TIMEOUT_MS,
+    )
+  );
+
+  const buffer = await Promise.race([bufferPromise, timeoutPromise]);
   const type   = file.type || "application/octet-stream";
   const blob   = new Blob([buffer], { type });
   return new File([blob], file.name, { type });
 }
 
-/* ─── Helper: genera URL de preview compatible con el navegador ── */
+/* ─── Helper: genera URL de preview o señal de placeholder ─────────
+ *
+ * Para HEIF/HEIC devuelve null de forma instantánea — el componente
+ * mostrará un placeholder estático que indica que el archivo fue
+ * seleccionado y se enviará al servidor.
+ *
+ * Razón para no usar heic2any en el preview:
+ *   La conversión ocurre en el hilo principal del navegador y puede
+ *   tomar 3–8 segundos en un móvil mid-range, bloqueando la UI por
+ *   completo. El backend ya convierte HEIC via Cloudinary, así que
+ *   pagar ese coste en el cliente solo por el preview no tiene sentido.
+ *
+ * Para cualquier otro formato usa URL.createObjectURL() directamente.
+ * ─────────────────────────────────────────────────────────────── */
+
+function buildPreviewUrl(file: File): string | null {
+  if (isHeifFile(file)) {
+    // Retornar null → el componente renderiza el placeholder de HEIF
+    return null;
+  }
+  return URL.createObjectURL(file);
+}
+
+/* ─── Constante de preview HEIF ─────────────────────────────────── */
 
 /**
- * Genera un ObjectURL previsualizable para cualquier formato de imagen.
- * Para HEIF/HEIC convierte a JPEG primero usando heic2any (import dinámico),
- * ya que Chrome y Firefox no tienen decodificador nativo para ese formato.
- * El archivo pasado aquí ya fue materializado — es un File estable en memoria.
- *
- * Casos especiales:
- *   - Si heic2any lanza ERR_USER ("already browser readable"), el archivo tiene
- *     extensión .heif pero su contenido es realmente PNG/JPEG — se usa ObjectURL directo.
- *   - Si el MIME type viene vacío (común en algunos OS), la detección se hace
- *     solo por extensión via isHeifFile().
+ * Valor especial que indica "hay un archivo HEIF seleccionado pero
+ * no hay preview visual disponible". El componente ImageZone lo usa
+ * para mostrar el estado correcto (archivo listo, no error).
  */
-async function buildPreviewUrl(file: File): Promise<string> {
-  if (!isHeifFile(file)) {
-    return URL.createObjectURL(file);
-  }
-
-  // Import dinámico: heic2any usa APIs de browser, no puede ejecutarse en SSR
-  const heic2any = (await import("heic2any")).default;
-
-  try {
-    const converted = await heic2any({
-      blob:    file,
-      toType:  "image/jpeg",
-      quality: 0.85,
-    });
-
-    // heic2any devuelve Blob | Blob[] si hay múltiples imágenes en el HEIF
-    const blob = Array.isArray(converted) ? converted[0] : converted;
-    return URL.createObjectURL(blob);
-
-  } catch (err: unknown) {
-    // ERR_USER significa que el archivo ya es legible por el navegador
-    // (extensión .heif pero contenido real PNG/JPEG) — ObjectURL directo funciona
-    const isAlreadyReadable =
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code: number }).code === 1;
-
-    if (isAlreadyReadable) {
-      return URL.createObjectURL(file);
-    }
-
-    // Cualquier otro error de conversión es real — re-lanzar para que
-    // processImageFile lo capture y muestre el mensaje de error al usuario
-    throw err;
-  }
-}
+export const HEIF_PREVIEW_PLACEHOLDER = "__heif_placeholder__";
 
 /* ─── Hook ──────────────────────────────────────────────────────── */
 
@@ -262,22 +256,21 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     ) return;
 
     try {
-      // 1. Materializar el archivo completo en memoria ANTES de cualquier otra
-      //    operación. Esto resuelve el Content URI de Android de forma inmediata
-      //    y produce un File estable que no depende del proveedor externo.
-      //    Si el proveedor falla aquí (archivo no disponible, permisos revocados,
-      //    etc.), el error se captura y se muestra al usuario en este momento,
-      //    no más tarde durante el submit.
+      // 1. Materializar el archivo en memoria de forma inmediata.
+      //    Incluye timeout para detectar Content URIs de Android que no responden.
+      //    Sin esto, arrayBuffer() puede quedar pendiente indefinidamente y el
+      //    submit posterior lanzaría TypeError sin que el backend lo vea.
       const stableFile = await materializeFile(file);
 
-      // 2. Guardar el File estable en el estado del formulario.
-      //    El archivo original (Content URI) ya no se referencia.
+      // 2. Guardar el File estable en el formulario. A partir de aquí,
+      //    el Content URI original ya no se referencia.
       setFormData((prev) => ({ ...prev, image: stableFile }));
 
-      // 3. Generar la URL de preview con el archivo ya materializado.
-      //    Para HEIF convierte a JPEG primero (solo para el preview).
-      const previewUrl = await buildPreviewUrl(stableFile);
-      setImagePreview(previewUrl);
+      // 3. Generar la URL de preview.
+      //    Para HEIF devuelve null → se muestra el placeholder de forma instantánea.
+      //    Para otros formatos genera un ObjectURL en el hilo principal (< 1 ms).
+      const previewUrl = buildPreviewUrl(stableFile);
+      setImagePreview(previewUrl ?? HEIF_PREVIEW_PLACEHOLDER);
 
       setErrors((prev) => {
         const next = { ...prev };
@@ -286,10 +279,15 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
       });
       setApiError(null);
 
-    } catch {
+    } catch (err: unknown) {
+      const isTimeout =
+        err instanceof Error && err.message === "TIMEOUT";
+
       setErrors((prev) => ({
         ...prev,
-        image: "No se pudo procesar la imagen. Intenta con JPG o PNG.",
+        image: isTimeout
+          ? "El archivo tardó demasiado en cargarse. Intenta descargarlo primero y luego súbelo."
+          : "No se pudo procesar la imagen. Intenta con JPG o PNG.",
       }));
     }
   }, []);
@@ -342,8 +340,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
         body.append("color",    formData.color);
 
         // Solo adjuntar imagen si el usuario seleccionó una nueva.
-        // En este punto formData.image es ya un File estable en memoria
-        // (materializado en processImageFile), no un Content URI lazy.
+        // formData.image es un File estable en memoria — no un Content URI lazy.
         if (formData.image) {
           body.append("image", formData.image);
         }

@@ -72,7 +72,9 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
     setRenameError(null);
 
     const encodedId = encodeURIComponent(asset.publicId);
-    const res = await api.patch<{ asset: { publicId: string; secureUrl: string } }>(
+    const res = await api.patch<{
+      asset: { publicId: string; secureUrl: string; displayName: string };
+    }>(
       `/api/admin/cloudinary/images/${encodedId}/rename`,
       { newName: trimmed },
     );
@@ -80,7 +82,7 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
     setRenaming(false);
 
     if (res.error || !res.data) {
-      setRenameError(res.error ?? "Error al renombrar");
+      setRenameError(res.error ?? 'Error al renombrar');
       return;
     }
 

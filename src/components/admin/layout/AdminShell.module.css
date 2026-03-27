@@ -1,16 +1,11 @@
 /**
- * src/components/admin/css/AdminShell.module.css
+ * src/components/admin/layout/AdminShell.module.css
  *
  * Layout del panel administrativo — sidebar + body + topbar.
- *
- * Breakpoint ≤ 1100px:
- *   - El sidebar se oculta (display: none).
- *   - El botón hamburguesa del topbar se muestra.
- *   - El campo de búsqueda y el label de "Nuevo Producto" se ajustan.
  */
 
 /* ════════════════════════════════════════════════════
-   SHELL — layout raíz (sidebar + body)
+   SHELL
    ════════════════════════════════════════════════════ */
 
 .shell {
@@ -24,30 +19,27 @@
    ════════════════════════════════════════════════════ */
 
 .sidebar {
-  width:            200px;
-  flex-shrink:      0;
-  background:       var(--admin-sidebar-bg);
-  border-right:     1px solid var(--admin-border);
-  display:          flex;
-  flex-direction:   column;
-  position:         sticky;
-  top:              0;
-  height:           100dvh;
-  overflow-y:       auto;
+  width:          200px;
+  flex-shrink:    0;
+  background:     var(--admin-sidebar-bg);
+  border-right:   1px solid var(--admin-border);
+  display:        flex;
+  flex-direction: column;
+  position:       sticky;
+  top:            0;
+  height:         100dvh;
+  overflow-y:     auto;
 }
 
-/* Ocultar sidebar en móvil — el AdminMobileMenu lo reemplaza */
 @media (max-width: 1100px) {
-  .sidebar {
-    display: none;
-  }
+  .sidebar { display: none; }
 }
 
 /* ── Sidebar Header ── */
 .sidebarHeader {
-  padding:        1.25rem 1.125rem 1rem;
-  border-bottom:  1px solid var(--admin-border);
-  flex-shrink:    0;
+  padding:       1.25rem 1.125rem 1rem;
+  border-bottom: 1px solid var(--admin-border);
+  flex-shrink:   0;
 }
 
 .sidebarBrand {
@@ -76,11 +68,11 @@
 
 /* ── Sidebar Nav ── */
 .sidebarNav {
-  flex:    1;
-  padding: 0.75rem 0.625rem;
-  display: flex;
+  flex:           1;
+  padding:        0.75rem 0.625rem;
+  display:        flex;
   flex-direction: column;
-  gap:     2px;
+  gap:            2px;
 }
 
 .navSectionLabel {
@@ -134,8 +126,8 @@
 
 /* ── Sidebar Footer ── */
 .sidebarFooter {
-  padding:    0.75rem 0.625rem;
-  border-top: 1px solid var(--admin-border);
+  padding:     0.75rem 0.625rem;
+  border-top:  1px solid var(--admin-border);
   flex-shrink: 0;
 }
 
@@ -163,14 +155,14 @@
 }
 
 /* ════════════════════════════════════════════════════
-   BODY — columna derecha (topbar + main)
+   BODY
    ════════════════════════════════════════════════════ */
 
 .body {
   flex:           1;
   display:        flex;
   flex-direction: column;
-  min-width:      0; /* evita overflow en flex */
+  min-width:      0;
   overflow:       hidden;
 }
 
@@ -193,14 +185,13 @@
   z-index:         40;
 }
 
-/* Cuando estamos en /admin/dashboard el topbar tiene búsqueda */
 .topbarExpanded {
   gap: 0.875rem;
 }
 
-/* ── Hamburger button — oculto en desktop, visible en ≤ 1100px ── */
+/* ── Hamburger ── */
 .hamburgerBtn {
-  display:         none; /* se muestra solo en móvil */
+  display:         none;
   align-items:     center;
   justify-content: center;
   width:           2rem;
@@ -221,9 +212,7 @@
 }
 
 @media (max-width: 1100px) {
-  .hamburgerBtn {
-    display: flex;
-  }
+  .hamburgerBtn { display: flex; }
 }
 
 /* ── Title ── */
@@ -243,11 +232,8 @@
   min-width: 0;
 }
 
-/* Comprimir información */
 @media (max-width: 1100px) {
-  .topbarTitle {
-    display: none;
-  }
+  .topbarTitle { display: none; }
 }
 
 /* ── Right group ── */
@@ -288,21 +274,16 @@
   transform: translateY(0);
 }
 
-/* En móvil pequeño, ocultar el label y dejar solo el ícono "+" */
 .btnNewProductLabel {
   display: inline;
 }
 
 @media (max-width: 520px) {
-  .btnNewProduct {
-    padding: 0.4rem 0.5rem;
-  }
-  .btnNewProductLabel {
-    display: none;
-  }
+  .btnNewProduct { padding: 0.4rem 0.5rem; }
+  .btnNewProductLabel { display: none; }
 }
 
-/* ── Avatar button ── */
+/* ── Avatar ── */
 .profileWrap {
   position: relative;
 }
@@ -335,7 +316,7 @@
   line-height:    1;
 }
 
-/* ── Profile menu dropdown ── */
+/* ── Profile menu ── */
 .profileMenuWrap {
   position: absolute;
   top:      calc(100% + 8px);
@@ -362,10 +343,10 @@
 }
 
 .profileMenuName {
-  font-family:    var(--font-jost), sans-serif;
-  font-size:      0.775rem;
-  font-weight:    600;
-  color:          var(--admin-text);
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.775rem;
+  font-weight: 600;
+  color:       var(--admin-text);
 }
 
 .profileMenuEmail {
@@ -413,7 +394,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   MAIN — área de contenido
+   MAIN
    ════════════════════════════════════════════════════ */
 
 .main {
@@ -424,9 +405,6 @@
   scrollbar-color: var(--admin-surface) var(--admin-bg);
 }
 
-/* Reducir padding en pantallas pequeñas */
 @media (max-width: 640px) {
-  .main {
-    padding: 1.25rem 1rem;
-  }
+  .main { padding: 1.25rem 1rem; }
 }

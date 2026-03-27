@@ -1,0 +1,93 @@
+/**
+ * src/components/admin/auth/PatternLock.module.css
+ */
+
+/* ── Wrapper ── */
+.wrapper {
+  position:      relative;
+  width:         240px;
+  height:        240px;
+  margin-bottom: 1rem;
+}
+
+.wrapperDisabled {
+  opacity:        0.45;
+  pointer-events: none;
+}
+
+/* ── SVG ── */
+.svg {
+  position: absolute;
+  inset:    0;
+  width:    100%;
+  height:   100%;
+  z-index:  2;
+  overflow: visible;
+}
+
+/* ── Grid 3×3 ── */
+.grid {
+  position:              absolute;
+  inset:                 0;
+  display:               grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows:    repeat(3, 1fr);
+  z-index:               1;
+}
+
+/* ── Nodo base ── */
+.node {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+}
+
+.node::after {
+  content:       "";
+  display:       block;
+  width:         36px;
+  height:        36px;
+  border-radius: 50%;
+  background:    var(--node-bg, var(--admin-surface));
+  border:        1.5px solid var(--node-ring, var(--admin-border));
+  transition:
+    background   0.15s ease,
+    border-color 0.15s ease,
+    transform    0.15s ease,
+    box-shadow   0.15s ease;
+}
+
+/* ── Nodo activo ── */
+.nodeOn::after {
+  transform:  scale(1.1);
+  box-shadow: var(--admin-shadow-node-active);
+}
+
+/* ── Primer nodo ── */
+.nodeFirst::after {
+  box-shadow: var(--admin-shadow-node-first);
+}
+
+/* ── Estado error ── */
+.nodeOn[data-state="error"]::after {
+  box-shadow: var(--admin-shadow-node-error);
+}
+
+/* ── Estado success ── */
+.nodeOn[data-state="success"]::after {
+  animation: patternPulse 0.45s ease forwards;
+}
+
+/* ── Nodo deshabilitado ── */
+.nodeDisabled::after {
+  background:   var(--admin-surface) !important;
+  border-color: var(--admin-border) !important;
+  box-shadow:   none !important;
+  transform:    none !important;
+}
+
+@keyframes patternPulse {
+  0%   { transform: scale(1);    }
+  50%  { transform: scale(1.18); }
+  100% { transform: scale(1.1);  }
+}

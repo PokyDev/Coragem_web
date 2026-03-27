@@ -1,0 +1,80 @@
+/**
+ * src/components/admin/ui/DevelopmentState.module.css
+ */
+
+.root {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  min-height:      100%;
+  padding:         3rem 1.5rem;
+}
+
+.card {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            0;
+  text-align:     center;
+  max-width:      400px;
+}
+
+.icon {
+  font-size:     2.25rem;
+  color:         var(--admin-text-dim);
+  margin-bottom: 1.5rem;
+  line-height:   1;
+  animation:     iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { opacity: 0.35; transform: scale(1);    }
+  50%       { opacity: 0.6;  transform: scale(1.05); }
+}
+
+.title {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.55rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+  margin-bottom:  0.65rem;
+}
+
+.description {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.76rem;
+  color:          var(--admin-text-muted);
+  line-height:    1.75;
+  letter-spacing: 0.03em;
+  margin-bottom:  1.5rem;
+}
+
+.badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            0.45rem;
+  padding:        0.35rem 0.9rem;
+  border-radius:  100px;
+  background:     var(--stock-low-bg);
+  border:         1px solid rgba(196, 154, 108, 0.2);
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.66rem;
+  font-weight:    600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color:          var(--stock-low-color);
+}
+
+.badgeDot {
+  width:         5px;
+  height:        5px;
+  border-radius: 50%;
+  background:    var(--stock-low-color);
+  animation:     dotBlink 1.8s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
+}

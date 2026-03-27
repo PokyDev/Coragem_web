@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
 import { api } from "@/lib/api";
-import styles from "@/components/admin/css/ImagesPage.module.css";
+import styles from "@/components/admin/css/ImageDetailModal.module.css";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024)        return `${bytes} B`;

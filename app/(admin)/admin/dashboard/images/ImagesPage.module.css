@@ -1,0 +1,282 @@
+/**
+ * src/components/admin/images/ImageDetailModal.module.css
+ *
+ * Modal de detalle de un asset de Cloudinary.
+ */
+
+/* ── Backdrop ── */
+.backdrop {
+  position:         fixed;
+  inset:            0;
+  z-index:          200;
+  display:          flex;
+  align-items:      center;
+  justify-content:  center;
+  padding:          1.5rem;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter:  blur(0px);
+  transition:
+    background-color 0.3s ease,
+    backdrop-filter  0.3s ease;
+}
+
+.backdropVisible {
+  background-color: rgba(0, 0, 0, 0.72);
+  backdrop-filter:  blur(6px);
+}
+
+/* ── Modal panel ── */
+.modal {
+  position:      relative;
+  width:         100%;
+  max-width:     860px;
+  max-height:    calc(100dvh - 3rem);
+  overflow-y:    auto;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.08),
+    0 40px 96px rgba(0, 0, 0, 0.5);
+  opacity:   0;
+  transform: translateY(24px) scale(0.975);
+  transition:
+    opacity   0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg-card);
+}
+
+.modalVisible {
+  opacity:   1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Modal header ── */
+.modalHeader {
+  position:        sticky;
+  top:             0;
+  z-index:         10;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         1.1rem 1.4rem;
+  background:      var(--admin-bg-card);
+  border-bottom:   1px solid var(--admin-border);
+  border-radius:   18px 18px 0 0;
+}
+
+.modalEyebrow {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color:          var(--admin-accent);
+  margin-bottom:  0.15rem;
+}
+
+.modalTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.35rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+  line-height:    1.1;
+  word-break:     break-all;
+}
+
+.closeBtn {
+  width:           32px;
+  height:          32px;
+  border-radius:   8px;
+  border:          1px solid var(--admin-border);
+  background:      var(--admin-surface);
+  color:           var(--admin-text-muted);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  flex-shrink:     0;
+  transition:      background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.closeBtn:hover {
+  background:   var(--stock-out-bg);
+  border-color: rgba(196, 122, 158, 0.3);
+  color:        var(--admin-danger);
+}
+
+/* ── Modal body ── */
+.modalBody {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   1.5rem;
+  padding:               1.4rem;
+}
+
+@media (max-width: 600px) {
+  .modalBody { grid-template-columns: 1fr; }
+}
+
+/* Preview */
+.previewWrap {
+  position:      relative;
+  width:         100%;
+  aspect-ratio:  1 / 1;
+  border-radius: 12px;
+  overflow:      hidden;
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-border);
+}
+
+.previewImg { object-fit: cover; }
+
+/* Detalles */
+.details {
+  display:        flex;
+  flex-direction: column;
+  gap:            1rem;
+}
+
+/* Renombrar */
+.renameSection {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.4rem;
+}
+
+.fieldLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  font-weight:    700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color:          var(--admin-text-muted);
+}
+
+.renameRow { display: flex; gap: 0.5rem; }
+
+.renameInput {
+  flex:          1;
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-border);
+  border-radius: 8px;
+  color:         var(--admin-text);
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.8rem;
+  padding:       0.5rem 0.75rem;
+  outline:       none;
+  transition:    border-color 0.2s, box-shadow 0.2s;
+  min-width:     0;
+}
+
+.renameInput:focus {
+  border-color: var(--admin-accent);
+  box-shadow:   0 0 0 3px rgba(78, 196, 196, 0.1);
+}
+
+.renameBtn {
+  padding:        0.5rem 1rem;
+  border-radius:  8px;
+  border:         none;
+  background:     var(--admin-accent);
+  color:          #0d1520;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  font-weight:    700;
+  letter-spacing: 0.04em;
+  cursor:         pointer;
+  flex-shrink:    0;
+  transition:     opacity 0.15s, transform 0.15s;
+}
+
+.renameBtn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.renameBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.renameError {
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.62rem;
+  color:       var(--admin-danger);
+}
+
+/* Metadatos */
+.metaGrid {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   0.65rem 1rem;
+}
+
+.metaLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+  margin-bottom:  0.18rem;
+}
+
+.metaValue {
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.78rem;
+  font-weight: 500;
+  color:       var(--admin-text);
+  word-break:  break-all;
+}
+
+.metaValueAccent { color: var(--admin-accent); }
+
+/* Public ID */
+.publicIdRow { display: flex; gap: 0.4rem; align-items: center; }
+
+.copyBtn {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           26px;
+  height:          26px;
+  border-radius:   6px;
+  border:          1px solid var(--admin-border);
+  background:      transparent;
+  color:           var(--admin-text-muted);
+  cursor:          pointer;
+  flex-shrink:     0;
+  transition:      border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.copyBtn:hover {
+  border-color: var(--admin-accent);
+  color:        var(--admin-accent);
+  background:   var(--admin-nav-active-bg);
+}
+
+.copyOk {
+  color:        var(--admin-accent) !important;
+  border-color: var(--admin-accent) !important;
+}
+
+/* Divider */
+.divider {
+  height:     1px;
+  background: var(--admin-border);
+  opacity:    0.5;
+}
+
+/* URL link */
+.urlLink {
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.68rem;
+  color:           var(--admin-accent);
+  text-decoration: none;
+  word-break:      break-all;
+  letter-spacing:  0.02em;
+  transition:      opacity 0.15s;
+}
+
+.urlLink:hover { opacity: 0.75; }
+
+/* Tema claro */
+:global(.admin[data-admin-theme="light"]) .renameBtn {
+  color: #ffffff;
+}

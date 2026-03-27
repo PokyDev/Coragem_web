@@ -1,12 +1,10 @@
 /**
  * src/components/admin/layout/AdminMobileMenu.module.css
  *
- * Estilos específicos del menú móvil del panel administrativo.
- * Usa tokens del design system Slate Command (--admin-*).
- * La estructura estructural del panel la gestiona SlideMenu.module.css.
+ * Estilos del menú móvil del panel administrativo.
  */
 
-/* ── Header ──────────────────────────────────────────────────────── */
+/* ── Header ── */
 .header {
   display:         flex;
   align-items:     center;
@@ -41,7 +39,7 @@
   color:          var(--admin-text-dim);
 }
 
-/* ── Nav section ─────────────────────────────────────────────────── */
+/* ── Nav section ── */
 .navSection {
   display:        flex;
   flex-direction: column;
@@ -59,7 +57,7 @@
   padding:        0.5rem 0.75rem 0.25rem;
 }
 
-/* ── Nav item ────────────────────────────────────────────────────── */
+/* ── Nav item ── */
 .navItem {
   display:         flex;
   align-items:     center;
@@ -92,13 +90,13 @@
 }
 
 .navIcon {
-  font-size:  0.85rem;
-  width:      16px;
-  text-align: center;
+  font-size:   0.85rem;
+  width:       16px;
+  text-align:  center;
   flex-shrink: 0;
 }
 
-/* ── Footer ──────────────────────────────────────────────────────── */
+/* ── Footer ── */
 .footer {
   width: 100%;
 }
@@ -109,7 +107,7 @@
   justify-content: space-between;
 }
 
-/* ── Logout button ───────────────────────────────────────────────── */
+/* ── Logout button ── */
 .logoutBtn {
   display:        flex;
   align-items:    center;

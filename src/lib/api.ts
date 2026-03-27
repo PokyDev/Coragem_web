@@ -2,35 +2,22 @@
  * src/lib/api.ts
  *
  * Cliente HTTP base para consumir la API de Coragem.
- * Centraliza la URL base y el manejo de respuestas para no repetir
- * lógica de fetch en cada hook o componente.
+ * Centraliza la URL base y el manejo de respuestas.
  */
 
 function getApiBase(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL;
+  const url = process.env.NEXT_PUBLIC_API_URL ?? "";
   if (!url) throw new Error("NEXT_PUBLIC_API_URL is not defined");
   return url;
 }
 
 export interface ApiResponse<T> {
-  data:  T    | null;
+  data:  T | null;
   error: string | null;
   /** Solo presente en respuestas de rate limit (HTTP 429) */
   retryAfter?: number;
 }
 
-/**
- * Convierte un error capturado en el catch de fetch en un mensaje legible.
- *
- * Casos relevantes:
- *   - TypeError "Failed to fetch": sin conectividad, CORS, o el stream del
- *     archivo fue cerrado por el proveedor antes del envío (Android Content URI).
- *     Con el fix de materializeFile en useProductForm, este último caso ya no
- *     debería ocurrir, pero el mensaje sigue siendo más informativo que el genérico.
- *   - TypeError con otro mensaje: error de construcción del request (body inválido,
- *     FormData vacío, etc.). Se incluye el mensaje para facilitar el debugging.
- *   - Otros errores: se devuelve el mensaje si está disponible.
- */
 function parseNetworkError(err: unknown): string {
   if (err instanceof TypeError) {
     if (err.message.toLowerCase().includes("failed to fetch")) {
@@ -38,16 +25,14 @@ function parseNetworkError(err: unknown): string {
     }
     return `Error al enviar la solicitud: ${err.message}`;
   }
-  if (err instanceof Error) {
-    return err.message || "Error desconocido";
-  }
+  if (err instanceof Error) return err.message || "Error desconocido";
   return "No se pudo conectar con el servidor";
 }
 
 async function request<T>(
-  path:     string,
-  options:  RequestInit = {},
-  withBody  = true,
+  path:    string,
+  options: RequestInit = {},
+  withBody = true,
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(`${getApiBase()}${path}`, {
@@ -65,7 +50,6 @@ async function request<T>(
       };
     }
 
-    // Respuestas sin body (204 No Content) — no intentar parsear JSON
     if (res.status === 204 || res.headers.get("content-length") === "0") {
       return { data: null, error: null };
     }
@@ -82,56 +66,10 @@ async function request<T>(
   }
 }
 
-/**
- * Petición multipart/form-data.
- *
- * NO se establece el header Content-Type manualmente: el navegador lo
- * genera automáticamente con el boundary correcto al recibir un FormData.
- * Forzar "Content-Type: multipart/form-data" sin boundary rompe el parsing
- * del servidor.
- */
-async function multipartRequest<T>(
-  path:    string,
-  method:  "POST" | "PATCH" | "PUT",
-  body:    FormData,
-): Promise<ApiResponse<T>> {
-  try {
-    const res = await fetch(`${getApiBase()}${path}`, {
-      method,
-      credentials: "include",
-      body,
-      // Sin headers: el browser pone "Content-Type: multipart/form-data; boundary=..."
-    });
-
-    if (res.status === 429) {
-      const resBody = await res.json().catch(() => ({}));
-      return {
-        data:       null,
-        error:      resBody.error ?? "Demasiados intentos fallidos",
-        retryAfter: resBody.retryAfter,
-      };
-    }
-
-    const resBody = await res.json();
-
-    if (!res.ok) {
-      return { data: null, error: resBody.error ?? "Error desconocido" };
-    }
-
-    return { data: resBody as T, error: null };
-  } catch (err) {
-    return { data: null, error: parseNetworkError(err) };
-  }
-}
-
 export const api = {
-  get:        <T>(path: string)                        => request<T>(path, {}, false),
-  post:       <T>(path: string, body: unknown)         => request<T>(path, { method: "POST",   body: JSON.stringify(body) }),
-  put:        <T>(path: string, body: unknown)         => request<T>(path, { method: "PUT",    body: JSON.stringify(body) }),
-  patch:      <T>(path: string, body: unknown)         => request<T>(path, { method: "PATCH",  body: JSON.stringify(body) }),
-  delete:     <T>(path: string)                        => request<T>(path, { method: "DELETE" }, false),
-
-  /** Subida de archivos — omite Content-Type para preservar el multipart boundary */
-  multipart:  <T>(path: string, method: "POST" | "PATCH" | "PUT", body: FormData) =>
-    multipartRequest<T>(path, method, body),
+  get:    <T>(path: string)                => request<T>(path, {}, false),
+  post:   <T>(path: string, body: unknown) => request<T>(path, { method: "POST",   body: JSON.stringify(body) }),
+  put:    <T>(path: string, body: unknown) => request<T>(path, { method: "PUT",    body: JSON.stringify(body) }),
+  patch:  <T>(path: string, body: unknown) => request<T>(path, { method: "PATCH",  body: JSON.stringify(body) }),
+  delete: <T>(path: string)                => request<T>(path, { method: "DELETE" }, false),
 };

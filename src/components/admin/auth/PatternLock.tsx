@@ -5,15 +5,10 @@
  *
  * Componente visual del grid de patrón.
  * Responsabilidad única: renderizar los nodos y las líneas SVG.
- *
- * Prop adicional `disabled`: cuando true, el grid se muestra
- * atenuado y no acepta eventos de puntero (fase "locked").
  */
 
 import type { Point, PatternState } from "@/types/admin";
-import styles from "@/components/admin/css/PatternLock.module.css";
-
-/* ──── Types ────────────────────────────────────────────────────── */
+import styles from "./PatternLock.module.css";
 
 interface PatternLockProps {
   pattern:     number[];
@@ -24,11 +19,8 @@ interface PatternLockProps {
   wrapperRef:  React.RefObject<HTMLDivElement | null>;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseMove?: (e: React.MouseEvent<HTMLDivElement>) => void;
-  /** Cuando true, deshabilita toda interacción y atenúa el grid */
   disabled?:   boolean;
 }
-
-/* ─── Color map por estado ──────────────────────────────────────── */
 
 const STATE_COLORS: Record<PatternState, { nodeBg: string; ring: string; line: string; dot: string }> = {
   idle:    { nodeBg: "var(--admin-surface)",    ring: "var(--admin-border)", line: "rgba(78,196,196,0.4)",   dot: "#4a5568" },
@@ -37,18 +29,9 @@ const STATE_COLORS: Record<PatternState, { nodeBg: string; ring: string; line: s
   error:   { nodeBg: "rgba(196,122,158,0.15)",  ring: "#c47a9e",             line: "rgba(196,122,158,0.75)", dot: "#c47a9e" },
 };
 
-/* ─── Component ─────────────────────────────────────────────────── */
-
 export function PatternLock({
-  pattern,
-  state,
-  cursor,
-  nodeCenters,
-  svgRef,
-  wrapperRef,
-  onMouseDown,
-  onMouseMove,
-  disabled = false,
+  pattern, state, cursor, nodeCenters, svgRef, wrapperRef,
+  onMouseDown, onMouseMove, disabled = false,
 }: PatternLockProps) {
   const C = STATE_COLORS[state];
 
@@ -72,7 +55,6 @@ export function PatternLock({
       style={{ userSelect: "none", cursor: disabled ? "not-allowed" : "crosshair" }}
     >
       <svg ref={svgRef} className={styles.svg} style={{ pointerEvents: "none" }}>
-
         {linePoints && (
           <polyline
             points={linePoints}
@@ -120,9 +102,9 @@ export function PatternLock({
               key={i}
               className={[
                 styles.node,
-                selected  ? styles.nodeOn    : "",
-                isFirst   ? styles.nodeFirst : "",
-                disabled  ? styles.nodeDisabled : "",
+                selected ? styles.nodeOn    : "",
+                isFirst  ? styles.nodeFirst : "",
+                disabled ? styles.nodeDisabled : "",
               ].join(" ").trim()}
               data-state={state}
               aria-label={`Nodo ${i + 1}`}

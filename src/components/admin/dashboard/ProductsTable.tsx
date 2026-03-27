@@ -4,38 +4,25 @@
  * src/components/admin/dashboard/ProductsTable.tsx
  *
  * Tabla de productos del dashboard.
- * Expone onEdit y onDelete para que DashboardPage controle el modal.
- *
- * Comportamientos de preview de imagen:
- *   Desktop — portal React montado en document.body, posicionado con
- *             getBoundingClientRect(). Aparece 1 s después del mouseenter
- *             sobre la fila. Al salir de la fila se cancela o se oculta.
- *             Al estar fuera del árbol de la tabla no hay stacking context
- *             que lo tape (sidebar, thead sticky, etc.).
- *   Móvil   — tap sobre el cardThumb abre un backdrop fullscreen.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import type { ProductRow, StockFilter } from "@/types/admin";
-import styles from "@/components/admin/css/ProductsTable.module.css";
+import styles from "./ProductsTable.module.css";
 
 const PAGE_SIZE = 10;
 
-/* ─── Formatters ────────────────────────────────────────────────── */
-
+/* ─── Formatters ── */
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CO", {
-    style:                 "currency",
-    currency:              "COP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    style: "currency", currency: "COP",
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(price);
 }
 
-/* ─── Stock Badge ────────────────────────────────────────────────── */
-
+/* ─── Stock Badge ── */
 function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   const map = {
     ok:  { label: "Con Stock",  cls: styles.badgeOk  },
@@ -51,69 +38,42 @@ function StockBadge({ status }: { status: ProductRow["stockStatus"] }) {
   );
 }
 
-/* ─── Stock Count ────────────────────────────────────────────────── */
-
+/* ─── Stock Count ── */
 function StockCount({ status, stock }: { status: ProductRow["stockStatus"]; stock: number }) {
   const colorClass = { ok: styles.stockOk, low: styles.stockLow, out: styles.stockOut }[status];
   return <span className={`${styles.stockCount} ${colorClass}`}>{stock}</span>;
 }
 
-/* ─── Category label ─────────────────────────────────────────────── */
-
+/* ─── Category label ── */
 const CATEGORY_LABELS: Record<string, string> = {
   EARCUFF: "Earcuff", ANILLO: "Anillo", DIJE: "Dije",
   CADENA: "Cadena", TOPOS: "Topos", CANDONGAS: "Candongas", CONJUNTOS: "Conjuntos",
 };
 
-/* ─── Desktop Image Tooltip (portal en document.body) ───────────── */
-
+/* ─── Desktop Image Tooltip ── */
 interface TooltipPortalProps {
-  url:        string;
-  name:       string;
-  anchorRect: DOMRect;
+  url: string; name: string; anchorRect: DOMRect;
 }
 
 function TooltipPortal({ url, name, anchorRect }: TooltipPortalProps) {
-  const TOOLTIP_SIZE = 300;
-
-  /*
-   * position: fixed → coordenadas relativas al viewport.
-   * getBoundingClientRect() también es relativo al viewport,
-   * así que no se suma scrollY. El tooltip se centra sobre el
-   * thumb y crece hacia arriba desde su borde superior.
-   */
-  const left = anchorRect.left + anchorRect.width / 2 - TOOLTIP_SIZE / 2;
-  const top  = anchorRect.top  + anchorRect.height / 2 - TOOLTIP_SIZE / 2;
+  const SIZE = 300;
+  const left = anchorRect.left + anchorRect.width  / 2 - SIZE / 2;
+  const top  = anchorRect.top  + anchorRect.height / 2 - SIZE / 2;
 
   return createPortal(
     <div
       className={styles.desktopTooltip}
-      style={{ top, left, width: TOOLTIP_SIZE, height: TOOLTIP_SIZE }}
+      style={{ top, left, width: SIZE, height: SIZE }}
       aria-hidden="true"
     >
-      <Image
-        src={url}
-        alt={name}
-        fill
-        sizes="300px"
-        style={{ objectFit: "cover" }}
-        className={styles.desktopTooltipImg}
-        priority={false}
-      />
+      <Image src={url} alt={name} fill sizes="300px" style={{ objectFit: "cover" }} className={styles.desktopTooltipImg} priority={false} />
     </div>,
     document.body
   );
 }
 
-/* ─── Mobile Image Preview ───────────────────────────────────────── */
-
-interface MobilePreviewProps {
-  url:     string;
-  name:    string;
-  onClose: () => void;
-}
-
-function MobilePreview({ url, name, onClose }: MobilePreviewProps) {
+/* ─── Mobile Image Preview ── */
+function MobilePreview({ url, name, onClose }: { url: string; name: string; onClose: () => void }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -121,30 +81,12 @@ function MobilePreview({ url, name, onClose }: MobilePreviewProps) {
   }, [onClose]);
 
   return (
-    <div
-      className={styles.mobilePreviewBackdrop}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Vista previa de ${name}`}
-    >
+    <div className={styles.mobilePreviewBackdrop} onClick={onClose} role="dialog" aria-modal="true" aria-label={`Vista previa de ${name}`}>
       <div className={styles.mobilePreviewPanel} onClick={(e) => e.stopPropagation()}>
         <div className={styles.mobilePreviewImgWrap}>
-          <Image
-            src={url}
-            alt={name}
-            fill
-            sizes="88vw"
-            style={{ objectFit: "cover" }}
-            className={styles.mobilePreviewImg}
-          />
+          <Image src={url} alt={name} fill sizes="88vw" style={{ objectFit: "cover" }} className={styles.mobilePreviewImg} />
         </div>
-        <button
-          className={styles.mobilePreviewClose}
-          onClick={onClose}
-          aria-label="Cerrar vista previa"
-          type="button"
-        >
+        <button className={styles.mobilePreviewClose} onClick={onClose} aria-label="Cerrar vista previa" type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
@@ -155,28 +97,22 @@ function MobilePreview({ url, name, onClose }: MobilePreviewProps) {
   );
 }
 
-/* ─── Pagination ─────────────────────────────────────────────────── */
-
-interface PaginationProps {
-  current: number; total: number; onChange: (page: number) => void;
-}
-
-function Pagination({ current, total, onChange }: PaginationProps) {
+/* ─── Pagination ── */
+function Pagination({ current, total, onChange }: { current: number; total: number; onChange: (page: number) => void }) {
   if (total <= 1) return null;
-  const pages = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className={styles.pagination}>
-      <button className={styles.pageBtn} onClick={() => onChange(current - 1)} disabled={current === 1} aria-label="Página anterior">
+      <button className={styles.pageBtn} onClick={() => onChange(current - 1)} disabled={current === 1} aria-label="Anterior">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
-      {pages.map((p) => (
+      {Array.from({ length: total }, (_, i) => i + 1).map((p) => (
         <button key={p} className={`${styles.pageBtn} ${p === current ? styles.pageBtnActive : ""}`} onClick={() => onChange(p)} aria-label={`Página ${p}`} aria-current={p === current ? "page" : undefined}>
           {p}
         </button>
       ))}
-      <button className={styles.pageBtn} onClick={() => onChange(current + 1)} disabled={current === total} aria-label="Página siguiente">
+      <button className={styles.pageBtn} onClick={() => onChange(current + 1)} disabled={current === total} aria-label="Siguiente">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <polyline points="9 18 15 12 9 6" />
         </svg>
@@ -185,8 +121,7 @@ function Pagination({ current, total, onChange }: PaginationProps) {
   );
 }
 
-/* ─── Empty States ────────────────────────────────────────────────── */
-
+/* ─── Empty state ── */
 const STOCK_FILTER_LABELS: Record<string, string> = {
   ok: "con stock", low: "con stock bajo", out: "sin stock",
 };
@@ -209,15 +144,7 @@ function EmptyState({ hasSearch, stockFilter }: { hasSearch: boolean; stockFilte
   );
 }
 
-function EmptyStateDesc({ hasSearch, stockFilter }: { hasSearch: boolean; stockFilter: StockFilter }) {
-  const filterLabel = stockFilter !== "all" ? STOCK_FILTER_LABELS[stockFilter] : "";
-  return hasSearch
-    ? `Ningún producto ${filterLabel ? `${filterLabel} ` : ""}coincide con la búsqueda.`
-    : `No hay productos ${filterLabel}.`;
-}
-
-/* ─── Props ─────────────────────────────────────────────────────── */
-
+/* ─── Props ── */
 interface ProductsTableProps {
   products:    ProductRow[];
   searchQuery: string;
@@ -226,24 +153,16 @@ interface ProductsTableProps {
   onDelete:    (product: ProductRow) => void;
 }
 
-/* ─── Component ─────────────────────────────────────────────────── */
-
+/* ─── Component ── */
 export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDelete }: ProductsTableProps) {
   const [page, setPage] = useState(1);
-
-  /* Desktop tooltip */
   const [tooltip, setTooltip] = useState<{ url: string; name: string; rect: DOMRect } | null>(null);
+  const [mobilePreview, setMobilePreview] = useState<{ url: string; name: string } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* Mobile preview */
-  const [mobilePreview, setMobilePreview] = useState<{ url: string; name: string } | null>(null);
-
   useEffect(() => { setPage(1); }, [searchQuery, stockFilter]);
-
-  /* Limpiar timer al desmontar */
   useEffect(() => () => { if (hoverTimer.current) clearTimeout(hoverTimer.current); }, []);
 
-  /* Desktop: iniciar contador de 1 s al entrar en la fila */
   const handleRowMouseEnter = useCallback((product: ProductRow, e: React.MouseEvent<HTMLTableRowElement>) => {
     if (!product.images[0]?.url) return;
     const thumb = (e.currentTarget as HTMLElement).querySelector<HTMLElement>(`.${styles.productThumb}`);
@@ -254,13 +173,11 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
     }, 1000);
   }, []);
 
-  /* Desktop: cancelar o cerrar al salir de la fila */
   const handleRowMouseLeave = useCallback(() => {
     if (hoverTimer.current) { clearTimeout(hoverTimer.current); hoverTimer.current = null; }
     setTooltip(null);
   }, []);
 
-  /* Móvil */
   const openMobilePreview  = useCallback((url: string, name: string) => setMobilePreview({ url, name }), []);
   const closeMobilePreview = useCallback(() => setMobilePreview(null), []);
 
@@ -279,9 +196,7 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
         {(searchQuery || stockFilter !== "all") && (
           <div className={styles.filterBadges}>
             {searchQuery && (
-              <div className={styles.searchBadge}>
-                Búsqueda: <strong>{searchQuery}</strong>
-              </div>
+              <div className={styles.searchBadge}>Búsqueda: <strong>{searchQuery}</strong></div>
             )}
             {stockFilter !== "all" && (
               <div className={`${styles.searchBadge} ${styles[`filterBadge_${stockFilter}`]}`}>
@@ -309,24 +224,12 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
           <tbody>
             {pageItems.length > 0 ? (
               pageItems.map((product) => (
-                <tr
-                  key={product.id}
-                  className={styles.row}
-                  onMouseEnter={(e) => handleRowMouseEnter(product, e)}
-                  onMouseLeave={handleRowMouseLeave}
-                >
+                <tr key={product.id} className={styles.row} onMouseEnter={(e) => handleRowMouseEnter(product, e)} onMouseLeave={handleRowMouseLeave}>
                   <td className={styles.td}>
                     <div className={styles.productCell}>
                       <div className={styles.productThumb}>
                         {product.images[0]?.url ? (
-                          <Image
-                            src={product.images[0].url}
-                            alt={product.name}
-                            fill
-                            sizes="30px"
-                            className={styles.productThumbImg}
-                            style={{ objectFit: "cover" }}
-                          />
+                          <Image src={product.images[0].url} alt={product.name} fill sizes="30px" className={styles.productThumbImg} style={{ objectFit: "cover" }} />
                         ) : (
                           <span className={styles.productThumbPlaceholder}>◈</span>
                         )}
@@ -334,37 +237,15 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
                       <span className={styles.productName}>{product.name}</span>
                     </div>
                   </td>
-                  <td className={`${styles.td} ${styles.tdMuted}`}>
-                    {CATEGORY_LABELS[product.category] ?? product.category}
-                  </td>
-                  <td className={styles.td}>
-                    <span className={styles.price}>{formatPrice(product.price)}</span>
-                  </td>
+                  <td className={`${styles.td} ${styles.tdMuted}`}>{CATEGORY_LABELS[product.category] ?? product.category}</td>
+                  <td className={styles.td}><span className={styles.price}>{formatPrice(product.price)}</span></td>
                   <td className={`${styles.td} ${styles.tdMuted}`}>{product.ventas}</td>
-                  <td className={styles.td}>
-                    <StockCount status={product.stockStatus} stock={product.stock} />
-                  </td>
-                  <td className={styles.td}>
-                    <StockBadge status={product.stockStatus} />
-                  </td>
+                  <td className={styles.td}><StockCount status={product.stockStatus} stock={product.stock} /></td>
+                  <td className={styles.td}><StockBadge status={product.stockStatus} /></td>
                   <td className={`${styles.td} ${styles.tdActions}`}>
                     <div className={styles.actionsWrap}>
-                      <button
-                        className={styles.actionBtn}
-                        type="button"
-                        aria-label={`Editar ${product.name}`}
-                        onClick={() => onEdit(product)}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                        type="button"
-                        aria-label={`Eliminar ${product.name}`}
-                        onClick={() => onDelete(product)}
-                      >
-                        Eliminar
-                      </button>
+                      <button className={styles.actionBtn} type="button" aria-label={`Editar ${product.name}`} onClick={() => onEdit(product)}>Editar</button>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} type="button" aria-label={`Eliminar ${product.name}`} onClick={() => onDelete(product)}>Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -376,89 +257,55 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
         </table>
       </div>
 
-      {/* ── Card list (móvil ≤ 500px) ── */}
+      {/* Card list móvil */}
       <div className={styles.cardList}>
-        {pageItems.length > 0 ? (
-          pageItems.map((product, index) => (
-            <div
-              key={product.id}
-              className={styles.productCard}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              <div className={styles.cardMain}>
-                <button
-                  className={styles.cardThumb}
-                  type="button"
-                  aria-label={product.images[0]?.url ? `Ver imagen de ${product.name}` : undefined}
-                  onClick={() => product.images[0]?.url && openMobilePreview(product.images[0].url, product.name)}
-                  style={{ cursor: product.images[0]?.url ? "pointer" : "default" }}
-                >
-                  {product.images[0]?.url ? (
-                    <Image
-                      src={product.images[0].url}
-                      alt={product.name}
-                      fill
-                      sizes="34px"
-                      className={styles.cardThumbImg}
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <span className={styles.cardId}>◈</span>
-                  )}
-                </button>
-                <div className={styles.cardNameGroup}>
-                  <p className={styles.cardName}>{product.name}</p>
-                  <p className={styles.cardCategory}>
-                    {CATEGORY_LABELS[product.category] ?? product.category}
-                  </p>
-                </div>
-                <StockBadge status={product.stockStatus} />
+        {pageItems.length > 0 ? pageItems.map((product, index) => (
+          <div key={product.id} className={styles.productCard} style={{ animationDelay: `${index * 0.05}s` }}>
+            <div className={styles.cardMain}>
+              <button
+                className={styles.cardThumb}
+                type="button"
+                aria-label={product.images[0]?.url ? `Ver imagen de ${product.name}` : undefined}
+                onClick={() => product.images[0]?.url && openMobilePreview(product.images[0].url, product.name)}
+                style={{ cursor: product.images[0]?.url ? "pointer" : "default" }}
+              >
+                {product.images[0]?.url ? (
+                  <Image src={product.images[0].url} alt={product.name} fill sizes="34px" className={styles.cardThumbImg} style={{ objectFit: "cover" }} />
+                ) : (
+                  <span className={styles.cardId}>◈</span>
+                )}
+              </button>
+              <div className={styles.cardNameGroup}>
+                <p className={styles.cardName}>{product.name}</p>
+                <p className={styles.cardCategory}>{CATEGORY_LABELS[product.category] ?? product.category}</p>
               </div>
+              <StockBadge status={product.stockStatus} />
+            </div>
 
-              <div className={styles.cardMeta}>
-                <div className={styles.cardMetaItem}>
-                  <span className={styles.cardMetaLabel}>Precio</span>
-                  <span className={styles.cardMetaValue}>{formatPrice(product.price)}</span>
-                </div>
-                <div className={styles.cardMetaItem}>
-                  <span className={styles.cardMetaLabel}>Stock</span>
-                  <span className={styles.cardMetaValue}>
-                    <StockCount status={product.stockStatus} stock={product.stock} />
-                  </span>
-                </div>
-                <div className={styles.cardMetaItem}>
-                  <span className={styles.cardMetaLabel}>Ventas</span>
-                  <span className={styles.cardMetaValue}>{product.ventas}</span>
-                </div>
+            <div className={styles.cardMeta}>
+              <div className={styles.cardMetaItem}>
+                <span className={styles.cardMetaLabel}>Precio</span>
+                <span className={styles.cardMetaValue}>{formatPrice(product.price)}</span>
               </div>
-
-              <div className={styles.cardActions}>
-                <button
-                  className={styles.cardActionBtn}
-                  type="button"
-                  onClick={() => onEdit(product)}
-                  aria-label={`Editar ${product.name}`}
-                >
-                  Editar
-                </button>
-                <button
-                  className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`}
-                  type="button"
-                  onClick={() => onDelete(product)}
-                  aria-label={`Eliminar ${product.name}`}
-                >
-                  Eliminar
-                </button>
+              <div className={styles.cardMetaItem}>
+                <span className={styles.cardMetaLabel}>Stock</span>
+                <span className={styles.cardMetaValue}><StockCount status={product.stockStatus} stock={product.stock} /></span>
+              </div>
+              <div className={styles.cardMetaItem}>
+                <span className={styles.cardMetaLabel}>Ventas</span>
+                <span className={styles.cardMetaValue}>{product.ventas}</span>
               </div>
             </div>
-          ))
-        ) : (
+
+            <div className={styles.cardActions}>
+              <button className={styles.cardActionBtn} type="button" onClick={() => onEdit(product)} aria-label={`Editar ${product.name}`}>Editar</button>
+              <button className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`} type="button" onClick={() => onDelete(product)} aria-label={`Eliminar ${product.name}`}>Eliminar</button>
+            </div>
+          </div>
+        )) : (
           <div className={styles.emptyState}>
             <span className={styles.emptyIcon} aria-hidden="true">◈</span>
             <p className={styles.emptyTitle}>Sin resultados</p>
-            <p className={styles.emptyDesc}>
-              <EmptyStateDesc hasSearch={!!searchQuery} stockFilter={stockFilter} />
-            </p>
           </div>
         )}
       </div>
@@ -471,23 +318,8 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
         <Pagination current={page} total={totalPages} onChange={setPage} />
       </div>
 
-      {/* ── Desktop image tooltip portal ── */}
-      {tooltip && (
-        <TooltipPortal
-          url={tooltip.url}
-          name={tooltip.name}
-          anchorRect={tooltip.rect}
-        />
-      )}
-
-      {/* ── Mobile image preview ── */}
-      {mobilePreview && (
-        <MobilePreview
-          url={mobilePreview.url}
-          name={mobilePreview.name}
-          onClose={closeMobilePreview}
-        />
-      )}
+      {tooltip && <TooltipPortal url={tooltip.url} name={tooltip.name} anchorRect={tooltip.rect} />}
+      {mobilePreview && <MobilePreview url={mobilePreview.url} name={mobilePreview.name} onClose={closeMobilePreview} />}
     </div>
   );
 }

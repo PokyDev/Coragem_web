@@ -1,0 +1,299 @@
+/**
+ * src/components/admin/dashboard/ProductFormModal.module.css
+ *
+ * Estilos del modal de creación/edición de productos.
+ * La subida de imágenes está suspendida, por lo que el formulario
+ * ocupa una sola columna con todos los campos de texto.
+ */
+
+/* ── Backdrop ── */
+.backdrop {
+  position:         fixed;
+  inset:            0;
+  z-index:          200;
+  display:          flex;
+  align-items:      center;
+  justify-content:  center;
+  padding:          1.5rem;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter:  blur(0px);
+  transition:
+    background-color 0.3s ease,
+    backdrop-filter  0.3s ease;
+}
+
+.backdropVisible {
+  background-color: rgba(0, 0, 0, 0.62);
+  backdrop-filter:  blur(5px);
+}
+
+/* ── Panel ── */
+.panel {
+  position:   relative;
+  width:      100%;
+  max-width:  520px;
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+  background: var(--admin-bg-card);
+  border:     1px solid var(--admin-border);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.07),
+    0 40px 96px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.18);
+  opacity:   0;
+  transform: translateY(28px) scale(0.972);
+  transition:
+    opacity   0.34s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg-card);
+  overscroll-behavior: contain;
+}
+
+.panel::-webkit-scrollbar       { width: 4px; }
+.panel::-webkit-scrollbar-track { background: var(--admin-bg-card); }
+.panel::-webkit-scrollbar-thumb { background: var(--admin-surface); border-radius: 999px; }
+
+.panelVisible {
+  opacity:   1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Header ── */
+.header {
+  position:        sticky;
+  top:             0;
+  z-index:         10;
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         1.3rem 1.6rem;
+  background:      var(--admin-bg-card);
+  border-bottom:   1px solid var(--admin-border);
+  border-radius:   18px 18px 0 0;
+}
+
+.headerLeft {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.18rem;
+}
+
+.headerEyebrow {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color:          var(--admin-accent);
+}
+
+.headerTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.5rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+  line-height:    1.1;
+}
+
+.closeBtn {
+  width:           34px;
+  height:          34px;
+  border-radius:   8px;
+  border:          1px solid var(--admin-border);
+  background:      var(--admin-surface);
+  color:           var(--admin-text-muted);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  flex-shrink:     0;
+  transition:      background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.closeBtn:hover {
+  background:   var(--stock-out-bg);
+  border-color: rgba(196, 122, 158, 0.3);
+  color:        var(--admin-danger);
+}
+
+/* ── Body ── */
+.body {
+  display:        flex;
+  flex-direction: column;
+  gap:            1.05rem;
+  padding:        1.6rem;
+}
+
+/* ── Grupos de campo ── */
+.fieldGroup {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.32rem;
+}
+
+.fieldLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.63rem;
+  font-weight:    700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color:          var(--admin-text-muted);
+}
+
+.fieldRequired { color: var(--admin-danger); margin-left: 0.18rem; }
+
+.fieldInput,
+.fieldSelect {
+  width:       100%;
+  background:  var(--admin-surface);
+  border:      1px solid var(--admin-border);
+  border-radius: 8px;
+  color:       var(--admin-text);
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.82rem;
+  padding:     0.62rem 0.88rem;
+  outline:     none;
+  transition:  border-color 0.2s, box-shadow 0.2s;
+  appearance:  none;
+  -webkit-appearance: none;
+}
+
+.fieldInput::placeholder { color: var(--admin-text-dim); }
+
+.fieldInput:focus,
+.fieldSelect:focus {
+  border-color: var(--admin-accent);
+  box-shadow:   0 0 0 3px rgba(78, 196, 196, 0.1);
+}
+
+.fieldInputError,
+.fieldSelectError {
+  border-color: var(--admin-danger) !important;
+  box-shadow:   0 0 0 3px rgba(196, 122, 158, 0.1) !important;
+}
+
+.fieldError {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  color:          var(--admin-danger);
+  letter-spacing: 0.02em;
+}
+
+.selectWrapper { position: relative; }
+
+.selectArrow {
+  position:       absolute;
+  right:          0.75rem;
+  top:            50%;
+  transform:      translateY(-50%);
+  pointer-events: none;
+  color:          var(--admin-text-dim);
+}
+
+/* Color dot en el select */
+.colorDotWrapper {
+  position:       absolute;
+  left:           0.75rem;
+  top:            50%;
+  transform:      translateY(-50%);
+  pointer-events: none;
+}
+
+.colorDot {
+  width:         10px;
+  height:        10px;
+  border-radius: 50%;
+  display:       block;
+  border:        1px solid rgba(255, 255, 255, 0.15);
+}
+
+.fieldSelectWithDot { padding-left: 2rem; }
+
+.fieldRow {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   0.8rem;
+}
+
+/* ── Footer ── */
+.footer {
+  display:         flex;
+  align-items:     center;
+  justify-content: flex-end;
+  gap:             0.75rem;
+  padding:         1.1rem 1.6rem 1.5rem;
+  border-top:      1px solid var(--admin-border);
+}
+
+.btnCancel {
+  padding:        0.57rem 1.25rem;
+  border-radius:  8px;
+  border:         1px solid var(--admin-border);
+  background:     transparent;
+  color:          var(--admin-text-muted);
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.76rem;
+  font-weight:    600;
+  letter-spacing: 0.05em;
+  cursor:         pointer;
+  transition:     background 0.18s, color 0.18s;
+}
+
+.btnCancel:hover {
+  background: var(--admin-hover-bg);
+  color:      var(--admin-text);
+}
+
+.btnSubmit {
+  display:        flex;
+  align-items:    center;
+  gap:            0.45rem;
+  padding:        0.57rem 1.45rem;
+  border-radius:  8px;
+  border:         none;
+  background:     var(--admin-accent);
+  color:          #0d1520;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.76rem;
+  font-weight:    700;
+  letter-spacing: 0.05em;
+  cursor:         pointer;
+  transition:     opacity 0.18s, transform 0.14s, box-shadow 0.18s;
+}
+
+.btnSubmit:hover:not(:disabled) {
+  opacity:   0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(78, 196, 196, 0.3);
+}
+
+.btnSubmit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spinner {
+  width:         13px;
+  height:        13px;
+  border:        2px solid rgba(13, 21, 32, 0.25);
+  border-top-color: #0d1520;
+  border-radius: 50%;
+  animation:     spin 0.65s linear infinite;
+  flex-shrink:   0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Tema claro ── */
+:global(.admin[data-admin-theme="light"]) .btnSubmit {
+  color: #ffffff;
+}
+
+:global(.admin[data-admin-theme="light"]) .btnCancel {
+  color: var(--admin-text-muted);
+}
+
+:global(.admin[data-admin-theme="light"]) .btnCancel:hover {
+  background: var(--admin-hover-bg);
+  color:      var(--admin-text);
+}

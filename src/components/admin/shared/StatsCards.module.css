@@ -1,32 +1,24 @@
 /**
- * src/components/admin/css/StatsCards.module.css
- *
- * Estilos de las 4 tarjetas de estadísticas del dashboard.
- * Las tarjetas de estado son clickeables y tienen estado activo/dimmed.
+ * src/components/admin/shared/StatsCards.module.css
  */
 
-/* ── Grid de 4 columnas ── */
 .grid {
-  display: grid;
+  display:               grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap:                   1rem;
 }
 
-/* ── Tarjeta base (ahora es <button>) ── */
 .card {
-  position:   relative;
-  background: var(--admin-bg-card);
-  border:     1px solid var(--admin-border);
+  position:      relative;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
   border-radius: 14px;
-  padding:    1.25rem 1.35rem 1.1rem;
-  overflow:   hidden;
-  text-align: left;
-  width:      100%;
-
-  /* Reset de botón */
-  font-family: inherit;
-  cursor:      default;
-
+  padding:       1.25rem 1.35rem 1.1rem;
+  overflow:      hidden;
+  text-align:    left;
+  width:         100%;
+  font-family:   inherit;
+  cursor:        default;
   transition:
     transform    0.2s ease,
     box-shadow   0.2s ease,
@@ -35,13 +27,12 @@
     background   0.2s ease;
 }
 
-/* Solo las tarjetas con filtro tienen cursor pointer */
 .cardClickable {
   cursor: pointer;
 }
 
 .cardClickable:hover {
-  transform: translateY(-2px);
+  transform:  translateY(-2px);
   box-shadow:
     0 0 0 1px rgba(78, 196, 196, 0.08),
     0 12px 28px rgba(0, 0, 0, 0.18);
@@ -51,7 +42,6 @@
   transform: translateY(0);
 }
 
-/* ── Estado: dimmed (otra tarjeta está activa) ── */
 .cardDimmed {
   opacity: 0.45;
 }
@@ -60,12 +50,11 @@
   opacity: 0.7;
 }
 
-/* ── Estado: activo ── */
 .cardActive {
   opacity: 1 !important;
 }
 
-/* ── Header: label + (icon + checkbox) ── */
+/* ── Header ── */
 .cardHeader {
   display:         flex;
   align-items:     flex-start;
@@ -82,7 +71,6 @@
   color:          var(--admin-text-muted);
 }
 
-/* Agrupa icon + checkbox en la esquina derecha */
 .cardHeaderRight {
   display:     flex;
   align-items: center;
@@ -121,7 +109,7 @@
   border-color: currentColor;
 }
 
-/* ── Valor numérico ── */
+/* ── Value ── */
 .cardValue {
   font-family:    var(--font-jost), sans-serif;
   font-size:      2.1rem;
@@ -131,7 +119,7 @@
   margin-bottom:  0.85rem;
 }
 
-/* ── Barra decorativa inferior ── */
+/* ── Bar ── */
 .cardBar {
   position:      absolute;
   bottom:        0;
@@ -141,39 +129,29 @@
   border-radius: 0 0 14px 14px;
 }
 
-/* ════════════════════════════════════════════════
-   Variantes de color por estado
-════════════════════════════════════════════════ */
-
-/* Neutral (Total) */
+/* ── Variantes ── */
 .neutral .cardIcon  { background: rgba(148, 163, 184, 0.1); color: var(--admin-text-muted); }
 .neutral .cardValue { color: var(--admin-text); }
 .bar_neutral { background: linear-gradient(90deg, var(--admin-border), transparent); }
 
-/* OK (Con Stock) */
 .ok .cardIcon  { background: var(--stock-ok-bg); color: var(--stock-ok-color); }
 .ok .cardValue { color: var(--stock-ok-color); }
 .bar_ok { background: linear-gradient(90deg, var(--stock-ok-color), transparent); opacity: 0.6; }
 .ok.cardActive  { border-color: rgba(78, 196, 196, 0.45); background: rgba(78, 196, 196, 0.05); }
 .ok .checkboxChecked { background: var(--stock-ok-color); border-color: var(--stock-ok-color); }
 
-/* Low (Stock Bajo) */
 .low .cardIcon  { background: var(--stock-low-bg); color: var(--stock-low-color); }
 .low .cardValue { color: var(--stock-low-color); }
 .bar_low { background: linear-gradient(90deg, var(--stock-low-color), transparent); opacity: 0.6; }
 .low.cardActive { border-color: rgba(196, 154, 108, 0.45); background: rgba(196, 154, 108, 0.05); }
 .low .checkboxChecked { background: var(--stock-low-color); border-color: var(--stock-low-color); }
 
-/* Out (Sin Stock) */
 .out .cardIcon  { background: var(--stock-out-bg); color: var(--stock-out-color); }
 .out .cardValue { color: var(--stock-out-color); }
 .bar_out { background: linear-gradient(90deg, var(--stock-out-color), transparent); opacity: 0.6; }
 .out.cardActive { border-color: rgba(196, 122, 158, 0.45); background: rgba(196, 122, 158, 0.05); }
 .out .checkboxChecked { background: var(--stock-out-color); border-color: var(--stock-out-color); }
 
-/* ── Responsive ── */
 @media (max-width: 900px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }

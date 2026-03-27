@@ -4,7 +4,7 @@
  * src/hooks/admin/useProductForm.ts
  *
  * Encapsula la lógica del formulario de producto:
- *   - Estado de campos (nombre, precio, stock, ventas, categoría, color)
+ *   - Estado de campos (nombre, precio, stock, ventas, categoría, color, imagen)
  *   - Validación de campos obligatorios
  *   - Reset al abrir/cerrar modal
  *   - Modo "nuevo" vs "editar" según si se recibe un ProductRow
@@ -12,8 +12,9 @@
  *       new  → POST  /api/admin/products
  *       edit → PATCH /api/admin/products/:id
  *
- * Nota: la subida de imágenes está suspendida temporalmente.
- * Los productos nuevos se crean sin imagen; al editar se conserva la existente.
+ * La imagen se gestiona mediante imageUrl + imagePublicId,
+ * seleccionados desde ImagePickerModal (biblioteca de Cloudinary).
+ * Si no se elige imagen nueva al editar, se conserva la existente.
  */
 
 import {
@@ -52,22 +53,27 @@ interface SaveProductResponse {
 /* ─── Estado inicial ────────────────────────────────────────────── */
 
 const EMPTY_FORM: ProductFormData = {
-  name:     "",
-  price:    "",
-  stock:    "",
-  ventas:   "",
-  category: "",
-  color:    "",
+  name:          "",
+  price:         "",
+  stock:         "",
+  ventas:        "",
+  category:      "",
+  color:         "",
+  imageUrl:      "",
+  imagePublicId: "",
 };
 
 function productRowToFormData(product: ProductRow): ProductFormData {
   return {
-    name:     product.name,
-    price:    String(product.price),
-    stock:    String(product.stock),
-    ventas:   String(product.ventas),
-    category: product.category,
-    color:    product.color,
+    name:          product.name,
+    price:         String(product.price),
+    stock:         String(product.stock),
+    ventas:        String(product.ventas),
+    category:      product.category,
+    color:         product.color,
+    /* Precarga la imagen existente para previsualización */
+    imageUrl:      product.images[0]?.url      ?? "",
+    imagePublicId: "",  // No enviamos el publicId existente al editar a menos que se cambie
   };
 }
 
@@ -127,6 +133,15 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     []
   );
 
+  /**
+   * Actualiza imageUrl e imagePublicId de golpe cuando el admin
+   * selecciona un asset desde ImagePickerModal.
+   */
+  const handleImageSelect = useCallback((url: string, publicId: string) => {
+    setFormData((prev) => ({ ...prev, imageUrl: url, imagePublicId: publicId }));
+    setApiError(null);
+  }, []);
+
   /* ── Submit ── */
   const handleSubmit = useCallback(async (): Promise<boolean> => {
     const validationErrors = validate(formData);
@@ -139,7 +154,16 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     setApiError(null);
 
     try {
-      const payload = {
+      /*
+       * Construir el payload.
+       * - Al crear: se envían imageUrl + imagePublicId si se seleccionaron
+       *   (el backend los acepta pero no los requiere para permitir crear sin imagen).
+       * - Al editar: solo se envían si el admin seleccionó una imagen nueva
+       *   (imagePublicId no vacío), para no pisar la imagen existente.
+       */
+      const hasNewImage = Boolean(formData.imageUrl && formData.imagePublicId);
+
+      const basePayload = {
         name:     formData.name.trim(),
         price:    Number(formData.price),
         stock:    Number(formData.stock),
@@ -147,6 +171,10 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
         category: formData.category,
         color:    formData.color,
       };
+
+      const payload = hasNewImage
+        ? { ...basePayload, imageUrl: formData.imageUrl, imagePublicId: formData.imagePublicId }
+        : basePayload;
 
       const res = isEdit && product
         ? await api.patch<SaveProductResponse>(`/api/admin/products/${product.id}`, payload)
@@ -172,6 +200,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     isEdit,
     apiError,
     handleFieldChange,
+    handleImageSelect,
     handleSubmit,
     handleCancel,
   };

@@ -78,12 +78,16 @@ export type StockFilter = StockStatus | "all";
 /* ─── Product Form ──────────────────────────────────────────────── */
 
 export interface ProductFormData {
-  name:     string;
-  price:    string;
-  stock:    string;
-  ventas:   string;
-  category: string;
-  color:    string;
+  name:          string;
+  price:         string;
+  stock:         string;
+  ventas:        string;
+  category:      string;
+  color:         string;
+  /** URL de entrega de Cloudinary (con f_auto,q_auto) */
+  imageUrl:      string;
+  /** public_id del asset en Cloudinary */
+  imagePublicId: string;
 }
 
 export interface ProductFormErrors {

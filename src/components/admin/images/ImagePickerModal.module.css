@@ -1,0 +1,284 @@
+/**
+ * src/components/admin/images/ImagePickerModal.module.css
+ *
+ * Modal para seleccionar un asset de Cloudinary dentro del ProductFormModal.
+ * Diseño: backdrop con blur + panel deslizante desde abajo.
+ */
+
+/* ── Backdrop ── */
+.backdrop {
+  position:         fixed;
+  inset:            0;
+  z-index:          300;
+  display:          flex;
+  align-items:      flex-end;
+  justify-content:  center;
+  padding:          0;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter:  blur(0px);
+  transition:
+    background-color 0.32s ease,
+    backdrop-filter  0.32s ease;
+}
+
+/* En pantallas grandes centra el panel como modal flotante */
+@media (min-height: 600px) {
+  .backdrop {
+    align-items:  center;
+    padding:      1.5rem;
+  }
+}
+
+.backdropVisible {
+  background-color: rgba(0, 0, 0, 0.72);
+  backdrop-filter:  blur(6px);
+}
+
+/* ── Panel ── */
+.panel {
+  position:      relative;
+  width:         100%;
+  max-width:     740px;
+  height:        82dvh;
+  max-height:    680px;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 22px 22px 0 0;
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.08),
+    0 -24px 72px rgba(0, 0, 0, 0.45),
+    0 -4px 16px rgba(0, 0, 0, 0.2);
+  display:        flex;
+  flex-direction: column;
+  overflow:       hidden;
+
+  /* Animación entrada desde abajo */
+  opacity:   0;
+  transform: translateY(48px);
+  transition:
+    opacity   0.36s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-height: 600px) {
+  .panel {
+    border-radius: 22px;
+
+    /* En modal flotante entra desde abajo más sutilmente */
+    transform: translateY(28px) scale(0.972);
+  }
+}
+
+.panelVisible {
+  opacity:   1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Header ── */
+.header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             0.75rem;
+  padding:         1.1rem 1.4rem 0.9rem;
+  border-bottom:   1px solid var(--admin-border);
+  flex-shrink:     0;
+}
+
+.headerLeft {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.15rem;
+  min-width:      0;
+}
+
+.headerEyebrow {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color:          var(--admin-accent);
+}
+
+.headerTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.3rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+  line-height:    1.1;
+}
+
+.closeBtn {
+  width:           32px;
+  height:          32px;
+  border-radius:   8px;
+  border:          1px solid var(--admin-border);
+  background:      var(--admin-surface);
+  color:           var(--admin-text-muted);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  flex-shrink:     0;
+  transition:      background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.closeBtn:hover {
+  background:   var(--stock-out-bg);
+  border-color: rgba(196, 122, 158, 0.3);
+  color:        var(--admin-danger);
+}
+
+/* ── Toolbar: búsqueda + conteo ── */
+.toolbar {
+  display:     flex;
+  align-items: center;
+  gap:         0.75rem;
+  padding:     0.75rem 1.4rem;
+  border-bottom: 1px solid var(--admin-border);
+  flex-shrink: 0;
+}
+
+.searchWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.count {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.68rem;
+  font-weight:    700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+  white-space:    nowrap;
+  flex-shrink:    0;
+}
+
+/* ── Grid scrolleable ── */
+.gridScroll {
+  flex:            1;
+  overflow-y:      auto;
+  padding:         1rem 1.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-surface) var(--admin-bg-card);
+}
+
+.gridScroll::-webkit-scrollbar       { width: 4px; }
+.gridScroll::-webkit-scrollbar-track { background: var(--admin-bg-card); }
+.gridScroll::-webkit-scrollbar-thumb { background: var(--admin-surface); border-radius: 999px; }
+
+.grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap:                   0.85rem;
+}
+
+/* ── Footer con botón confirmar ── */
+.footer {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             0.75rem;
+  padding:         0.9rem 1.4rem 1rem;
+  border-top:      1px solid var(--admin-border);
+  flex-shrink:     0;
+}
+
+.selectedLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.02em;
+  min-width:      0;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  white-space:    nowrap;
+}
+
+.selectedLabel strong {
+  color:       var(--admin-accent);
+  font-weight: 600;
+}
+
+.btnConfirm {
+  display:        flex;
+  align-items:    center;
+  gap:            0.4rem;
+  padding:        0.55rem 1.35rem;
+  border-radius:  8px;
+  border:         none;
+  background:     var(--admin-accent);
+  color:          #0d1520;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.76rem;
+  font-weight:    700;
+  letter-spacing: 0.05em;
+  cursor:         pointer;
+  flex-shrink:    0;
+  transition:     opacity 0.18s ease, transform 0.14s ease, box-shadow 0.18s ease;
+}
+
+.btnConfirm:hover:not(:disabled) {
+  opacity:    0.88;
+  transform:  translateY(-1px);
+  box-shadow: 0 4px 14px rgba(78, 196, 196, 0.3);
+}
+
+.btnConfirm:disabled {
+  opacity: 0.38;
+  cursor:  not-allowed;
+}
+
+/* Tema claro */
+:global(.admin[data-admin-theme="light"]) .btnConfirm {
+  color: #ffffff;
+}
+
+/* ── Estados de carga / error / vacío ── */
+.stateWrap {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         3rem 1.5rem;
+  gap:             0.6rem;
+  text-align:      center;
+  flex:            1;
+}
+
+.stateIcon {
+  font-size:     2.2rem;
+  color:         var(--admin-text-dim);
+  margin-bottom: 0.4rem;
+  animation:     iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
+}
+
+.stateTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size:   1.2rem;
+  font-weight: 600;
+  color:       var(--admin-text);
+}
+
+.stateDesc {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.74rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.03em;
+  max-width:      280px;
+  line-height:    1.7;
+}
+
+.stateError {
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.82rem;
+  color:       var(--admin-danger);
+}

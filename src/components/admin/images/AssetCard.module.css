@@ -1,0 +1,145 @@
+/**
+ * src/components/admin/images/AssetCard.module.css
+ *
+ * Tarjeta de asset de Cloudinary.
+ * Modo "gallery" → abre detalle/renombrar.
+ * Modo "picker"  → selecciona el asset para el formulario.
+ */
+
+/* ── Tarjeta base ── */
+.card {
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 12px;
+  overflow:      hidden;
+  cursor:        pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow   0.2s ease,
+    transform    0.2s ease;
+  animation:     cardIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+  width:         100%;
+  text-align:    left;
+  padding:       0;
+}
+
+.card:hover {
+  border-color: rgba(78, 196, 196, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.22);
+  transform: translateY(-2px);
+}
+
+/* Estado seleccionado (solo modo picker) */
+.cardSelected {
+  border-color: var(--admin-accent) !important;
+  box-shadow:
+    0 0 0 2px rgba(78, 196, 196, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.22) !important;
+  transform: translateY(-2px);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Thumbnail ── */
+.thumb {
+  position:     relative;
+  width:        100%;
+  aspect-ratio: 1 / 1;
+  background:   var(--admin-surface);
+  overflow:     hidden;
+}
+
+.thumbImg {
+  object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover .thumbImg {
+  transform: scale(1.04);
+}
+
+/* ── Overlay ── */
+.thumbOverlay {
+  position:        absolute;
+  inset:           0;
+  background:      rgba(0, 0, 0, 0);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  transition:      background 0.2s ease;
+  pointer-events:  none;
+}
+
+.card:hover .thumbOverlay {
+  background: rgba(0, 0, 0, 0.38);
+}
+
+.cardSelected .thumbOverlay {
+  background: rgba(78, 196, 196, 0.15);
+}
+
+/* Ícono del overlay (zoom o check) */
+.overlayIcon {
+  color:      #fff;
+  opacity:    0;
+  transform:  scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover .overlayIcon {
+  opacity:   1;
+  transform: scale(1);
+}
+
+/* Check de selección — siempre visible cuando está seleccionado */
+.checkIcon {
+  position:      absolute;
+  top:           0.5rem;
+  right:         0.5rem;
+  width:         22px;
+  height:        22px;
+  border-radius: 50%;
+  background:    var(--admin-accent);
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  opacity:       0;
+  transform:     scale(0.6);
+  transition:
+    opacity   0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.cardSelected .checkIcon {
+  opacity:   1;
+  transform: scale(1);
+}
+
+/* ── Info inferior ── */
+.info {
+  padding: 0.65rem 0.75rem 0.7rem;
+}
+
+.name {
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.72rem;
+  font-weight:   600;
+  color:         var(--admin-text);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+}
+
+.meta {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.02em;
+}

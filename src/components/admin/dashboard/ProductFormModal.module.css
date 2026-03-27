@@ -2,8 +2,7 @@
  * src/components/admin/dashboard/ProductFormModal.module.css
  *
  * Estilos del modal de creación/edición de productos.
- * La subida de imágenes está suspendida, por lo que el formulario
- * ocupa una sola columna con todos los campos de texto.
+ * Incluye el área de previsualización de imagen con overlay interactivo.
  */
 
 /* ── Backdrop ── */
@@ -218,6 +217,187 @@
   gap:                   0.8rem;
 }
 
+/* ── Área de imagen ─────────────────────────────────────────────── */
+
+.imageArea {
+  position:      relative;
+  width:         100%;
+  aspect-ratio:  16 / 9;
+  border-radius: 12px;
+  overflow:      hidden;
+  background:    var(--admin-surface);
+  border:        1.5px dashed var(--admin-border);
+  cursor:        pointer;
+  transition:
+    border-color 0.22s ease,
+    box-shadow   0.22s ease;
+}
+
+.imageArea:hover {
+  border-color: rgba(78, 196, 196, 0.4);
+  box-shadow:   0 0 0 3px rgba(78, 196, 196, 0.08);
+}
+
+/* Cuando tiene imagen, borde sólido */
+.imageAreaFilled {
+  border-style: solid;
+  border-color: var(--admin-border);
+}
+
+.imageAreaFilled:hover {
+  border-color: rgba(78, 196, 196, 0.4);
+}
+
+/* Imagen actual del producto */
+.imagePreview {
+  object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.imageArea:hover .imagePreview {
+  transform: scale(1.03);
+}
+
+/* Overlay "Cambiar imagen" que aparece al hacer hover */
+.imageOverlay {
+  position:        absolute;
+  inset:           0;
+  background:      rgba(0, 0, 0, 0);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             0.5rem;
+  transition:      background 0.22s ease;
+}
+
+.imageArea:hover .imageOverlay {
+  background: rgba(0, 0, 0, 0.52);
+}
+
+.imageOverlayIcon {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           40px;
+  height:          40px;
+  border-radius:   10px;
+  background:      rgba(78, 196, 196, 0.18);
+  border:          1px solid rgba(78, 196, 196, 0.3);
+  color:           var(--admin-accent);
+  opacity:         0;
+  transform:       translateY(6px) scale(0.9);
+  transition:
+    opacity   0.22s ease,
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.imageArea:hover .imageOverlayIcon {
+  opacity:   1;
+  transform: translateY(0) scale(1);
+}
+
+.imageOverlayText {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  font-weight:    700;
+  letter-spacing: 0.06em;
+  color:          #fff;
+  opacity:        0;
+  transform:      translateY(4px);
+  transition:
+    opacity   0.22s ease 0.04s,
+    transform 0.22s ease 0.04s;
+}
+
+.imageArea:hover .imageOverlayText {
+  opacity:   1;
+  transform: translateY(0);
+}
+
+/* Placeholder (sin imagen) */
+.imagePlaceholder {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             0.5rem;
+  width:           100%;
+  height:          100%;
+  color:           var(--admin-text-dim);
+  transition:      color 0.2s ease;
+}
+
+.imageArea:hover .imagePlaceholder {
+  color: var(--admin-text-muted);
+}
+
+.imagePlaceholderIcon {
+  opacity:    0.5;
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.imageArea:hover .imagePlaceholderIcon {
+  opacity:   0.9;
+  transform: scale(1.08);
+}
+
+.imagePlaceholderText {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  font-weight:    600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.imagePlaceholderSub {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  letter-spacing: 0.03em;
+  color:          var(--admin-text-dim);
+}
+
+/* Badge "Nueva imagen seleccionada" */
+.imageNewBadge {
+  position:      absolute;
+  top:           0.6rem;
+  left:          0.6rem;
+  display:       inline-flex;
+  align-items:   center;
+  gap:           0.3rem;
+  padding:       0.22rem 0.6rem;
+  border-radius: 100px;
+  background:    var(--stock-ok-bg);
+  border:        1px solid rgba(78, 196, 196, 0.3);
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.6rem;
+  font-weight:   700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color:         var(--admin-accent);
+
+  /* Entrada animada */
+  animation: badgeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes badgeIn {
+  from { opacity: 0; transform: scale(0.7) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.imageNewBadgeDot {
+  width:         5px;
+  height:        5px;
+  border-radius: 50%;
+  background:    var(--admin-accent);
+  animation:     dotBlink 1.6s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
+}
+
 /* ── Footer ── */
 .footer {
   display:         flex;
@@ -265,8 +445,8 @@
 }
 
 .btnSubmit:hover:not(:disabled) {
-  opacity:   0.88;
-  transform: translateY(-1px);
+  opacity:    0.88;
+  transform:  translateY(-1px);
   box-shadow: 0 4px 14px rgba(78, 196, 196, 0.3);
 }
 

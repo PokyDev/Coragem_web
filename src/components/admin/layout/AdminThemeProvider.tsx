@@ -27,7 +27,6 @@ import {
   useCallback,
 } from "react";
 import { useAdminTheme, type AdminTheme } from "@/hooks/admin/useAdminTheme";
-import { AdminFloatingControls } from "@/components/admin/layout/AdminFloatingControls";
 
 /* ─── Duración de la transición (ms) ────────────────────────────── */
 const TRANSITION_MS = 300;
@@ -162,8 +161,6 @@ export function AdminThemeProvider({
             zIndex:        9999,
           }}
         />
-
-        <AdminFloatingControls />
       </div>
     </AdminThemeContext.Provider>
   );

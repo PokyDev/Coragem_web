@@ -7,7 +7,8 @@
 import Link         from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminLogout } from "@/hooks/admin/useAdminLogout";
-import styles from "@/components/admin/layout/AdminShell.module.css";
+import styles from "./AdminShell.module.css";
+import { ThemeToggle } from "@/components/layout/ui/ThemeToggle";
 
 interface NavItem    { href: string; label: string; icon: string; }
 interface NavSection { label: string; items: NavItem[]; }
@@ -77,6 +78,7 @@ export function AdminSidebar() {
       </nav>
 
       <div className={styles.sidebarFooter}>
+        <ThemeToggle variant="admin" size="2.25rem" />
         <button
           onClick={logout}
           className={styles.navItemLogout}

@@ -19,7 +19,7 @@
  *   description — descripción breve de lo que hará esta sección
  */
 
-import styles from "@/components/admin/css/DevelopmentState.module.css";
+import styles from "./DevelopmentState.module.css";
 
 interface DevelopmentStateProps {
   icon?:        string;

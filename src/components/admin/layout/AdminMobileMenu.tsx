@@ -18,7 +18,7 @@ import { useAdminLogout }  from "@/hooks/admin/useAdminLogout";
 import { SlideMenu }       from "@/components/layout/SlideMenu/SlideMenu";
 import { CloseButton }     from "@/components/layout/SlideMenu/CloseButton";
 import { ThemeToggle }     from "@/components/layout/ui/ThemeToggle";
-import styles from "@/components/admin/css/AdminMobileMenu.module.css";
+import styles from "./AdminMobileMenu.module.css";
 
 /* ─── Datos de navegación (misma estructura que AdminSidebar) ────── */
 

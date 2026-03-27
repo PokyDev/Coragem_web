@@ -7,7 +7,7 @@
 import Link         from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdminLogout } from "@/hooks/admin/useAdminLogout";
-import styles from "@/components/admin/css/AdminShell.module.css";
+import styles from "@/components/admin/layout/AdminShell.module.css";
 
 interface NavItem    { href: string; label: string; icon: string; }
 interface NavSection { label: string; items: NavItem[]; }

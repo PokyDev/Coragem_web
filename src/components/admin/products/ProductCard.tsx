@@ -20,7 +20,7 @@ import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
 import { getStockStatus } from "@/lib/dashboard";
 import { useProductMovement } from "@/hooks/admin/useProductMovement";
-import styles from "@/components/admin/css/ProductCard.module.css";
+import styles from "./ProductCard.module.css";
 
 /* ─── Formatters ────────────────────────────────────────────────── */
 

@@ -15,7 +15,7 @@
  *   <SearchInput variant="admin" {...inputProps} onClear={clearQuery} />
  */
 
-import styles from "@/components/shared/css/SearchInput.module.css";
+import styles from "./SearchInput.module.css";
 
 interface SearchInputProps {
   variant:     "catalog" | "admin";

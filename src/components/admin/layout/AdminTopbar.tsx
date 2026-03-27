@@ -17,7 +17,7 @@ import { SearchInput }         from "@/components/shared/ui/SearchInput";
 import { useAdminLogout }      from "@/hooks/admin/useAdminLogout";
 import { useProductSearch }    from "@/hooks/shared/useProductSearch";
 import { useDashboardActions } from "@/components/admin/layout/AdminShell";
-import styles from "@/components/admin/css/AdminShell.module.css";
+import styles from "./AdminShell.module.css";
 
 /* ─── Mapa pathname → título ─────────────────────────────────────── */
 

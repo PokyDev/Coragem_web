@@ -18,7 +18,7 @@ import { useState, useCallback, createContext, useContext } from "react";
 import { AdminSidebar }    from "@/components/admin/layout/AdminSidebar";
 import { AdminTopbar }     from "@/components/admin/layout/AdminTopbar";
 import { AdminMobileMenu } from "@/components/admin/layout/AdminMobileMenu";
-import styles from "@/components/admin/css/AdminShell.module.css";
+import styles from "./AdminShell.module.css";
 
 /* ─── Contexto de búsqueda ───────────────────────────────────────── */
 

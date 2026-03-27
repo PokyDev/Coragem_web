@@ -16,7 +16,7 @@ import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
 import { useCloudinaryImages } from "@/hooks/admin/useCloudinaryImages";
 import { ImageDetailModal } from "@/components/admin/images/ImageDetailModal";
 import { useDashboardActions } from "@/components/admin/layout/AdminShell";
-import styles from "@/components/admin/css/ImagesPage.module.css";
+import styles from "./ImagesPage.module.css";
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function formatBytes(bytes: number): string {

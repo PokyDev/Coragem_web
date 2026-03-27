@@ -15,7 +15,7 @@
  */
 
 import type { DashboardStats, StockFilter } from "@/types/admin";
-import styles from "@/components/admin/css/StatsCards.module.css";
+import styles from "./StatsCards.module.css";
 
 /* ─── Checkbox visual ────────────────────────────────────────────── */
 

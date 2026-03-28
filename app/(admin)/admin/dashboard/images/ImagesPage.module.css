@@ -1,7 +1,7 @@
 /**
  * app/(admin)/admin/dashboard/images/ImagesPage.module.css
  *
- * Galería de assets de Cloudinary — grid y toolbar.
+ * Galería/browser de assets de Cloudinary.
  */
 
 /* ── Toolbar ── */
@@ -19,6 +19,7 @@
   align-items: center;
   gap:         0.75rem;
   flex-wrap:   wrap;
+  min-width:   0;
 }
 
 .count {
@@ -28,6 +29,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color:          var(--admin-text-dim);
+  white-space:    nowrap;
 }
 
 .refreshBtn {
@@ -58,103 +60,58 @@
   cursor:  not-allowed;
 }
 
-/* ── Grid ── */
+/* ── Secciones: carpetas + assets ── */
+.section {
+  margin-bottom: 1.75rem;
+}
+
+.sectionHeader {
+  display:       flex;
+  align-items:   center;
+  gap:           0.6rem;
+  margin-bottom: 0.85rem;
+}
+
+.sectionLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.65rem;
+  font-weight:    700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+}
+
+.sectionCount {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  font-weight:    600;
+  letter-spacing: 0.08em;
+  color:          var(--admin-text-dim);
+  background:     var(--admin-surface);
+  border:         1px solid var(--admin-border);
+  border-radius:  4px;
+  padding:        0.1rem 0.45rem;
+}
+
+/* Separador entre sección de carpetas y sección de assets */
+.divider {
+  height:        1px;
+  background:    var(--admin-border);
+  margin-bottom: 1.75rem;
+  opacity:       0.6;
+}
+
+/* ── Grids ── */
+.gridFolders {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap:                   0.85rem;
+}
+
 .grid {
   display:               grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap:                   1rem;
-}
-
-/* ── Tarjeta ── */
-.card {
-  background:    var(--admin-bg-card);
-  border:        1px solid var(--admin-border);
-  border-radius: 12px;
-  overflow:      hidden;
-  cursor:        pointer;
-  transition:    border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-  animation:     cardIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-.card:hover {
-  border-color: rgba(78, 196, 196, 0.35);
-  box-shadow:
-    0 0 0 1px rgba(78, 196, 196, 0.08),
-    0 8px 24px rgba(0, 0, 0, 0.22);
-  transform: translateY(-2px);
-}
-
-@keyframes cardIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
-}
-
-/* Thumbnail */
-.thumb {
-  position:     relative;
-  width:        100%;
-  aspect-ratio: 1 / 1;
-  background:   var(--admin-surface);
-  overflow:     hidden;
-}
-
-.thumbImg {
-  object-fit: cover;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card:hover .thumbImg {
-  transform: scale(1.04);
-}
-
-.thumbOverlay {
-  position:        absolute;
-  inset:           0;
-  background:      rgba(0, 0, 0, 0);
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  transition:      background 0.2s;
-  pointer-events:  none;
-}
-
-.card:hover .thumbOverlay {
-  background: rgba(0, 0, 0, 0.38);
-}
-
-.zoomIcon {
-  color:      #fff;
-  opacity:    0;
-  transform:  scale(0.8);
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.card:hover .zoomIcon {
-  opacity:   1;
-  transform: scale(1);
-}
-
-/* Info inferior */
-.info {
-  padding: 0.65rem 0.75rem 0.7rem;
-}
-
-.name {
-  font-family:   var(--font-jost), sans-serif;
-  font-size:     0.72rem;
-  font-weight:   600;
-  color:         var(--admin-text);
-  white-space:   nowrap;
-  overflow:      hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 0.2rem;
-}
-
-.meta {
-  font-family:    var(--font-jost), sans-serif;
-  font-size:      0.62rem;
-  color:          var(--admin-text-dim);
-  letter-spacing: 0.02em;
 }
 
 /* ── Estados ── */

@@ -1,0 +1,63 @@
+/**
+ * src/components/admin/images/FolderBreadcrumb.module.css
+ *
+ * Breadcrumb de navegación por carpetas de Cloudinary.
+ * Muestra: Home / coragem / products
+ */
+
+.breadcrumb {
+  display:     flex;
+  align-items: center;
+  flex-wrap:   wrap;
+  gap:         0.1rem;
+  min-width:   0;
+}
+
+/* Segmento individual (botón o texto) */
+.segment {
+  display:        flex;
+  align-items:    center;
+  gap:            0.1rem;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  font-weight:    600;
+  letter-spacing: 0.03em;
+  white-space:    nowrap;
+}
+
+/* Botones clicables (todos menos el último) */
+.segmentBtn {
+  background:  none;
+  border:      none;
+  padding:     0.25rem 0.4rem;
+  border-radius: 5px;
+  cursor:      pointer;
+  color:       var(--admin-text-muted);
+  font-family: inherit;
+  font-size:   inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  transition:  color 0.15s ease, background 0.15s ease;
+  line-height: 1;
+}
+
+.segmentBtn:hover {
+  color:      var(--admin-accent);
+  background: var(--admin-nav-active-bg);
+}
+
+/* Segmento activo (último — no clicable) */
+.segmentCurrent {
+  padding:     0.25rem 0.4rem;
+  color:       var(--admin-text);
+  line-height: 1;
+}
+
+/* Separador "/" entre segmentos */
+.separator {
+  color:       var(--admin-text-dim);
+  font-size:   0.68rem;
+  user-select: none;
+  padding:     0 0.05rem;
+  line-height: 1;
+}

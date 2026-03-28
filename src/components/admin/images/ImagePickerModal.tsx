@@ -6,20 +6,25 @@
  * Modal para seleccionar un asset de Cloudinary.
  * Usado desde ProductFormModal para asignar imagen a un producto.
  *
+ * Carga directamente los assets de "coragem/products" — la carpeta
+ * de productos es el único destino válido para imágenes de producto.
+ *
  * Flujo:
  *   1. Se abre con isOpen=true.
- *   2. Carga assets vía useCloudinaryImages.
+ *   2. Carga assets de coragem/products vía useCloudinaryImages.
  *   3. El admin busca y hace click en una AssetCard (modo "picker").
  *   4. Al confirmar, llama a onSelect(asset) y se cierra.
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
-import { useCloudinaryImages } from "@/hooks/admin/useCloudinaryImages";
-import { AssetCard }           from "@/components/admin/images/AssetCard";
-import { SearchInput }         from "@/components/shared/ui/SearchInput";
-import { useProductSearch }    from "@/hooks/shared/useProductSearch";
+import { useCloudinaryImages }  from "@/hooks/admin/useCloudinaryImages";
+import { AssetCard }            from "@/components/admin/images/AssetCard";
+import { SearchInput }          from "@/components/shared/ui/SearchInput";
+import { useProductSearch }     from "@/hooks/shared/useProductSearch";
 import styles from "./ImagePickerModal.module.css";
+
+const PRODUCTS_FOLDER = "coragem/products";
 
 /* ── Props ── */
 interface ImagePickerModalProps {
@@ -34,7 +39,7 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
   const [selected, setSelected] = useState<CloudinaryAsset | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { assets, loading, error } = useCloudinaryImages();
+  const { assets, loading, error } = useCloudinaryImages(PRODUCTS_FOLDER);
 
   const { query, setQuery, clearQuery, inputProps } = useProductSearch({
     onChange: () => setSelected(null),
@@ -52,7 +57,6 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
   /* Animación de apertura/cierre */
   useEffect(() => {
     if (isOpen) {
-      /* Resetear estado al abrir */
       setSelected(null);
       clearQuery();
       const t = requestAnimationFrame(() => setVisible(true));

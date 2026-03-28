@@ -1,9 +1,5 @@
 /**
  * src/components/admin/images/AssetCard.module.css
- *
- * Tarjeta de asset de Cloudinary.
- * Modo "gallery" → abre detalle/renombrar.
- * Modo "picker"  → selecciona el asset para el formulario.
  */
 
 /* ── Tarjeta base ── */
@@ -31,7 +27,13 @@
   transform: translateY(-2px);
 }
 
-/* Estado seleccionado (solo modo picker) */
+/* En selectionMode el hover es más sutil — la acción principal es el checkbox */
+.cardSelectable:hover {
+  border-color: rgba(78, 196, 196, 0.25);
+  transform:    translateY(-1px);
+}
+
+/* Estado seleccionado */
 .cardSelected {
   border-color: var(--admin-accent) !important;
   box-shadow:
@@ -80,10 +82,9 @@
 }
 
 .cardSelected .thumbOverlay {
-  background: rgba(78, 196, 196, 0.15);
+  background: rgba(78, 196, 196, 0.1);
 }
 
-/* Ícono del overlay (zoom o check) */
 .overlayIcon {
   color:      #fff;
   opacity:    0;
@@ -96,7 +97,89 @@
   transform: scale(1);
 }
 
-/* Check de selección — siempre visible cuando está seleccionado */
+/* ── Checkbox de selección (gallery mode) ── */
+.checkbox {
+  position:        absolute;
+  top:             0.5rem;
+  left:            0.5rem;
+  width:           20px;
+  height:          20px;
+  border-radius:   5px;
+  border:          2px solid rgba(255, 255, 255, 0.5);
+  background:      rgba(13, 21, 32, 0.55);
+  backdrop-filter: blur(4px);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+
+  /* Oculto por defecto — aparece en selectionMode o al hacer hover */
+  opacity:   0;
+  transform: scale(0.7);
+  transition:
+    opacity   0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.15s ease,
+    background   0.15s ease;
+  pointer-events: none;
+}
+
+/* Visible cuando selectionMode está activo */
+.checkboxVisible {
+  opacity:   1;
+  transform: scale(1);
+}
+
+/* También visible al hacer hover sobre la tarjeta */
+.card:hover .checkbox {
+  opacity:   1;
+  transform: scale(1);
+}
+
+/* Estado marcado */
+.checkboxChecked {
+  background:   var(--admin-accent);
+  border-color: var(--admin-accent);
+  opacity:      1 !important;
+  transform:    scale(1) !important;
+}
+
+/* ── Botón de detalle (gallery + selectionMode) ── */
+.detailBtn {
+  position:        absolute;
+  bottom:          0.5rem;
+  right:           0.5rem;
+  width:           26px;
+  height:          26px;
+  border-radius:   6px;
+  border:          1px solid rgba(255, 255, 255, 0.2);
+  background:      rgba(13, 21, 32, 0.6);
+  backdrop-filter: blur(4px);
+  color:           rgba(255, 255, 255, 0.8);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  opacity:         0;
+  transform:       scale(0.8);
+  transition:
+    opacity   0.15s ease,
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.card:hover .detailBtn {
+  opacity:   1;
+  transform: scale(1);
+}
+
+.detailBtn:hover {
+  background: var(--admin-accent);
+  color:      #0d1520;
+  border-color: var(--admin-accent);
+}
+
+/* ── Check picker ── */
 .checkIcon {
   position:      absolute;
   top:           0.5rem;

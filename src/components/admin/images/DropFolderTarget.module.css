@@ -1,0 +1,55 @@
+/**
+ * src/components/admin/images/DropFolderTarget.module.css
+ */
+
+.target {
+  position: relative;
+  transition:
+    outline 0.15s ease,
+    background 0.15s ease;
+  border-radius: 12px; /* coincide con FolderCard */
+}
+
+/* Estado drag-over — resalta el target */
+.dragOver {
+  outline:    2px solid var(--admin-accent);
+  background: rgba(78, 196, 196, 0.06);
+}
+
+/* Para targets del breadcrumb (segmentos de texto, no tarjetas) */
+.dragOver :global(.segmentBtn),
+.dragOver :global(.segmentCurrent) {
+  color: var(--admin-accent);
+}
+
+/* Estado dropping (esperando respuesta del backend) */
+.dropping {
+  outline:  2px solid rgba(78, 196, 196, 0.5);
+  pointer-events: none;
+  opacity:  0.75;
+}
+
+/* Spinner de procesamiento */
+.droppingIndicator {
+  position:        absolute;
+  inset:           0;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  border-radius:   inherit;
+  background:      rgba(13, 21, 32, 0.35);
+  backdrop-filter: blur(2px);
+  z-index:         5;
+}
+
+.droppingSpinner {
+  display:      block;
+  width:        18px;
+  height:       18px;
+  border:       2.5px solid rgba(78, 196, 196, 0.25);
+  border-top-color: var(--admin-accent);
+  border-radius: 50%;
+  animation:    spin 0.65s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

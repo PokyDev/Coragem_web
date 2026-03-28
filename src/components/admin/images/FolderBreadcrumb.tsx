@@ -3,25 +3,29 @@
 /**
  * src/components/admin/images/FolderBreadcrumb.tsx
  *
- * Breadcrumb de navegación para el browser de carpetas de Cloudinary.
+ * Breadcrumb de navegación + drop targets en cada segmento.
  *
  * Dado currentPath = "coragem/products" renderiza:
  *   Home / coragem / products
  *
- * Los segmentos anteriores al actual son clicables y navegan a ese path.
- * El segmento actual no es clicable.
+ * Cada segmento anterior al actual es clicable y es un drop target:
+ * arrastrar assets sobre él los mueve a ese path.
  */
 
+import { DropFolderTarget } from "./DropFolderTarget";
 import styles from './FolderBreadcrumb.module.css';
 
 interface FolderBreadcrumbProps {
   currentPath: string;
   onNavigate:  (path: string) => void;
+  /** Si se pasa, cada segmento actúa como drop target */
+  onDrop?:     (publicIds: string[], targetPath: string) => void;
+  /** publicId que está siendo procesado en un move activo */
+  droppingTo?: string | null;
 }
 
 interface Segment {
   label: string;
-  /** Path completo hasta este segmento. Vacío = raíz. */
   path:  string;
 }
 
@@ -42,7 +46,12 @@ function buildSegments(currentPath: string): Segment[] {
   return segments;
 }
 
-export function FolderBreadcrumb({ currentPath, onNavigate }: FolderBreadcrumbProps) {
+export function FolderBreadcrumb({
+  currentPath,
+  onNavigate,
+  onDrop,
+  droppingTo,
+}: FolderBreadcrumbProps) {
   const segments = buildSegments(currentPath);
 
   return (
@@ -50,7 +59,7 @@ export function FolderBreadcrumb({ currentPath, onNavigate }: FolderBreadcrumbPr
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
 
-        return (
+        const segmentContent = (
           <span key={seg.path || 'root'} className={styles.segment}>
             {i > 0 && <span className={styles.separator}>/</span>}
 
@@ -69,6 +78,22 @@ export function FolderBreadcrumb({ currentPath, onNavigate }: FolderBreadcrumbPr
             )}
           </span>
         );
+
+        /* Los segmentos anteriores al actual son drop targets */
+        if (!isLast && onDrop) {
+          return (
+            <DropFolderTarget
+              key={seg.path || 'root'}
+              targetPath={seg.path}
+              onDrop={onDrop}
+              isDropping={droppingTo === seg.path}
+            >
+              {segmentContent}
+            </DropFolderTarget>
+          );
+        }
+
+        return segmentContent;
       })}
     </nav>
   );

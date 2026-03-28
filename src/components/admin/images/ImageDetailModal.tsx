@@ -4,7 +4,11 @@
  * src/components/admin/images/ImageDetailModal.tsx
  *
  * Modal de detalle de un asset de Cloudinary.
- * Muestra preview grande, metadatos y permite renombrar el asset.
+ *
+ * Cambio respecto a la versión anterior:
+ *   onRenamed() → firma simplificada sin parámetros.
+ *   ImagesPage llama a refetch() directamente; el modal no necesita
+ *   comunicar los nuevos valores porque la recarga los trae frescos.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -26,20 +30,20 @@ function formatDate(iso: string): string {
 }
 
 interface Props {
-  asset:   CloudinaryAsset | null;
-  onClose: () => void;
-  onRenamed: (oldPublicId: string, newPublicId: string, newUrl: string) => void;
+  asset:     CloudinaryAsset | null;
+  onClose:   () => void;
+  /** Llamado tras un rename exitoso — sin parámetros; el padre hace refetch */
+  onRenamed: () => void;
 }
 
 export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
-  const [visible,      setVisible]      = useState(false);
-  const [renameValue,  setRenameValue]  = useState("");
-  const [renaming,     setRenaming]     = useState(false);
-  const [renameError,  setRenameError]  = useState<string | null>(null);
-  const [copied,       setCopied]       = useState(false);
+  const [visible,     setVisible]     = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [renaming,    setRenaming]    = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [copied,      setCopied]      = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  /* Animación de apertura */
   useEffect(() => {
     if (asset) {
       setRenameValue(asset.displayName);
@@ -51,7 +55,6 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
     }
   }, [asset]);
 
-  /* Escape */
   useEffect(() => {
     if (!asset) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -86,7 +89,7 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
       return;
     }
 
-    onRenamed(asset.publicId, res.data.asset.publicId, res.data.asset.secureUrl);
+    onRenamed();
     onClose();
   }, [asset, renameValue, onRenamed, onClose]);
 
@@ -117,12 +120,7 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
             <p className={styles.modalEyebrow}>Asset de Cloudinary</p>
             <h2 className={styles.modalTitle}>{asset.displayName}</h2>
           </div>
-          <button
-            className={styles.closeBtn}
-            onClick={onClose}
-            aria-label="Cerrar"
-            type="button"
-          >
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Cerrar" type="button">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6"  y1="6" x2="18" y2="18" />
@@ -133,22 +131,12 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
         {/* Body */}
         <div className={styles.modalBody}>
 
-          {/* Preview */}
           <div className={styles.previewWrap}>
-            <Image
-              src={asset.secureUrl}
-              alt={asset.displayName}
-              fill
-              sizes="400px"
-              className={styles.previewImg}
-              priority
-            />
+            <Image src={asset.secureUrl} alt={asset.displayName} fill sizes="400px" className={styles.previewImg} priority />
           </div>
 
-          {/* Detalles */}
           <div className={styles.details}>
 
-            {/* Renombrar */}
             <div className={styles.renameSection}>
               <span className={styles.fieldLabel}>Nombre del asset</span>
               <div className={styles.renameRow}>
@@ -175,36 +163,27 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
 
             <div className={styles.divider} />
 
-            {/* Metadatos */}
             <div className={styles.metaGrid}>
-
               <div className={styles.metaItem}>
                 <p className={styles.metaLabel}>Formato</p>
-                <p className={`${styles.metaValue} ${styles.metaValueAccent}`}>
-                  {asset.format.toUpperCase()}
-                </p>
+                <p className={`${styles.metaValue} ${styles.metaValueAccent}`}>{asset.format.toUpperCase()}</p>
               </div>
-
               <div className={styles.metaItem}>
                 <p className={styles.metaLabel}>Tamaño</p>
                 <p className={styles.metaValue}>{formatBytes(asset.bytes)}</p>
               </div>
-
               <div className={styles.metaItem}>
                 <p className={styles.metaLabel}>Dimensiones</p>
                 <p className={styles.metaValue}>{asset.width} × {asset.height} px</p>
               </div>
-
               <div className={styles.metaItem}>
                 <p className={styles.metaLabel}>Subido el</p>
                 <p className={styles.metaValue}>{formatDate(asset.createdAt)}</p>
               </div>
-
               <div className={styles.metaItem} style={{ gridColumn: "1 / -1" }}>
                 <p className={styles.metaLabel}>Carpeta</p>
                 <p className={styles.metaValue}>{asset.folder || "—"}</p>
               </div>
-
               <div className={styles.metaItem} style={{ gridColumn: "1 / -1" }}>
                 <p className={styles.metaLabel}>Public ID</p>
                 <div className={styles.publicIdRow}>
@@ -214,7 +193,6 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
                     onClick={handleCopy}
                     type="button"
                     aria-label="Copiar public ID"
-                    title="Copiar public ID"
                   >
                     {copied ? (
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -229,19 +207,13 @@ export function ImageDetailModal({ asset, onClose, onRenamed }: Props) {
                   </button>
                 </div>
               </div>
-
             </div>
 
             <div className={styles.divider} />
 
             <div className={styles.metaItem}>
               <p className={styles.metaLabel}>URL segura</p>
-              <a
-                href={asset.secureUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.urlLink}
-              >
+              <a href={asset.secureUrl} target="_blank" rel="noopener noreferrer" className={styles.urlLink}>
                 {asset.secureUrl}
               </a>
             </div>

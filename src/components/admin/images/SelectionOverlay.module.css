@@ -1,0 +1,24 @@
+/**
+ * src/components/admin/images/SelectionOverlay.module.css
+ *
+ * Rectángulo visual del rubber-band selection.
+ * Renderizado con position: fixed para que las coordenadas de viewport
+ * coincidan exactamente con los valores de getBoundingClientRect().
+ */
+
+.overlay {
+  position:       fixed;
+  z-index:        50;
+  pointer-events: none;
+  border:         1.5px solid var(--admin-accent);
+  background:     rgba(78, 196, 196, 0.08);
+  border-radius:  4px;
+
+  /* Animación de entrada suave en el primer frame */
+  animation: overlayAppear 0.05s ease forwards;
+}
+
+@keyframes overlayAppear {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

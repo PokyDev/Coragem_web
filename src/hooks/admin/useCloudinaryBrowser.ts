@@ -9,9 +9,8 @@
  * - Al montar, restaura esa carpeta; si no existe, arranca desde la raíz.
  * - Expone carpetas, assets, estado de carga y helpers de navegación.
  *
- * Lógica de carga:
- *   - Siempre carga las sub-carpetas del path actual.
- *   - Solo carga assets si currentPath no está vacío (en la raíz no hay assets).
+ * La lógica de fetch está extraída en useCloudinaryData (mismo archivo)
+ * para poder reutilizarse en useCloudinaryPicker sin duplicar código.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -31,56 +30,27 @@ interface AssetsResponse {
   assets: CloudinaryAsset[];
 }
 
-export interface UseCloudinaryBrowserReturn {
-  /** Path de la carpeta actualmente visible. Vacío = raíz. */
-  currentPath: string;
-  folders:     CloudinaryFolder[];
-  assets:      CloudinaryAsset[];
-  loading:     boolean;
-  error:       string | null;
-  /** Navega a una carpeta hija */
-  navigate:    (path: string) => void;
-  /** Sube un nivel en la jerarquía */
-  goUp:        () => void;
-  /** Vuelve a la raíz */
-  goRoot:      () => void;
-  /** Fuerza recarga del contenido actual (útil tras rename) */
-  refetch:     () => void;
+/* ─── Hook primitivo de fetch ────────────────────────────────────────
+ * Carga carpetas y assets para un path dado.
+ * No tiene opinión sobre navegación ni persistencia — solo fetching.
+ * Consumido por useCloudinaryBrowser y useCloudinaryPicker.
+ * ─────────────────────────────────────────────────────────────────── */
+export interface UseCloudinaryDataReturn {
+  folders:  CloudinaryFolder[];
+  assets:   CloudinaryAsset[];
+  loading:  boolean;
+  error:    string | null;
 }
 
-const STORAGE_KEY = 'coragem:cloudinary:lastPath';
+export function useCloudinaryData(
+  currentPath: string,
+  tick: number,
+): UseCloudinaryDataReturn {
+  const [folders, setFolders] = useState<CloudinaryFolder[]>([]);
+  const [assets,  setAssets]  = useState<CloudinaryAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
 
-function readStoredPath(): string {
-  try {
-    return localStorage.getItem(STORAGE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
-
-function storePath(path: string): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, path);
-  } catch {
-    // localStorage no disponible (SSR, modo privado estricto) — se ignora
-  }
-}
-
-export function useCloudinaryBrowser(): UseCloudinaryBrowserReturn {
-  const [currentPath, setCurrentPath] = useState<string>('');
-  const [folders,     setFolders]     = useState<CloudinaryFolder[]>([]);
-  const [assets,      setAssets]      = useState<CloudinaryAsset[]>([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState<string | null>(null);
-  const [tick,        setTick]        = useState(0);
-
-  /* Restaurar último path al montar (solo en cliente) */
-  useEffect(() => {
-    const stored = readStoredPath();
-    setCurrentPath(stored);
-  }, []);
-
-  /* Cargar carpetas y assets cada vez que cambia currentPath o tick */
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -123,17 +93,62 @@ export function useCloudinaryBrowser(): UseCloudinaryBrowserReturn {
     });
 
     return () => { cancelled = true; };
-  // tick fuerza recarga sin cambiar currentPath
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPath, tick]);
 
-  /* Navegar a una carpeta hija */
+  return { folders, assets, loading, error };
+}
+
+/* ─── Browser público ────────────────────────────────────────────────
+ * Navegación completa con persistencia en localStorage.
+ * Usado por ImagesPage — sin cambios en su interfaz pública.
+ * ─────────────────────────────────────────────────────────────────── */
+export interface UseCloudinaryBrowserReturn {
+  currentPath: string;
+  folders:     CloudinaryFolder[];
+  assets:      CloudinaryAsset[];
+  loading:     boolean;
+  error:       string | null;
+  navigate:    (path: string) => void;
+  goUp:        () => void;
+  goRoot:      () => void;
+  refetch:     () => void;
+}
+
+const STORAGE_KEY = 'coragem:cloudinary:lastPath';
+
+function readStoredPath(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function storePath(path: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, path);
+  } catch {
+    // localStorage no disponible (SSR, modo privado estricto) — se ignora
+  }
+}
+
+export function useCloudinaryBrowser(): UseCloudinaryBrowserReturn {
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [tick,        setTick]        = useState(0);
+
+  /* Restaurar último path al montar (solo en cliente) */
+  useEffect(() => {
+    const stored = readStoredPath();
+    setCurrentPath(stored);
+  }, []);
+
+  const { folders, assets, loading, error } = useCloudinaryData(currentPath, tick);
+
   const navigate = useCallback((path: string) => {
     storePath(path);
     setCurrentPath(path);
   }, []);
 
-  /* Subir un nivel */
   const goUp = useCallback(() => {
     const parent = currentPath.includes('/')
       ? currentPath.substring(0, currentPath.lastIndexOf('/'))
@@ -142,13 +157,11 @@ export function useCloudinaryBrowser(): UseCloudinaryBrowserReturn {
     setCurrentPath(parent);
   }, [currentPath]);
 
-  /* Volver a la raíz */
   const goRoot = useCallback(() => {
     storePath('');
     setCurrentPath('');
   }, []);
 
-  /* Forzar recarga */
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   return {

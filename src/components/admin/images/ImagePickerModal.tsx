@@ -6,25 +6,29 @@
  * Modal para seleccionar un asset de Cloudinary.
  * Usado desde ProductFormModal para asignar imagen a un producto.
  *
- * Carga directamente los assets de "coragem/products" — la carpeta
- * de productos es el único destino válido para imágenes de producto.
+ * Permite navegar la jerarquía completa de carpetas de Cloudinary,
+ * arrancando siempre en `coragem/products` (el folder raíz de producto).
+ * Cada apertura del modal resetea la navegación a ese punto de partida.
  *
  * Flujo:
- *   1. Se abre con isOpen=true.
- *   2. Carga assets de coragem/products vía useCloudinaryImages.
- *   3. El admin busca y hace click en una AssetCard (modo "picker").
- *   4. Al confirmar, llama a onSelect(asset) y se cierra.
+ *   1. Se abre con isOpen=true → navega a coragem/products.
+ *   2. Muestra subcarpetas (FolderCard) y assets (AssetCard en modo picker).
+ *   3. El admin puede entrar en subcarpetas via FolderCard o FolderBreadcrumb.
+ *   4. La búsqueda filtra los assets del folder actualmente visible.
+ *   5. Click en un AssetCard lo selecciona; confirmar llama a onSelect(asset).
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
-import { useCloudinaryImages }  from "@/hooks/admin/useCloudinaryImages";
-import { AssetCard }            from "@/components/admin/images/AssetCard";
-import { SearchInput }          from "@/components/shared/ui/SearchInput";
-import { useProductSearch }     from "@/hooks/shared/useProductSearch";
+import type { CloudinaryAsset }    from "@/hooks/admin/useCloudinaryImages";
+import { useCloudinaryPicker }     from "@/hooks/admin/useCloudinaryPicker";
+import { AssetCard }               from "@/components/admin/images/AssetCard";
+import { FolderCard }              from "@/components/admin/images/FolderCard";
+import { FolderBreadcrumb }        from "@/components/admin/images/FolderBreadcrumb";
+import { SearchInput }             from "@/components/shared/ui/SearchInput";
+import { useProductSearch }        from "@/hooks/shared/useProductSearch";
 import styles from "./ImagePickerModal.module.css";
 
-const PRODUCTS_FOLDER = "coragem/products";
+const PICKER_ROOT = "coragem/products";
 
 /* ── Props ── */
 interface ImagePickerModalProps {
@@ -39,13 +43,24 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
   const [selected, setSelected] = useState<CloudinaryAsset | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { assets, loading, error } = useCloudinaryImages(PRODUCTS_FOLDER);
+  const {
+    currentPath,
+    folders,
+    assets,
+    loading,
+    error,
+    navigate,
+    refetch,
+  } = useCloudinaryPicker({
+    initialPath: PICKER_ROOT,
+    resetOnOpen: isOpen,
+  });
 
-  const { query, setQuery, clearQuery, inputProps } = useProductSearch({
+  const { query, clearQuery, inputProps } = useProductSearch({
     onChange: () => setSelected(null),
   });
 
-  /* Filtrado por nombre */
+  /* Filtrar assets por búsqueda (solo en el folder actual) */
   const filteredAssets = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return assets;
@@ -54,7 +69,7 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
     );
   }, [assets, query]);
 
-  /* Animación de apertura/cierre */
+  /* Animación de apertura/cierre + reset de selección y búsqueda */
   useEffect(() => {
     if (isOpen) {
       setSelected(null);
@@ -67,6 +82,13 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
   // clearQuery es estable — incluirla es seguro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  /* Limpiar selección y búsqueda al navegar a otra carpeta */
+  const handleNavigate = useCallback((path: string) => {
+    setSelected(null);
+    clearQuery();
+    navigate(path);
+  }, [navigate, clearQuery]);
 
   /* Cerrar con Escape */
   useEffect(() => {
@@ -93,6 +115,10 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
 
   if (!isOpen) return null;
 
+  const hasFolders = folders.length > 0;
+  const hasAssets  = filteredAssets.length > 0;
+  const isEmpty    = !hasFolders && !hasAssets && !loading && !error;
+
   return (
     <div
       className={`${styles.backdrop} ${visible ? styles.backdropVisible : ""}`}
@@ -105,7 +131,7 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
         ref={panelRef}
         className={`${styles.panel} ${visible ? styles.panelVisible : ""}`}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerEyebrow}>Biblioteca de imágenes</span>
@@ -124,28 +150,39 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
           </button>
         </div>
 
-        {/* Toolbar */}
+        {/* ── Toolbar: breadcrumb + búsqueda ── */}
         <div className={styles.toolbar}>
-          <div className={styles.searchWrap}>
-            <SearchInput
-              variant="admin"
-              value={inputProps.value}
-              onChange={inputProps.onChange}
-              onClear={clearQuery}
-              placeholder="Buscar imagen…"
+          {/* Fila superior: breadcrumb de navegación */}
+          <div className={styles.toolbarTop}>
+            <FolderBreadcrumb
+              currentPath={currentPath}
+              onNavigate={handleNavigate}
             />
           </div>
-          {!loading && !error && (
-            <span className={styles.count}>
-              {filteredAssets.length} imagen{filteredAssets.length !== 1 ? "es" : ""}
-            </span>
-          )}
+
+          {/* Fila inferior: búsqueda + conteo de assets */}
+          <div className={styles.toolbarBottom}>
+            <div className={styles.searchWrap}>
+              <SearchInput
+                variant="admin"
+                value={inputProps.value}
+                onChange={inputProps.onChange}
+                onClear={clearQuery}
+                placeholder="Buscar imagen…"
+              />
+            </div>
+            {!loading && !error && (
+              <span className={styles.count}>
+                {filteredAssets.length} imagen{filteredAssets.length !== 1 ? "es" : ""}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Cuerpo: grid o estados */}
+        {/* ── Cuerpo scrolleable ── */}
         {loading && (
           <div className={styles.stateWrap}>
-            <span className={styles.stateDesc}>Cargando imágenes…</span>
+            <span className={styles.stateDesc}>Cargando…</span>
           </div>
         )}
 
@@ -155,38 +192,81 @@ export function ImagePickerModal({ isOpen, onClose, onSelect }: ImagePickerModal
           </div>
         )}
 
-        {!loading && !error && filteredAssets.length === 0 && (
+        {!loading && !error && isEmpty && (
           <div className={styles.stateWrap}>
             <span className={styles.stateIcon} aria-hidden="true">⊞</span>
-            <p className={styles.stateTitle}>
-              {query ? "Sin resultados" : "Sin imágenes"}
-            </p>
+            <p className={styles.stateTitle}>Carpeta vacía</p>
             <p className={styles.stateDesc}>
-              {query
-                ? `Ninguna imagen coincide con "${query}".`
-                : "No hay assets en la carpeta coragem/products de Cloudinary."}
+              No hay carpetas ni imágenes en este directorio.
             </p>
           </div>
         )}
 
-        {!loading && !error && filteredAssets.length > 0 && (
+        {!loading && !error && !isEmpty && (
           <div className={styles.gridScroll}>
-            <div className={styles.grid}>
-              {filteredAssets.map((asset, i) => (
-                <AssetCard
-                  key={asset.publicId}
-                  mode="picker"
-                  asset={asset}
-                  index={i}
-                  onClick={setSelected}
-                  isSelected={selected?.publicId === asset.publicId}
-                />
-              ))}
-            </div>
+
+            {/* Sección de carpetas */}
+            {hasFolders && (
+              <div className={styles.foldersSection}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionLabel}>Carpetas</span>
+                  <span className={styles.sectionCount}>{folders.length}</span>
+                </div>
+                <div className={styles.gridFolders}>
+                  {folders.map((folder, i) => (
+                    <FolderCard
+                      key={folder.path}
+                      folder={folder}
+                      index={i}
+                      onNavigate={handleNavigate}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Divisor entre carpetas y assets */}
+            {hasFolders && hasAssets && (
+              <div className={styles.divider} />
+            )}
+
+            {/* Sección de assets */}
+            {hasAssets && (
+              <div className={styles.assetsSection}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionLabel}>Imágenes</span>
+                  <span className={styles.sectionCount}>{filteredAssets.length}</span>
+                </div>
+                <div className={styles.grid}>
+                  {filteredAssets.map((asset, i) => (
+                    <AssetCard
+                      key={asset.publicId}
+                      mode="picker"
+                      asset={asset}
+                      index={i}
+                      onClick={setSelected}
+                      isSelected={selected?.publicId === asset.publicId}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sin resultados de búsqueda (hay assets pero el filtro no matchea) */}
+            {!hasFolders && !hasAssets && query && (
+              <div className={styles.stateWrap}>
+                <span className={styles.stateIcon} aria-hidden="true">⊞</span>
+                <p className={styles.stateTitle}>Sin resultados</p>
+                <p className={styles.stateDesc}>
+                  Ninguna imagen coincide con &ldquo;{query}&rdquo;.
+                </p>
+              </div>
+            )}
+
           </div>
         )}
 
-        {/* Footer */}
+        {/* ── Footer ── */}
         <div className={styles.footer}>
           <p className={styles.selectedLabel}>
             {selected ? (

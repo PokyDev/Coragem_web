@@ -78,6 +78,7 @@ interface ProductCardProps {
 export function ProductCard({ product, animDelay = 0, onEdit, onDelete, onStockChange }: ProductCardProps) {
   const [qty, setQty]           = useState<string>("1");
   const [localStock, setLocalStock] = useState(product.stock);
+  const [localVentas, setLocalVentas] = useState(product.ventas);
   const { isLoading, error, register, clearError } = useProductMovement();
 
   const stockStatus = getStockStatus(localStock);
@@ -87,6 +88,7 @@ export function ProductCard({ product, animDelay = 0, onEdit, onDelete, onStockC
     const result = await register(product.id, type, quantity);
     if (result) {
       setLocalStock(result.stockAfter);
+      if (type === "SALE") setLocalVentas((prev) => prev + quantity);
       setQty("1");
       onStockChange?.(product.id, result.stockAfter);
     }
@@ -160,7 +162,7 @@ export function ProductCard({ product, animDelay = 0, onEdit, onDelete, onStockC
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Ventas</span>
-              <span className={styles.infoValue}>{product.ventas}</span>
+              <span className={styles.infoValue}>{localVentas}</span> {/* Patron para actualización dinamica (Estado local) */}
             </div>
           </div>
 

@@ -3,8 +3,15 @@
  *
  * Tarjeta de carpeta de Cloudinary.
  * Diseño coherente con AssetCard pero con identidad propia (ícono, sin imagen).
+ *
+ * Variante temática (.cardThemed):
+ *   Cuando la carpeta tiene metadatos conocidos (meses, categorías de
+ *   joyería), el componente inyecta --folder-accent y --folder-bg como
+ *   variables CSS inline. Los selectores .cardThemed leen esas variables
+ *   para colorear el ícono y el fondo, dejando el resto de estilos intactos.
  */
 
+/* ── Tarjeta base ── */
 .card {
   background:    var(--admin-bg-card);
   border:        1px solid var(--admin-border);
@@ -29,6 +36,14 @@
   transform: translateY(-2px);
 }
 
+/* Hover de tarjeta temática — usa el color de acento de la carpeta */
+.cardThemed:hover {
+  border-color: color-mix(in srgb, var(--folder-accent) 50%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--folder-accent) 15%, transparent),
+    0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0);   }
@@ -51,7 +66,16 @@
   background: rgba(78, 196, 196, 0.07);
 }
 
-/* Ícono de carpeta SVG */
+/* Fondo del área del ícono para tarjetas temáticas */
+.cardThemed .iconArea {
+  background: var(--folder-bg);
+}
+
+.cardThemed:hover .iconArea {
+  background: color-mix(in srgb, var(--folder-bg) 140%, transparent);
+}
+
+/* ── Ícono genérico de carpeta ── */
 .folderIcon {
   color:      var(--admin-text-dim);
   transition: color 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -62,7 +86,25 @@
   transform: scale(1.12);
 }
 
-/* Flecha indicadora de navegación */
+/* ── Ícono temático (meses / categorías) ── */
+.themedIcon {
+  display:     flex;
+  align-items: center;
+  color:       var(--folder-accent);
+  transition:  color 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Tamaño del SVG interno — el SVG hereda width/height del wrapper */
+}
+
+.themedIcon svg {
+  width:  52px;
+  height: 52px;
+}
+
+.card:hover .themedIcon {
+  transform: scale(1.12);
+}
+
+/* ── Flecha indicadora de navegación ── */
 .arrowIcon {
   position:   absolute;
   bottom:     0.6rem;
@@ -77,6 +119,11 @@
   opacity:   1;
   transform: translateX(0);
   color:     var(--admin-accent);
+}
+
+/* Flecha temática usa el color de acento de la carpeta */
+.cardThemed:hover .arrowIcon {
+  color: var(--folder-accent);
 }
 
 /* ── Info inferior ── */
@@ -94,6 +141,11 @@
   overflow:      hidden;
   text-overflow: ellipsis;
   margin-bottom: 0.15rem;
+}
+
+/* Nombre de carpeta temática con color de acento */
+.cardThemed .name {
+  color: var(--folder-accent);
 }
 
 .path {

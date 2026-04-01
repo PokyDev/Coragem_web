@@ -157,3 +157,30 @@
   overflow:       hidden;
   text-overflow:  ellipsis;
 }
+
+/* ── Mobile gallery mode (≤ 450px) ── */
+@media (max-width: 450px) {
+  .info {
+    padding: 0.4rem 0.5rem 0.45rem;
+  }
+
+  .name {
+    font-size: 0.62rem;
+  }
+
+  .path {
+    display: none;
+  }
+
+  /* Ícono genérico más compacto */
+  .folderIcon {
+    width:  36px;
+    height: 36px;
+  }
+
+  /* Ícono temático más compacto */
+  .themedIcon svg {
+    width:  36px;
+    height: 36px;
+  }
+}

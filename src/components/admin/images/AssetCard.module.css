@@ -226,3 +226,31 @@
   color:          var(--admin-text-dim);
   letter-spacing: 0.02em;
 }
+
+/* ── Mobile gallery mode (≤ 450px) ── */
+@media (max-width: 450px) {
+  /* Ocultar la sección de texto — solo imagen cuadrada */
+  .info {
+    display: none;
+  }
+
+  /* El checkbox y el botón de detalle siempre visibles (sin hover en touch) */
+  .checkbox {
+    opacity:   1;
+    transform: scale(1);
+  }
+
+  .detailBtn {
+    opacity:   1;
+    transform: scale(1);
+    /* Área táctil mínima de 44px */
+    width:     34px;
+    height:    34px;
+  }
+
+  /* Escalar el check icon ligeramente para touch */
+  .checkIcon {
+    width:  26px;
+    height: 26px;
+  }
+}

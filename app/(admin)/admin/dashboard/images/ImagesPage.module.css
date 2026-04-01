@@ -27,6 +27,20 @@
   flex-shrink: 0;
 }
 
+/* ── Search wrap ── */
+.searchWrap {
+  /* Ancho fijo en desktop; en móvil se expande al 100% gracias al flex-wrap
+     del toolbarRight cuando se junta con selectionBar o refreshBtn */
+  width:     200px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .searchWrap {
+    width: 160px;
+  }
+}
+
 /* ── Selection bar ── */
 .selectionBar {
   display:       flex;

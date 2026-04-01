@@ -8,10 +8,13 @@
  *
  * Flujo:
  *   1. Navegar carpetas con FolderBreadcrumb + FolderCard (como antes).
- *   2. Seleccionar assets:
+ *   2. Buscar assets en el folder actual con SearchInput (useImageSearch).
+ *      — Preparado para modo global: cambiar mode="global" en useImageSearch
+ *        cuando el endpoint esté disponible, sin tocar este componente.
+ *   3. Seleccionar assets:
  *      a) Click en checkbox individual (aparece al hacer hover o en selectionMode)
  *      b) Arrastrar sobre el fondo del grid (rubber-band)
- *   3. Mover assets:
+ *   4. Mover assets:
  *      a) Arrastrar tarjeta(s) sobre un FolderCard o segmento del breadcrumb
  *      b) El backend recibe los publicIds y el targetFolder
  *      c) Tras el move: clearSelection + refetch
@@ -22,12 +25,14 @@ import type { CloudinaryAsset }   from "@/hooks/admin/useCloudinaryImages";
 import { useCloudinaryBrowser }   from "@/hooks/admin/useCloudinaryBrowser";
 import { useAssetSelection }      from "@/hooks/admin/useAssetSelection";
 import { useMoveAssets }          from "@/hooks/admin/useMoveAssets";
+import { useImageSearch }         from "@/hooks/admin/useImageSearch";
 import { FolderCard }             from "@/components/admin/images/FolderCard";
 import { FolderBreadcrumb }       from "@/components/admin/images/FolderBreadcrumb";
 import { DraggableAssetCard }     from "@/components/admin/images/DraggableAssetCard";
 import { SelectionOverlay }       from "@/components/admin/images/SelectionOverlay";
 import { DropFolderTarget }       from "@/components/admin/images/DropFolderTarget";
 import { ImageDetailModal }       from "@/components/admin/images/ImageDetailModal";
+import { SearchInput }            from "@/components/shared/ui/SearchInput";
 import { useDashboardActions }    from "@/components/admin/layout/AdminShell";
 import styles from "./ImagesPage.module.css";
 
@@ -67,6 +72,25 @@ export default function ImagesPage() {
   const { move, isMoving, error: moveError, clearError: clearMoveError } = useMoveAssets();
 
   const { registerNewProductAction } = useDashboardActions();
+
+  /*
+   * Búsqueda de assets.
+   * mode="local" → filtra en memoria los assets del folder actual.
+   * Para activar búsqueda global en el futuro: cambiar a mode="global".
+   * La interfaz de retorno (filteredAssets, query, inputProps, clearQuery)
+   * es idéntica en ambos modos — ImagesPage no necesitará cambios.
+   */
+  const {
+    query,
+    filteredAssets,
+    isSearching,
+    inputProps: searchInputProps,
+    clearQuery,
+  } = useImageSearch({
+    assets,
+    mode: "local",
+    onQueryChange: clearSelection,
+  });
 
   const [selected,    setSelected]   = useState<CloudinaryAsset | null>(null);
   const [droppingTo,  setDroppingTo] = useState<string | null>(null);
@@ -151,13 +175,15 @@ export default function ImagesPage() {
     );
   }
 
-  const hasFolders = folders.length > 0;
-  const hasAssets  = assets.length > 0;
-  const isEmpty    = !hasFolders && !hasAssets;
+  const hasFolders      = folders.length > 0;
+  const hasAssets       = filteredAssets.length > 0;
+  const hasRawAssets    = assets.length > 0;
+  const isEmpty         = !hasFolders && !hasRawAssets;
+  const isEmptySearch   = hasRawAssets && !hasAssets && query.trim().length > 0;
 
   return (
     <>
-      {/* Toolbar: breadcrumb + controles */}
+      {/* Toolbar: breadcrumb + búsqueda + controles */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
           <FolderBreadcrumb
@@ -169,6 +195,19 @@ export default function ImagesPage() {
         </div>
 
         <div className={styles.toolbarRight}>
+          {/* Buscador de assets — visible cuando hay assets en el folder */}
+          {hasRawAssets && (
+            <div className={styles.searchWrap}>
+              <SearchInput
+                variant="admin"
+                value={searchInputProps.value}
+                onChange={searchInputProps.onChange}
+                onClear={clearQuery}
+                placeholder="Buscar imagen…"
+              />
+            </div>
+          )}
+
           {/* Contador de selección + botón limpiar */}
           {selectionMode && (
             <div className={styles.selectionBar}>
@@ -188,7 +227,7 @@ export default function ImagesPage() {
           <button
             className={styles.refreshBtn}
             onClick={refetch}
-            disabled={loading || isMoving}
+            disabled={loading || isMoving || isSearching}
             type="button"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -212,7 +251,7 @@ export default function ImagesPage() {
         </div>
       )}
 
-      {/* Estado vacío */}
+      {/* Estado vacío — folder sin contenido */}
       {isEmpty && (
         <div className={styles.emptyWrap}>
           <span className={styles.emptyIcon} aria-hidden="true">⊞</span>
@@ -221,6 +260,17 @@ export default function ImagesPage() {
             {currentPath
               ? `No hay carpetas ni imágenes en "${currentPath}".`
               : "No hay carpetas en la raíz de Cloudinary."}
+          </p>
+        </div>
+      )}
+
+      {/* Sin resultados de búsqueda */}
+      {isEmptySearch && (
+        <div className={styles.emptyWrap}>
+          <span className={styles.emptyIcon} aria-hidden="true">⊘</span>
+          <p className={styles.emptyTitle}>Sin resultados</p>
+          <p className={styles.emptyDesc}>
+            Ninguna imagen coincide con &ldquo;{query}&rdquo; en este folder.
           </p>
         </div>
       )}
@@ -258,10 +308,15 @@ export default function ImagesPage() {
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionLabel}>Imágenes</span>
-            <span className={styles.sectionCount}>{assets.length}</span>
+            {/* Mostrar cuántas matchean si hay búsqueda activa */}
+            <span className={styles.sectionCount}>
+              {query.trim()
+                ? `${filteredAssets.length} de ${assets.length}`
+                : assets.length}
+            </span>
           </div>
           <div ref={gridRef} className={styles.grid}>
-            {assets.map((asset, i) => (
+            {filteredAssets.map((asset, i) => (
               <DraggableAssetCard
                 key={asset.publicId}
                 asset={asset}

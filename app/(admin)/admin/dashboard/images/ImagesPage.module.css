@@ -29,9 +29,7 @@
 
 /* ── Search wrap ── */
 .searchWrap {
-  /* Ancho fijo en desktop; en móvil se expande al 100% gracias al flex-wrap
-     del toolbarRight cuando se junta con selectionBar o refreshBtn */
-  width:     200px;
+  width:       200px;
   flex-shrink: 0;
 }
 
@@ -152,7 +150,7 @@
 /* ── Secciones: carpetas + assets ── */
 .section {
   margin-bottom: 1.75rem;
-  position:      relative; /* contexto para SelectionOverlay */
+  position:      relative;
 }
 
 .sectionHeader {
@@ -212,8 +210,9 @@
     gap:                   0.5rem;
   }
 
+  /* 3 columnas para que los assets sean más grandes y fáciles de apreciar */
   .grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap:                   0.25rem;
   }
 }

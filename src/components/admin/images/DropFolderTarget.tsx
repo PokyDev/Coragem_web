@@ -5,26 +5,30 @@
  *
  * Wrapper de drop target sobre FolderCard y segmentos del breadcrumb.
  *
- * Cuando el usuario arrastra assets sobre este componente:
- *   - dragover → resalta el borde con --admin-accent y fondo sutil
- *   - drop → extrae los publicIds del dataTransfer y llama a onDrop
+ * ── Desktop (HTML5 drag API) ──────────────────────────────────────
+ *   dragover → resalta el borde con --admin-accent y fondo sutil.
+ *   drop     → extrae publicIds del dataTransfer y llama a onDrop.
  *
- * Espera recibir en dataTransfer.getData("application/x-coragem-assets")
- * un JSON con { publicIds: string[] }.
+ * ── Móvil (CustomEvents desde DraggableAssetCard) ─────────────────
+ *   coragem:touchdragenter → aplica el mismo highlight de drag-over.
+ *   coragem:touchdragleave → quita el highlight.
+ *   coragem:touchdrop      → extrae publicIds del detalle del evento
+ *                            y llama a onDrop.
+ *
+ *   El elemento raíz lleva data-drop-target para que DraggableAssetCard
+ *   pueda encontrarlo con closest("[data-drop-target]").
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import type { TouchDropDetail } from "./DraggableAssetCard";
 import styles from "./DropFolderTarget.module.css";
 
 export const DRAG_DATA_KEY = "application/x-coragem-assets";
 
 interface DropFolderTargetProps {
-  /** Path destino de la carpeta (puede ser "" para raíz) */
   targetPath:  string;
-  /** Callback cuando se suelta el drag sobre este target */
   onDrop:      (publicIds: string[], targetPath: string) => void;
   children:    React.ReactNode;
-  /** Si true, está procesando un move → muestra estado de carga */
   isDropping?: boolean;
   className?:  string;
 }
@@ -37,9 +41,11 @@ export function DropFolderTarget({
   className  = "",
 }: DropFolderTargetProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  /* ── Desktop handlers ── */
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    /* Solo aceptar drags que contengan nuestro tipo de dato */
     if (!e.dataTransfer.types.includes(DRAG_DATA_KEY)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
@@ -47,7 +53,6 @@ export function DropFolderTarget({
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    /* DragLeave se dispara al entrar en un hijo — verificar que salimos del target */
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     setIsDragOver(false);
   }, []);
@@ -69,8 +74,38 @@ export function DropFolderTarget({
     }
   }, [onDrop, targetPath]);
 
+  /* ── Móvil: escuchar CustomEvents del touch drag ── */
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const onTouchDragEnter = () => setIsDragOver(true);
+    const onTouchDragLeave = () => setIsDragOver(false);
+
+    const onTouchDrop = (e: Event) => {
+      setIsDragOver(false);
+      const { publicIds } = (e as CustomEvent<TouchDropDetail>).detail;
+      if (Array.isArray(publicIds) && publicIds.length > 0) {
+        onDrop(publicIds, targetPath);
+      }
+    };
+
+    el.addEventListener("coragem:touchdragenter", onTouchDragEnter);
+    el.addEventListener("coragem:touchdragleave", onTouchDragLeave);
+    el.addEventListener("coragem:touchdrop",      onTouchDrop);
+
+    return () => {
+      el.removeEventListener("coragem:touchdragenter", onTouchDragEnter);
+      el.removeEventListener("coragem:touchdragleave", onTouchDragLeave);
+      el.removeEventListener("coragem:touchdrop",      onTouchDrop);
+    };
+  }, [onDrop, targetPath]);
+
   return (
     <div
+      ref={rootRef}
+      data-drop-target
       className={`
         ${styles.target}
         ${isDragOver  ? styles.dragOver  : ""}
@@ -83,7 +118,6 @@ export function DropFolderTarget({
     >
       {children}
 
-      {/* Indicador de carga mientras se procesa el move */}
       {isDropping && (
         <div className={styles.droppingIndicator} aria-hidden="true">
           <span className={styles.droppingSpinner} />

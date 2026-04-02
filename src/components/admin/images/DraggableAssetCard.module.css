@@ -4,14 +4,23 @@
 
 .draggable {
   cursor: grab;
-  /* Durante drag el cursor cambia a grabbing */
 }
 
 .draggable:active {
   cursor: grabbing;
 }
 
-/* Ghost del drag — fuera del DOM normal, inyectado en document.body */
+/* Estado durante drag táctil activo */
+.dragging {
+  opacity: 0.6;
+}
+
+/**
+ * Ghost del drag — usado tanto por el drag desktop (setDragImage)
+ * como por el drag táctil (posicionado con style.left/top fijo).
+ *
+ * Inicia fuera de pantalla; el drag táctil sobreescribe left/top via JS.
+ */
 :global(.dragGhost) {
   position:       fixed;
   top:            -9999px;
@@ -30,9 +39,11 @@
     0 0 0 1px rgba(78, 196, 196, 0.3);
   pointer-events: none;
   z-index:        9999;
+  /* Transición suave al moverse con el dedo */
+  transition:     top 0.03s linear, left 0.03s linear;
 }
 
-/* ── Mobile: deshabilitar drag (touch no usa HTML5 drag API) ── */
+/* ── Mobile: cursor default (touch no usa CSS cursor) ── */
 @media (max-width: 450px) {
   .draggable {
     cursor: default;

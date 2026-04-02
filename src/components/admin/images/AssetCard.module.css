@@ -234,12 +234,7 @@
     display: none;
   }
 
-  /* El checkbox y el botón de detalle siempre visibles (sin hover en touch) */
-  .checkbox {
-    opacity:   1;
-    transform: scale(1);
-  }
-
+  /* El botón de detalle siempre visible (sin hover en touch) */
   .detailBtn {
     opacity:   1;
     transform: scale(1);

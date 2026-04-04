@@ -8,13 +8,18 @@
  * Esta page es responsable únicamente de:
  *   · Renderizar JSX con los componentes de images/
  *   · Mantener los refs de DOM que necesita SelectionOverlay
- *     (gridRef, assetRefs) y el cardRefCallback asociado,
+ *     (scrollRef, gridRef, assetRefs) y el cardRefCallback asociado,
  *     ya que son detalles de renderizado, no de lógica de negocio.
+ *
+ * scrollRef → apunta al scroll container del dashboard (el elemento
+ *   con overflow-y: auto que rodea el contenido de la página).
+ *   SelectionOverlay escucha mousedown aquí para que el rubber-band
+ *   pueda iniciarse en cualquier área vacía, no solo dentro del grid.
  *
  * Todo el estado y los handlers viven en useImagesPage.
  */
 
-import { useRef, useCallback }    from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useImagesPage }          from "@/hooks/admin/pages/useImagesPage";
 import { FolderCard }             from "@/components/admin/images/FolderCard";
 import { FolderBreadcrumb }       from "@/components/admin/images/FolderBreadcrumb";
@@ -27,6 +32,33 @@ import styles from "./ImagesPage.module.css";
 
 export default function ImagesPage() {
   /* ── Refs de DOM (renderizado, no lógica de negocio) ── */
+
+  /**
+   * scrollRef → el contenedor con scroll del dashboard.
+   * SelectionOverlay escucha mousedown aquí para que el rubber-band
+   * sea iniciable desde cualquier área vacía de la página.
+   *
+   * Se busca el ancestro con overflow-y distinto de "visible" para no
+   * depender de un selector CSS frágil. El fallback es document.body.
+   */
+  const pageRef   = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    /* Subir por el árbol del DOM hasta encontrar el scroll container */
+    let el: HTMLElement | null = pageRef.current?.parentElement ?? null;
+    while (el && el !== document.body) {
+      const overflow = window.getComputedStyle(el).overflowY;
+      if (overflow === "auto" || overflow === "scroll") {
+        scrollRef.current = el;
+        return;
+      }
+      el = el.parentElement;
+    }
+    /* Fallback: el body si no encontramos un contenedor con scroll */
+    scrollRef.current = document.documentElement as HTMLElement;
+  }, []);
+
   const gridRef   = useRef<HTMLDivElement>(null);
   const assetRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -93,7 +125,7 @@ export default function ImagesPage() {
   }
 
   return (
-    <>
+    <div ref={pageRef}>
       {/* ── Toolbar: breadcrumb + búsqueda + controles ── */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
@@ -238,15 +270,20 @@ export default function ImagesPage() {
               />
             ))}
           </div>
-
-          <SelectionOverlay
-            containerRef={gridRef}
-            assetRefs={assetRefs}
-            onSelect={selectMany}
-            enabled={!isMoving}
-          />
         </div>
       )}
+
+      {/* ── Rubber-band selection overlay ──
+          listenRef  → todo el scroll container del dashboard (área activa ampliada)
+          containerRef → solo el grid (para delimitar intersecciones)
+      ── */}
+      <SelectionOverlay
+        listenRef={scrollRef}
+        containerRef={gridRef}
+        assetRefs={assetRefs}
+        onSelect={selectMany}
+        enabled={!isMoving}
+      />
 
       {/* ── Modal de detalle / renombrar ── */}
       <ImageDetailModal
@@ -254,6 +291,6 @@ export default function ImagesPage() {
         onClose={handleCloseDetail}
         onRenamed={handleRenamed}
       />
-    </>
+    </div>
   );
 }

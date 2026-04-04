@@ -1,5 +1,5 @@
 /**
- * src/lib/folderMeta.ts
+ * src/lib/folderMeta.tsx
  *
  * Metadatos visuales para carpetas conocidas del browser de Cloudinary.
  * Centraliza íconos SVG y colores de acento por nombre de carpeta.
@@ -31,15 +31,12 @@ export interface FolderMeta {
 const TEAL  = "#4ec4c4";
 const PINK  = "#c47a9e";
 const SAND  = "#c49a6c";
-const NAVY  = "#1e3a5f";
 
 const tealBg  = "rgba(78,  196, 196, 0.12)";
 const pinkBg  = "rgba(196, 122, 158, 0.12)";
 const sandBg  = "rgba(196, 154, 108, 0.14)";
-const navyBg  = "rgba(30,  58,  95,  0.30)";
 
 /* ── Íconos SVG ─────────────────────────────────────────────────── */
-// Cada ícono es un fragmento JSX — viewBox 24×24, stroke="currentColor".
 
 const IconCalendar = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -102,22 +99,21 @@ const IconCrescent = (
 );
 
 /* ── Mapa principal ─────────────────────────────────────────────── */
-// Claves siempre en minúsculas — la lookup normaliza el input.
 
 const FOLDER_META_MAP: Record<string, FolderMeta> = {
-  // ── Meses ──────────────────────────────────────────────────────
-  enero:      { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  febrero:    { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  marzo:      { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  abril:      { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  mayo:       { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  junio:      { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  julio:      { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  agosto:     { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  septiembre: { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  octubre:    { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  noviembre:  { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
-  diciembre:  { icon: IconCalendar, accentColor: NAVY, bgColor: navyBg },
+  // ── Meses — teal para máximo contraste y coherencia con el sistema ──
+  enero:      { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  febrero:    { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  marzo:      { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  abril:      { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  mayo:       { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  junio:      { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  julio:      { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  agosto:     { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  septiembre: { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  octubre:    { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  noviembre:  { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
+  diciembre:  { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
 
   // ── Categorías ─────────────────────────────────────────────────
   candongas:  { icon: IconHoop,     accentColor: PINK, bgColor: pinkBg },
@@ -132,8 +128,8 @@ const FOLDER_META_MAP: Record<string, FolderMeta> = {
 /* ── Valores neutros (fallback para carpetas no reconocidas) ────── */
 
 const DEFAULT_META: FolderMeta = {
-  icon:        null,   // FolderCard usará su ícono de carpeta genérico
-  accentColor: "",     // FolderCard usará sus estilos CSS por defecto
+  icon:        null,
+  accentColor: "",
   bgColor:     "",
 };
 

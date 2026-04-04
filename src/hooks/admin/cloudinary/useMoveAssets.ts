@@ -9,7 +9,7 @@
 
 import { useState, useCallback } from 'react';
 import { api } from '@/lib/api';
-import type { CloudinaryAsset } from './cloudinary/useCloudinaryImages';
+import type { CloudinaryAsset } from './useCloudinaryImages';
 
 interface MoveAssetsResponse {
   moved:  number;

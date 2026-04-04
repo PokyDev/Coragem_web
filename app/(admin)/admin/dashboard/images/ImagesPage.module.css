@@ -2,6 +2,11 @@
  * app/(admin)/admin/dashboard/images/ImagesPage.module.css
  */
 
+/* ── Root wrapper — evita selección de texto durante rubber-band ── */
+.root {
+  user-select: none;
+}
+
 /* ── Toolbar ── */
 .toolbar {
   display:         flex;
@@ -210,7 +215,6 @@
     gap:                   0.5rem;
   }
 
-  /* 3 columnas para que los assets sean más grandes y fáciles de apreciar */
   .grid {
     grid-template-columns: repeat(3, 1fr);
     gap:                   0.25rem;

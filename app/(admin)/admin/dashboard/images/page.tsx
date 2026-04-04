@@ -125,7 +125,7 @@ export default function ImagesPage() {
   }
 
   return (
-    <div ref={pageRef}>
+    <div ref={pageRef} className={styles.root}>
       {/* ── Toolbar: breadcrumb + búsqueda + controles ── */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>

@@ -14,6 +14,7 @@
   justify-content: center;
   min-height: 100%;
   padding: 3rem 1.5rem;
+  user-select: none;
 }
 
 /* ── Placeholder centrado ── */

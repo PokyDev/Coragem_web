@@ -23,7 +23,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import type { CloudinaryAsset } from "./cloudinary/useCloudinaryImages";
+import type { CloudinaryAsset } from "./useCloudinaryImages";
 
 /* ─── Tipos ─────────────────────────────────────────────────────── */
 

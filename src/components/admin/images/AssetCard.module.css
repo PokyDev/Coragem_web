@@ -227,7 +227,7 @@
   letter-spacing: 0.02em;
 }
 
-/* ── Mobile gallery mode (≤ 450px) ── */
+/* ── Mobile gallery new mode (≤ 450px) ── */
 @media (max-width: 450px) {
   /* Ocultar la sección de texto — solo imagen cuadrada */
   .info {

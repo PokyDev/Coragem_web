@@ -135,11 +135,18 @@ export function AssetCard({
           ) : null}
         </div>
 
-        {/* Checkbox de selección — gallery + selectionMode */}
-        {isGallery && (
+        {/* Checkbox de selección — gallery (visible en hover o en selectionMode) */}
+        {isGallery && onToggleSelect && (
           <div
+            role="checkbox"
+            aria-checked={isSelected}
+            aria-label={isSelected ? `Deseleccionar ${asset.displayName}` : `Seleccionar ${asset.displayName}`}
             className={`${styles.checkbox} ${isSelected ? styles.checkboxChecked : ""} ${selectionMode ? styles.checkboxVisible : ""}`}
-            aria-hidden="true"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect(asset.publicId);
+            }}
+            style={{ pointerEvents: "auto", cursor: "pointer" }}
           >
             {isSelected && (
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0d1520" strokeWidth="3.5" strokeLinecap="round">

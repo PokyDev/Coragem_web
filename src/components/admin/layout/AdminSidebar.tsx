@@ -6,7 +6,7 @@
 
 import Link         from "next/link";
 import { usePathname } from "next/navigation";
-import { useAdminLogout } from "@/hooks/admin/useAdminLogout";
+import { useAdminLogout } from "@/hooks/admin/auth/useAdminLogout";
 import styles from "./AdminShell.module.css";
 import { ThemeToggle } from "@/components/layout/ui/ThemeToggle";
 

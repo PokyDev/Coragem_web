@@ -14,7 +14,7 @@
 
 import Link            from "next/link";
 import { usePathname } from "next/navigation";
-import { useAdminLogout }  from "@/hooks/admin/useAdminLogout";
+import { useAdminLogout }  from "@/hooks/admin/auth/useAdminLogout";
 import { SlideMenu }       from "@/components/layout/SlideMenu/SlideMenu";
 import { CloseButton }     from "@/components/layout/SlideMenu/CloseButton";
 import { ThemeToggle }     from "@/components/layout/ui/ThemeToggle";

@@ -12,7 +12,7 @@
  * estilo neutro genérico de carpeta.
  */
 
-import type { CloudinaryFolder } from "@/hooks/admin/useCloudinaryBrowser";
+import type { CloudinaryFolder } from "@/hooks/admin/cloudinary/useCloudinaryBrowser";
 import { getFolderMeta }         from "@/lib/folderMeta";
 import styles from "./FolderCard.module.css";
 

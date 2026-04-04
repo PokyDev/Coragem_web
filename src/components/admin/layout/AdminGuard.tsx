@@ -12,7 +12,7 @@
 
 import { useEffect }    from "react";
 import { useRouter }    from "next/navigation";
-import { useAuth }      from "@/hooks/admin/useAuth";
+import { useAuth }      from "@/hooks/admin/auth/useAuth";
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useAuth();

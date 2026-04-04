@@ -26,7 +26,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { useAdminTheme, type AdminTheme } from "@/hooks/admin/useAdminTheme";
+import { useAdminTheme, type AdminTheme } from "@/hooks/admin/auth/useAdminTheme";
 
 /* ─── Duración de la transición (ms) ────────────────────────────── */
 const TRANSITION_MS = 300;

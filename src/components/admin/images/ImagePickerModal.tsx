@@ -19,8 +19,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import type { CloudinaryAsset }    from "@/hooks/admin/useCloudinaryImages";
-import { useCloudinaryPicker }     from "@/hooks/admin/useCloudinaryPicker";
+import type { CloudinaryAsset }    from "@/hooks/admin/cloudinary/useCloudinaryImages";
+import { useCloudinaryPicker }     from "@/hooks/admin/cloudinary/useCloudinaryPicker";
 import { AssetCard }               from "@/components/admin/images/AssetCard";
 import { FolderCard }              from "@/components/admin/images/FolderCard";
 import { FolderBreadcrumb }        from "@/components/admin/images/FolderBreadcrumb";

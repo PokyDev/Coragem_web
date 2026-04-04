@@ -3,29 +3,19 @@
 /**
  * app/(admin)/admin/dashboard/images/page.tsx
  *
- * Browser de Cloudinary con navegación, selección múltiple,
- * rubber-band selection y drag & drop para mover assets entre carpetas.
+ * Orquestador de la pestaña Imágenes del panel administrativo.
  *
- * Flujo:
- *   1. Navegar carpetas con FolderBreadcrumb + FolderCard (como antes).
- *   2. Buscar assets en el folder actual con SearchInput (useImageSearch).
- *      — Preparado para modo global: cambiar mode="global" en useImageSearch
- *        cuando el endpoint esté disponible, sin tocar este componente.
- *   3. Seleccionar assets:
- *      a) Click en checkbox individual (aparece al hacer hover o en selectionMode)
- *      b) Arrastrar sobre el fondo del grid (rubber-band)
- *   4. Mover assets:
- *      a) Arrastrar tarjeta(s) sobre un FolderCard o segmento del breadcrumb
- *      b) El backend recibe los publicIds y el targetFolder
- *      c) Tras el move: clearSelection + refetch
+ * Esta page es responsable únicamente de:
+ *   · Renderizar JSX con los componentes de images/
+ *   · Mantener los refs de DOM que necesita SelectionOverlay
+ *     (gridRef, assetRefs) y el cardRefCallback asociado,
+ *     ya que son detalles de renderizado, no de lógica de negocio.
+ *
+ * Todo el estado y los handlers viven en useImagesPage.
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import type { CloudinaryAsset }   from "@/hooks/admin/useCloudinaryImages";
-import { useCloudinaryBrowser }   from "@/hooks/admin/useCloudinaryBrowser";
-import { useAssetSelection }      from "@/hooks/admin/useAssetSelection";
-import { useMoveAssets }          from "@/hooks/admin/useMoveAssets";
-import { useImageSearch }         from "@/hooks/admin/useImageSearch";
+import { useRef, useCallback }    from "react";
+import { useImagesPage }          from "@/hooks/admin/pages/useImagesPage";
 import { FolderCard }             from "@/components/admin/images/FolderCard";
 import { FolderBreadcrumb }       from "@/components/admin/images/FolderBreadcrumb";
 import { DraggableAssetCard }     from "@/components/admin/images/DraggableAssetCard";
@@ -33,85 +23,13 @@ import { SelectionOverlay }       from "@/components/admin/images/SelectionOverl
 import { DropFolderTarget }       from "@/components/admin/images/DropFolderTarget";
 import { ImageDetailModal }       from "@/components/admin/images/ImageDetailModal";
 import { SearchInput }            from "@/components/shared/ui/SearchInput";
-import { useDashboardActions }    from "@/components/admin/layout/AdminShell";
 import styles from "./ImagesPage.module.css";
 
-/* ── Lazy SweetAlert2 ── */
-async function getSwal() {
-  return (await import("sweetalert2")).default;
-}
-
-const SWAL_THEME = {
-  background:         "#111827",
-  color:              "#e2e8f0",
-  confirmButtonColor: "#4ec4c4",
-} as const;
-
-/* ── Page ── */
 export default function ImagesPage() {
-  const {
-    currentPath,
-    folders,
-    assets,
-    loading,
-    error,
-    navigate,
-    refetch,
-  } = useCloudinaryBrowser();
+  /* ── Refs de DOM (renderizado, no lógica de negocio) ── */
+  const gridRef   = useRef<HTMLDivElement>(null);
+  const assetRefs = useRef<Map<string, HTMLElement>>(new Map());
 
-  const {
-    selectedIds,
-    selectionMode,
-    isSelected,
-    toggleOne,
-    selectMany,
-    clearSelection,
-    count,
-  } = useAssetSelection();
-
-  const { move, isMoving, error: moveError, clearError: clearMoveError } = useMoveAssets();
-
-  const { registerNewProductAction } = useDashboardActions();
-
-  /*
-   * Búsqueda de assets.
-   * mode="local" → filtra en memoria los assets del folder actual.
-   * Para activar búsqueda global en el futuro: cambiar a mode="global".
-   * La interfaz de retorno (filteredAssets, query, inputProps, clearQuery)
-   * es idéntica en ambos modos — ImagesPage no necesitará cambios.
-   */
-  const {
-    query,
-    filteredAssets,
-    isSearching,
-    inputProps: searchInputProps,
-    clearQuery,
-  } = useImageSearch({
-    assets,
-    mode: "local",
-    onQueryChange: clearSelection,
-  });
-
-  const [selected,    setSelected]   = useState<CloudinaryAsset | null>(null);
-  const [droppingTo,  setDroppingTo] = useState<string | null>(null);
-
-  /* Ref del grid — usado por SelectionOverlay */
-  const gridRef    = useRef<HTMLDivElement>(null);
-  /* Map publicId → HTMLElement — para el rubber-band hit test */
-  const assetRefs  = useRef<Map<string, HTMLElement>>(new Map());
-
-  /* Esta página no usa el botón "+ Nuevo Producto" del topbar */
-  useEffect(() => {
-    registerNewProductAction(() => {});
-  }, [registerNewProductAction]);
-
-  /* Abrir / cerrar modal de detalle */
-  const handleOpenDetail  = useCallback((asset: CloudinaryAsset) => setSelected(asset), []);
-  const handleCloseDetail = useCallback(() => setSelected(null), []);
-
-  const handleRenamed = useCallback(() => { refetch(); }, [refetch]);
-
-  /* Callback para que DraggableAssetCard registre su DOM element */
   const cardRefCallback = useCallback((publicId: string, el: HTMLElement | null) => {
     if (el) {
       assetRefs.current.set(publicId, el);
@@ -120,45 +38,44 @@ export default function ImagesPage() {
     }
   }, []);
 
-  /* Mover assets — llamado desde DropFolderTarget */
-  const handleDrop = useCallback(async (publicIds: string[], targetPath: string) => {
-    /* No mover hacia la carpeta actual */
-    if (targetPath === currentPath) return;
+  /* ── Lógica de negocio ── */
+  const {
+    currentPath,
+    folders,
+    assets,
+    loading,
+    error,
+    navigate,
+    refetch,
+    query,
+    filteredAssets,
+    isSearching,
+    searchInputProps,
+    clearQuery,
+    selectedIds,
+    selectionMode,
+    isSelected,
+    toggleOne,
+    selectMany,
+    clearSelection,
+    count,
+    isMoving,
+    droppingTo,
+    handleDrop,
+    selectedAsset,
+    handleOpenDetail,
+    handleCloseDetail,
+    handleRenamed,
+  } = useImagesPage();
 
-    setDroppingTo(targetPath);
-    const ok = await move(publicIds, targetPath);
-    setDroppingTo(null);
+  /* ── Estados derivados para el JSX ── */
+  const hasFolders    = folders.length > 0;
+  const hasAssets     = filteredAssets.length > 0;
+  const hasRawAssets  = assets.length > 0;
+  const isEmpty       = !hasFolders && !hasRawAssets;
+  const isEmptySearch = hasRawAssets && !hasAssets && query.trim().length > 0;
 
-    if (ok) {
-      clearSelection();
-      refetch();
-
-      const Swal = await getSwal();
-      await Swal.fire({
-        title:             publicIds.length > 1
-          ? `${publicIds.length} imágenes movidas`
-          : "Imagen movida",
-        text:              `Assets movidos a "${targetPath || "raíz"}" correctamente.`,
-        icon:              "success",
-        confirmButtonText: "Aceptar",
-        timer:             2400,
-        timerProgressBar:  true,
-        ...SWAL_THEME,
-      });
-    } else if (moveError) {
-      const Swal = await getSwal();
-      await Swal.fire({
-        title: "Error al mover",
-        text:  moveError,
-        icon:  "error",
-        confirmButtonText: "Aceptar",
-        ...SWAL_THEME,
-      });
-      clearMoveError();
-    }
-  }, [currentPath, move, clearSelection, refetch, moveError, clearMoveError]);
-
-  /* ── Estado de carga ── */
+  /* ── Estados de carga y error ── */
   if (loading) {
     return (
       <div className={styles.loadingWrap}>
@@ -175,15 +92,9 @@ export default function ImagesPage() {
     );
   }
 
-  const hasFolders      = folders.length > 0;
-  const hasAssets       = filteredAssets.length > 0;
-  const hasRawAssets    = assets.length > 0;
-  const isEmpty         = !hasFolders && !hasRawAssets;
-  const isEmptySearch   = hasRawAssets && !hasAssets && query.trim().length > 0;
-
   return (
     <>
-      {/* Toolbar: breadcrumb + búsqueda + controles */}
+      {/* ── Toolbar: breadcrumb + búsqueda + controles ── */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
           <FolderBreadcrumb
@@ -195,7 +106,6 @@ export default function ImagesPage() {
         </div>
 
         <div className={styles.toolbarRight}>
-          {/* Buscador de assets — visible cuando hay assets en el folder */}
           {hasRawAssets && (
             <div className={styles.searchWrap}>
               <SearchInput
@@ -208,7 +118,6 @@ export default function ImagesPage() {
             </div>
           )}
 
-          {/* Contador de selección + botón limpiar */}
           {selectionMode && (
             <div className={styles.selectionBar}>
               <span className={styles.selectionCount}>
@@ -239,7 +148,7 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      {/* Hint de instrucciones cuando hay selección activa */}
+      {/* ── Hint de selección activa ── */}
       {selectionMode && hasFolders && (
         <div className={styles.selectionHint} aria-live="polite">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -251,7 +160,7 @@ export default function ImagesPage() {
         </div>
       )}
 
-      {/* Estado vacío — folder sin contenido */}
+      {/* ── Estado vacío ── */}
       {isEmpty && (
         <div className={styles.emptyWrap}>
           <span className={styles.emptyIcon} aria-hidden="true">⊞</span>
@@ -264,7 +173,7 @@ export default function ImagesPage() {
         </div>
       )}
 
-      {/* Sin resultados de búsqueda */}
+      {/* ── Sin resultados de búsqueda ── */}
       {isEmptySearch && (
         <div className={styles.emptyWrap}>
           <span className={styles.emptyIcon} aria-hidden="true">⊘</span>
@@ -275,7 +184,7 @@ export default function ImagesPage() {
         </div>
       )}
 
-      {/* Sección de carpetas — cada una es un DropFolderTarget */}
+      {/* ── Sección de carpetas ── */}
       {hasFolders && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
@@ -303,12 +212,11 @@ export default function ImagesPage() {
 
       {hasFolders && hasAssets && <div className={styles.divider} />}
 
-      {/* Sección de assets — con SelectionOverlay para rubber-band */}
+      {/* ── Sección de assets con rubber-band ── */}
       {hasAssets && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionLabel}>Imágenes</span>
-            {/* Mostrar cuántas matchean si hay búsqueda activa */}
             <span className={styles.sectionCount}>
               {query.trim()
                 ? `${filteredAssets.length} de ${assets.length}`
@@ -331,7 +239,6 @@ export default function ImagesPage() {
             ))}
           </div>
 
-          {/* Rubber-band selection overlay */}
           <SelectionOverlay
             containerRef={gridRef}
             assetRefs={assetRefs}
@@ -341,9 +248,9 @@ export default function ImagesPage() {
         </div>
       )}
 
-      {/* Modal de detalle / renombrar */}
+      {/* ── Modal de detalle / renombrar ── */}
       <ImageDetailModal
-        asset={selected}
+        asset={selectedAsset}
         onClose={handleCloseDetail}
         onRenamed={handleRenamed}
       />

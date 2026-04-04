@@ -16,8 +16,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
-import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
-import { useProductForm }     from "@/hooks/admin/useProductForm";
+import type { CloudinaryAsset } from "@/hooks/admin/cloudinary/useCloudinaryImages";
+import { useProductForm }     from "@/hooks/admin/products/useProductForm";
 import { ImagePickerModal }   from "@/components/admin/images/ImagePickerModal";
 import categories from "@/data/categories.json";
 import colors     from "@/data/colors.json";

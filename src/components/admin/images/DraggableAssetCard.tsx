@@ -31,7 +31,7 @@
 import { useRef, useCallback } from "react";
 import { AssetCard }   from "./AssetCard";
 import { DRAG_DATA_KEY } from "./DropFolderTarget";
-import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
+import type { CloudinaryAsset } from "@/hooks/admin/cloudinary/useCloudinaryImages";
 import styles from "./DraggableAssetCard.module.css";
 
 /* ── Constantes ── */

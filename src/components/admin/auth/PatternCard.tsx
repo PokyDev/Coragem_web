@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePatternLock } from "@/hooks/admin/usePatternLock";
+import { usePatternLock } from "@/hooks/admin/auth/usePatternLock";
 import { PatternLock }    from "@/components/admin/auth/PatternLock";
 import type { PatternAuthPhase } from "@/types/admin";
 

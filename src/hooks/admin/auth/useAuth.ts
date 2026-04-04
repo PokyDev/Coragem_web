@@ -1,5 +1,5 @@
 /**
- * src/hooks/admin/useAuth.ts
+ * src/hooks/admin/auth/useAuth.ts
  *
  * Verifica si hay una sesión activa consultando GET /api/auth/me.
  * La cookie HttpOnly se envía automáticamente con credentials: "include".

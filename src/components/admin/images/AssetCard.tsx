@@ -21,7 +21,7 @@
  */
 
 import Image from "next/image";
-import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
+import type { CloudinaryAsset } from "@/hooks/admin/cloudinary/useCloudinaryImages";
 import styles from "./AssetCard.module.css";
 
 /* ── Helpers ── */

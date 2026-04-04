@@ -19,7 +19,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
 import { getStockStatus } from "@/lib/dashboard";
-import { useProductMovement } from "@/hooks/admin/useProductMovement";
+import { useProductMovement } from "@/hooks/admin/products/useProductMovement";
 import styles from "./ProductCard.module.css";
 
 /* ─── Formatters ────────────────────────────────────────────────── */

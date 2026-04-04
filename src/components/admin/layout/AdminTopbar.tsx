@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { SearchInput }         from "@/components/shared/ui/SearchInput";
-import { useAdminLogout }      from "@/hooks/admin/useAdminLogout";
+import { useAdminLogout }      from "@/hooks/admin/auth/useAdminLogout";
 import { useProductSearch }    from "@/hooks/shared/useProductSearch";
 import { useDashboardActions } from "@/components/admin/layout/AdminShell";
 import styles from "./AdminShell.module.css";

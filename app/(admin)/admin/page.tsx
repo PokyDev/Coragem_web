@@ -1,6 +1,6 @@
 "use client";
 
-import { usePatternAuth } from "@/hooks/admin/usePatternAuth";
+import { usePatternAuth } from "@/hooks/admin/auth/usePatternAuth";
 import { PatternCard }      from "@/components/admin/auth/PatternCard";
 import { GoogleSignInCard } from "@/components/admin/auth/GoogleSignInCard";
 import styles from "./css/page.module.css";

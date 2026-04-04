@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import type { CloudinaryAsset } from "@/hooks/admin/useCloudinaryImages";
+import type { CloudinaryAsset } from "@/hooks/admin/cloudinary/useCloudinaryImages";
 import { api } from "@/lib/api";
 import styles from "./ImageDetailModal.module.css";
 

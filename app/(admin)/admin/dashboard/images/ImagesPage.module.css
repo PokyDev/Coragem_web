@@ -46,20 +46,21 @@
 
 /* ── Selection bar ── */
 .selectionBar {
-  display:       flex;
-  align-items:   center;
-  gap:           0.5rem;
-  background:    var(--admin-nav-active-bg);
-  border:        1px solid rgba(78, 196, 196, 0.25);
-  border-radius: 7px;
-  padding:       0.3rem 0.5rem 0.3rem 0.75rem;
-  opacity:       0;
+  display:        flex;
+  align-items:    center;
+  gap:            0.5rem;
+  background:     var(--admin-nav-active-bg);
+  border:         1px solid rgba(78, 196, 196, 0.25);
+  border-radius:  7px;
+  padding:        0.3rem 0.5rem 0.3rem 0.75rem;
+  /* Siempre presente en el layout — oculto via opacidad */
+  opacity:        0;
   pointer-events: none;
-  transition:    opacity 0.2s ease;
+  transition:     opacity 0.2s ease;
 }
 
 .selectionBarVisible {
-  opacity:       1;
+  opacity:        1;
   pointer-events: auto;
 }
 
@@ -94,26 +95,27 @@
 
 /* ── Selection hint ── */
 .selectionHint {
-  display:       flex;
-  align-items:   center;
-  gap:           0.5rem;
-  padding:       0.55rem 0.9rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  background:    rgba(196, 154, 108, 0.08);
-  border:        1px solid rgba(196, 154, 108, 0.2);
-  color:         var(--admin-warning);
-  font-family:   var(--font-jost), sans-serif;
-  font-size:     0.7rem;
-  font-weight:   500;
+  display:        flex;
+  align-items:    center;
+  gap:            0.5rem;
+  padding:        0.55rem 0.9rem;
+  margin-bottom:  1rem;
+  border-radius:  8px;
+  background:     rgba(196, 154, 108, 0.08);
+  border:         1px solid rgba(196, 154, 108, 0.2);
+  color:          var(--admin-warning);
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  font-weight:    500;
   letter-spacing: 0.02em;
-  opacity: 0;
+  /* Siempre presente en el layout — oculto via opacidad */
+  opacity:        0;
   pointer-events: none;
-  transition: opacity 0.22s ease;
+  transition:     opacity 0.22s ease;
 }
 
 .selectionHintVisible {
-  opacity: 1;
+  opacity:        1;
   pointer-events: auto;
 }
 

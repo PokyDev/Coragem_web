@@ -116,7 +116,7 @@ export default function ImagesPage() {
 
   return (
     <div ref={pageRef} className={styles.root}>
-      {/* ── Toolbar: breadcrumb + búsqueda + controles ── */}
+      {/* ── Toolbar: breadcrumb + controles ── */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
           <FolderBreadcrumb
@@ -128,11 +128,12 @@ export default function ImagesPage() {
         </div>
 
         <div className={styles.toolbarRight}>
-
-          { /* Siepre en el DOM, Visible solo cuando hay selección */ }
-          <div className={`${styles.selectionBar} ${selectionMode ? styles.selectionBarVisible : ""}`}>
+          {/* Siempre en el DOM — visible solo cuando hay selección activa */}
+          <div
+            className={`${styles.selectionBar} ${selectionMode ? styles.selectionBarVisible : ""}`}
+          >
             <span className={styles.selectionCount}>
-              {count} sleccionada{count !== 1 ? "s" : ""}
+              {count} seleccionada{count !== 1 ? "s" : ""}
             </span>
             <button
               className={styles.clearSelectionBtn}
@@ -170,9 +171,9 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      {/* ── Hint de selección activa ── */}
-      {selectionMode && hasFolders && (
-        <div 
+      {/* ── Hint de selección activa — siempre en el DOM cuando hay carpetas ── */}
+      {hasFolders && (
+        <div
           className={`${styles.selectionHint} ${selectionMode ? styles.selectionHintVisible : ""}`}
           aria-live="polite"
         >

@@ -250,7 +250,7 @@ export function ProductsGrid() {
 
         {!loading &&
           !error &&
-          products.map((product, i) => (
+          products.slice(0, 8).map((product, i) => (
             <ProductCard
               key={product.id}
               product={product}

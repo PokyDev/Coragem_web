@@ -128,6 +128,21 @@ export default function ImagesPage() {
         </div>
 
         <div className={styles.toolbarRight}>
+
+          { /* Siepre en el DOM, Visible solo cuando hay selección */ }
+          <div className={`${styles.selectionBar} ${selectionMode ? styles.selectionBarVisible : ""}`}>
+            <span className={styles.selectionCount}>
+              {count} sleccionada{count !== 1 ? "s" : ""}
+            </span>
+            <button
+              className={styles.clearSelectionBtn}
+              onClick={clearSelection}
+              type="button"
+            >
+              Limpiar
+            </button>
+          </div>
+
           {hasRawAssets && (
             <div className={styles.searchWrap}>
               <SearchInput
@@ -137,21 +152,6 @@ export default function ImagesPage() {
                 onClear={clearQuery}
                 placeholder="Buscar imagen…"
               />
-            </div>
-          )}
-
-          {selectionMode && (
-            <div className={styles.selectionBar}>
-              <span className={styles.selectionCount}>
-                {count} seleccionada{count !== 1 ? "s" : ""}
-              </span>
-              <button
-                className={styles.clearSelectionBtn}
-                onClick={clearSelection}
-                type="button"
-              >
-                Limpiar
-              </button>
             </div>
           )}
 
@@ -172,7 +172,10 @@ export default function ImagesPage() {
 
       {/* ── Hint de selección activa ── */}
       {selectionMode && hasFolders && (
-        <div className={styles.selectionHint} aria-live="polite">
+        <div 
+          className={`${styles.selectionHint} ${selectionMode ? styles.selectionHintVisible : ""}`}
+          aria-live="polite"
+        >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />

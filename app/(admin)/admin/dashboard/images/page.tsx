@@ -33,19 +33,10 @@ import styles from "./ImagesPage.module.css";
 export default function ImagesPage() {
   /* ── Refs de DOM (renderizado, no lógica de negocio) ── */
 
-  /**
-   * scrollRef → el contenedor con scroll del dashboard.
-   * SelectionOverlay escucha mousedown aquí para que el rubber-band
-   * sea iniciable desde cualquier área vacía de la página.
-   *
-   * Se busca el ancestro con overflow-y distinto de "visible" para no
-   * depender de un selector CSS frágil. El fallback es document.body.
-   */
   const pageRef   = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    /* Subir por el árbol del DOM hasta encontrar el scroll container */
     let el: HTMLElement | null = pageRef.current?.parentElement ?? null;
     while (el && el !== document.body) {
       const overflow = window.getComputedStyle(el).overflowY;
@@ -55,7 +46,6 @@ export default function ImagesPage() {
       }
       el = el.parentElement;
     }
-    /* Fallback: el body si no encontramos un contenedor con scroll */
     scrollRef.current = document.documentElement as HTMLElement;
   }, []);
 
@@ -274,14 +264,16 @@ export default function ImagesPage() {
       )}
 
       {/* ── Rubber-band selection overlay ──
-          listenRef  → todo el scroll container del dashboard (área activa ampliada)
-          containerRef → solo el grid (para delimitar intersecciones)
+          listenRef        → todo el scroll container del dashboard
+          containerRef     → solo el grid (para delimitar intersecciones)
+          onClearSelection → limpia la selección al hacer click en área vacía
       ── */}
       <SelectionOverlay
         listenRef={scrollRef}
         containerRef={gridRef}
         assetRefs={assetRefs}
         onSelect={selectMany}
+        onClearSelection={clearSelection}
         enabled={!isMoving}
       />
 

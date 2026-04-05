@@ -1,21 +1,22 @@
 "use client";
 
 /**
- * src/hooks/admin/useAssetSelection.ts
+ * src/hooks/admin/cloudinary/useAssetSelection.ts
  *
  * Centraliza toda la lógica de selección múltiple de assets.
  * Usado por ImagesPage, DraggableAssetCard y SelectionOverlay.
  *
  * Modos de selección:
- *   - toggleOne:  click en checkbox individual
- *   - selectMany: rubber-band (selección por área)
+ *   - toggleOne:      click en checkbox individual (acumulativo)
+ *   - selectMany:     rubber-band — REEMPLAZA la selección completa con los ids
+ *                     recibidos, de modo que encoger el rectángulo deselecciona
  *   - clearSelection: limpiar todo
  *
  * selectionMode se activa automáticamente cuando hay ≥ 1 asset seleccionado,
  * lo que hace que los AssetCard muestren los checkboxes.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from "react";
 
 export interface UseAssetSelectionReturn {
   selectedIds:    Set<string>;
@@ -49,12 +50,9 @@ export function useAssetSelection(): UseAssetSelectionReturn {
     });
   }, []);
 
+  /* Reemplaza la selección completa — rubber-band siempre parte de cero */
   const selectMany = useCallback((publicIds: string[]) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      for (const id of publicIds) next.add(id);
-      return next;
-    });
+    setSelectedIds(new Set(publicIds));
   }, []);
 
   const clearSelection = useCallback(() => {

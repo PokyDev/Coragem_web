@@ -26,15 +26,34 @@ export interface FolderMeta {
   bgColor:     string;
 }
 
+/* Generación de Backgrounds */
+
+const withOpacity = (hex: string, opacity: number) => {
+  const bigint = parseInt(hex.replace("#", ""), 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
 /* ── Tokens de color (valores hex de los tokens del design system) ─ */
 
-const TEAL  = "#4ec4c4";
-const PINK  = "#c47a9e";
-const SAND  = "#c49a6c";
+const TEAL     = "#4ec4c4";
+const PINK     = "#c47a9e";
+const SAND     = "#c49a6c";
+const LAVENDER = "#a88ec6"; // elegante / femenino
+const CORAL    = "#e58a7a"; // cálido / llamativo
+const SKY      = "#7ab6e5"; // fresco / moderno
+const OLIVE    = "#9aa86c"; // natural / artesanal
 
-const tealBg  = "rgba(78,  196, 196, 0.12)";
-const pinkBg  = "rgba(196, 122, 158, 0.12)";
-const sandBg  = "rgba(196, 154, 108, 0.14)";
+const tealBg     = withOpacity(TEAL, 0.12);
+const pinkBg     = withOpacity(PINK, 0.12);
+const sandBg     = withOpacity(SAND, 0.14);
+const lavenderBg = withOpacity(LAVENDER, 0.12);
+const coralBg    = withOpacity(CORAL, 0.12);
+const skyBg      = withOpacity(SKY, 0.12);
+const oliveBg    = withOpacity(OLIVE, 0.14);
 
 /* ── Íconos SVG ─────────────────────────────────────────────────── */
 
@@ -98,6 +117,21 @@ const IconCrescent = (
   </svg>
 );
 
+const IconBracelet = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {/* Forma principal tipo aro */}
+    <circle cx="12" cy="12" r="7.5" />
+
+    {/* Cuentas / detalles */}
+    <circle cx="12" cy="4.5" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="17.5" cy="8" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="17.5" cy="16" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="19.5" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="6.5" cy="16" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="6.5" cy="8" r="0.8" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 /* ── Mapa principal ─────────────────────────────────────────────── */
 
 const FOLDER_META_MAP: Record<string, FolderMeta> = {
@@ -116,13 +150,14 @@ const FOLDER_META_MAP: Record<string, FolderMeta> = {
   diciembre:  { icon: IconCalendar, accentColor: TEAL, bgColor: tealBg },
 
   // ── Categorías ─────────────────────────────────────────────────
-  candongas:  { icon: IconHoop,     accentColor: PINK, bgColor: pinkBg },
-  conjuntos:  { icon: IconGrid,     accentColor: TEAL, bgColor: tealBg },
-  topos:      { icon: IconDot,      accentColor: SAND, bgColor: sandBg },
-  aretes:     { icon: IconDiamond,  accentColor: PINK, bgColor: pinkBg },
-  anillos:    { icon: IconRing,     accentColor: TEAL, bgColor: tealBg },
-  cadenas:    { icon: IconChain,    accentColor: SAND, bgColor: sandBg },
-  earcuff:    { icon: IconCrescent, accentColor: PINK, bgColor: pinkBg },
+  candongas:  { icon: IconHoop,      accentColor: PINK,     bgColor: pinkBg },
+  conjuntos:  { icon: IconGrid,      accentColor: TEAL,     bgColor: tealBg },
+  topos:      { icon: IconDot,       accentColor: SAND,     bgColor: sandBg },
+  aretes:     { icon: IconDiamond,   accentColor: PINK,     bgColor: pinkBg },
+  anillos:    { icon: IconRing,      accentColor: TEAL,     bgColor: tealBg },
+  cadenas:    { icon: IconChain,     accentColor: OLIVE,    bgColor: oliveBg },
+  earcuff:    { icon: IconCrescent,  accentColor: PINK,     bgColor: pinkBg },
+  pulseras:   { icon: IconBracelet,  accentColor: LAVENDER, bgColor: lavenderBg },
 };
 
 /* ── Valores neutros (fallback para carpetas no reconocidas) ────── */

@@ -4,6 +4,8 @@
  * Tipos compartidos del panel administrativo.
  */
 
+import type { CatalogCategory, CatalogColor } from "./catalog";
+
 /* ─── Pattern Lock ──────────────────────────────────────────────── */
 
 export interface Point {
@@ -64,13 +66,14 @@ export interface DashboardStats {
 export interface ProductRow {
   id:          string;
   name:        string;
-  category:    string;
+  category:    CatalogCategory;
+  color:       CatalogColor;
   price:       number;
   stock:       number;
   stockStatus: StockStatus;
   ventas:      number;
   images:      { id: string; url: string; order: number }[];
-  color:       string;
+  isVisible:   boolean;
 }
 
 export type StockFilter = StockStatus | "all";
@@ -82,21 +85,21 @@ export interface ProductFormData {
   price:         string;
   stock:         string;
   ventas:        string;
-  category:      string;
-  color:         string;
-  /** URL de entrega de Cloudinary (con f_auto,q_auto) */
+  categoryId:    string;
+  colorId:       string;
+  /** URL de entrega de Cloudinary */
   imageUrl:      string;
   /** public_id del asset en Cloudinary */
   imagePublicId: string;
 }
 
 export interface ProductFormErrors {
-  name?:     string;
-  price?:    string;
-  stock?:    string;
-  ventas?:   string;
-  category?: string;
-  color?:    string;
+  name?:       string;
+  price?:      string;
+  stock?:      string;
+  ventas?:     string;
+  categoryId?: string;
+  colorId?:    string;
 }
 
 /* ─── Modal state ───────────────────────────────────────────────── */

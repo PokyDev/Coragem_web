@@ -1,20 +1,15 @@
 "use client";
 
 /**
- * src/hooks/admin/useProductForm.ts
+ * src/hooks/admin/products/useProductForm.ts
  *
- * Encapsula la lógica del formulario de producto:
- *   - Estado de campos (nombre, precio, stock, ventas, categoría, color, imagen)
- *   - Validación de campos obligatorios
- *   - Reset al abrir/cerrar modal
- *   - Modo "nuevo" vs "editar" según si se recibe un ProductRow
- *   - Integración con el backend vía JSON:
- *       new  → POST  /api/admin/products
- *       edit → PATCH /api/admin/products/:id
+ * Encapsula la lógica del formulario de producto.
+ * Categorías y colores se reciben como prop (ya fetchados por useCatalog)
+ * en lugar de leerlos desde JSON estáticos.
  *
- * La imagen se gestiona mediante imageUrl + imagePublicId,
- * seleccionados desde ImagePickerModal (biblioteca de Cloudinary).
- * Si no se elige imagen nueva al editar, se conserva la existente.
+ * Campos del form:
+ *   categoryId / colorId → IDs de cuid que coinciden con las entidades
+ *   de la API, enviados directamente al backend.
  */
 
 import {
@@ -32,8 +27,8 @@ interface ProductPayload {
   id:        string;
   name:      string;
   price:     number;
-  category:  string;
-  color:     string;
+  category:  { id: string; name: string; slug: string };
+  color:     { id: string; name: string; slug: string; hex: string };
   stock:     number;
   ventas:    number;
   isVisible: boolean;
@@ -57,8 +52,8 @@ const EMPTY_FORM: ProductFormData = {
   price:         "",
   stock:         "",
   ventas:        "",
-  category:      "",
-  color:         "",
+  categoryId:    "",
+  colorId:       "",
   imageUrl:      "",
   imagePublicId: "",
 };
@@ -69,11 +64,10 @@ function productRowToFormData(product: ProductRow): ProductFormData {
     price:         String(product.price),
     stock:         String(product.stock),
     ventas:        String(product.ventas),
-    category:      product.category,
-    color:         product.color,
-    /* Precarga la imagen existente para previsualización */
-    imageUrl:      product.images[0]?.url      ?? "",
-    imagePublicId: "",  // No enviamos el publicId existente al editar a menos que se cambie
+    categoryId:    product.category.id,
+    colorId:       product.color.id,
+    imageUrl:      product.images[0]?.url ?? "",
+    imagePublicId: "",
   };
 }
 
@@ -82,13 +76,13 @@ function productRowToFormData(product: ProductRow): ProductFormData {
 function validate(data: ProductFormData): ProductFormErrors {
   const errors: ProductFormErrors = {};
 
-  if (!data.name.trim())           errors.name     = "El nombre es obligatorio";
-  if (!data.price)                 errors.price    = "El precio es obligatorio";
-  else if (Number(data.price) < 0) errors.price    = "El precio no puede ser negativo";
-  if (!data.stock)                 errors.stock    = "El stock es obligatorio";
-  else if (Number(data.stock) < 0) errors.stock    = "El stock no puede ser negativo";
-  if (!data.category)              errors.category = "Selecciona una categoría";
-  if (!data.color)                 errors.color    = "Selecciona un color";
+  if (!data.name.trim())           errors.name       = "El nombre es obligatorio";
+  if (!data.price)                 errors.price      = "El precio es obligatorio";
+  else if (Number(data.price) < 0) errors.price      = "El precio no puede ser negativo";
+  if (!data.stock)                 errors.stock      = "El stock es obligatorio";
+  else if (Number(data.stock) < 0) errors.stock      = "El stock no puede ser negativo";
+  if (!data.categoryId)            errors.categoryId = "Selecciona una categoría";
+  if (!data.colorId)               errors.colorId    = "Selecciona un color";
 
   return errors;
 }
@@ -133,10 +127,7 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     []
   );
 
-  /**
-   * Actualiza imageUrl e imagePublicId de golpe cuando el admin
-   * selecciona un asset desde ImagePickerModal.
-   */
+  /* ── Imagen desde ImagePickerModal ── */
   const handleImageSelect = useCallback((url: string, publicId: string) => {
     setFormData((prev) => ({ ...prev, imageUrl: url, imagePublicId: publicId }));
     setApiError(null);
@@ -154,22 +145,15 @@ export function useProductForm({ product, onClose }: UseProductFormOptions) {
     setApiError(null);
 
     try {
-      /*
-       * Construir el payload.
-       * - Al crear: se envían imageUrl + imagePublicId si se seleccionaron
-       *   (el backend los acepta pero no los requiere para permitir crear sin imagen).
-       * - Al editar: solo se envían si el admin seleccionó una imagen nueva
-       *   (imagePublicId no vacío), para no pisar la imagen existente.
-       */
       const hasNewImage = Boolean(formData.imageUrl && formData.imagePublicId);
 
       const basePayload = {
-        name:     formData.name.trim(),
-        price:    Number(formData.price),
-        stock:    Number(formData.stock),
-        ventas:   Number(formData.ventas || "0"),
-        category: formData.category,
-        color:    formData.color,
+        name:       formData.name.trim(),
+        price:      Number(formData.price),
+        stock:      Number(formData.stock),
+        ventas:     Number(formData.ventas || "0"),
+        categoryId: formData.categoryId,
+        colorId:    formData.colorId,
       };
 
       const payload = hasNewImage

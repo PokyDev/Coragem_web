@@ -1,18 +1,50 @@
 import type { Metadata } from 'next';
 import { CatalogClient } from '@/components/user/catalog/CatalogClient';
-import categories from '@/data/categories.json';
-import colors     from '@/data/colors.json';
+import type { CatalogCategory, CatalogColor } from '@/types/catalog';
 
 export const metadata: Metadata = {
   title: 'Catálogo — Coragem Accessories',
   description: 'Explora nuestra colección completa de bisutería en rodio.',
 };
 
-export default function ProductsPage() {
+/* ── Fetch en servidor — sin credenciales, datos públicos ────────── */
+
+async function fetchCategories(): Promise<CatalogCategory[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.categories ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchColors(): Promise<CatalogColor[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/colors`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.colors ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function ProductsPage() {
+  const [categories, colors] = await Promise.all([
+    fetchCategories(),
+    fetchColors(),
+  ]);
+
   return (
     <main style={{ minHeight: 'calc(100dvh - 72px)', backgroundColor: 'var(--bg)', transition: 'background-color 0.3s ease', paddingBottom: '5rem' }}>
 
-      {/* ── Page Header (sin cambios) ── */}
+      {/* ── Page Header ── */}
       <section style={{ maxWidth: '1100px', margin: '0 auto', padding: '2.5rem 1.5rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent 0%, var(--border) 100%)' }} />
@@ -34,7 +66,7 @@ export default function ProductsPage() {
         <div style={{ height: '1px', background: 'linear-gradient(90deg, var(--coragem-teal) 0%, var(--coragem-pink) 40%, transparent 100%)', opacity: 0.3, marginBottom: '2rem' }} />
       </section>
 
-      {/* ── Catalog body — ya no recibe products ── */}
+      {/* ── Catalog body ── */}
       <section style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem' }}>
         <CatalogClient categories={categories} colors={colors} />
       </section>

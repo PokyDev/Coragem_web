@@ -4,6 +4,8 @@
  * src/components/admin/dashboard/ProductsTable.tsx
  *
  * Tabla de productos del dashboard.
+ * Categoría y color se leen del objeto (product.category.name / product.color.name)
+ * devuelto por la API — sin labels hardcodeados.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -43,12 +45,6 @@ function StockCount({ status, stock }: { status: ProductRow["stockStatus"]; stoc
   const colorClass = { ok: styles.stockOk, low: styles.stockLow, out: styles.stockOut }[status];
   return <span className={`${styles.stockCount} ${colorClass}`}>{stock}</span>;
 }
-
-/* ─── Category label ── */
-const CATEGORY_LABELS: Record<string, string> = {
-  EARCUFF: "Earcuff", ANILLO: "Anillo", DIJE: "Dije",
-  CADENA: "Cadena", TOPOS: "Topos", CANDONGAS: "Candongas", CONJUNTOS: "Conjuntos",
-};
 
 /* ─── Desktop Image Tooltip ── */
 interface TooltipPortalProps {
@@ -237,7 +233,7 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
                       <span className={styles.productName}>{product.name}</span>
                     </div>
                   </td>
-                  <td className={`${styles.td} ${styles.tdMuted}`}>{CATEGORY_LABELS[product.category] ?? product.category}</td>
+                  <td className={`${styles.td} ${styles.tdMuted}`}>{product.category.name}</td>
                   <td className={styles.td}><span className={styles.price}>{formatPrice(product.price)}</span></td>
                   <td className={`${styles.td} ${styles.tdMuted}`}>{product.ventas}</td>
                   <td className={styles.td}><StockCount status={product.stockStatus} stock={product.stock} /></td>
@@ -277,7 +273,7 @@ export function ProductsTable({ products, searchQuery, stockFilter, onEdit, onDe
               </button>
               <div className={styles.cardNameGroup}>
                 <p className={styles.cardName}>{product.name}</p>
-                <p className={styles.cardCategory}>{CATEGORY_LABELS[product.category] ?? product.category}</p>
+                <p className={styles.cardCategory}>{product.category.name}</p>
               </div>
               <StockBadge status={product.stockStatus} />
             </div>

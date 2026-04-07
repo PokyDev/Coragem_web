@@ -1,5 +1,13 @@
 'use client';
 
+/**
+ * src/components/user/catalog/CatalogClient.tsx
+ *
+ * Recibe categories y colors desde el Server Component (ya fetchados).
+ * Los filtros de categoría y color comparan contra slugs para coincidir
+ * con los parámetros que acepta la API pública.
+ */
+
 import { useState, useMemo, useCallback } from 'react';
 import { CatalogAside       } from '@/components/user/catalog/CatalogAside';
 import { CatalogToolbar     } from '@/components/user/catalog/CatalogToolbar';
@@ -7,11 +15,11 @@ import { CatalogGrid        } from '@/components/user/catalog/CatalogGrid';
 import { MobileFilterDrawer } from '@/components/user/catalog/MobileFilterDrawer';
 import { LoadMoreButton     } from '@/components/shared/ui/LoadMoreButton';
 import { useProducts        } from '@/hooks/shared/useProducts';
-import type { Category, Color, ActiveFilters, Product, SortKey } from '@/types/catalog';
+import type { CatalogCategory, CatalogColor, ActiveFilters, Product, SortKey } from '@/types/catalog';
 
 interface CatalogClientProps {
-  categories: Category[];
-  colors:     Color[];
+  categories: CatalogCategory[];
+  colors:     CatalogColor[];
 }
 
 const PRICE_MIN = 0;
@@ -26,7 +34,7 @@ const DEFAULT_FILTERS: ActiveFilters = {
   sort:       'most_sold',
 };
 
-/* ─── Sorting ────────────────────────────────────────────────────── */
+/* ─── Sorting ── */
 function sortProducts(products: Product[], sort: SortKey): Product[] {
   const arr = [...products];
   switch (sort) {
@@ -39,42 +47,24 @@ function sortProducts(products: Product[], sort: SortKey): Product[] {
   }
 }
 
-/* ─── Mobile toggle ──────────────────────────────────────────────── */
-function MobileFilterToggle({
-  onClick,
-  hasActive,
-}: {
-  onClick:   () => void;
-  hasActive: boolean;
-}) {
+/* ─── Mobile toggle ── */
+function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasActive: boolean }) {
   return (
     <button
       onClick={onClick}
       className="mobile-filter-toggle"
       style={{
-        display:       'none',
-        alignItems:    'center',
-        gap:           '0.5rem',
-        padding:       '0.5rem 1rem',
-        borderRadius:  '999px',
-        border:        '1px solid',
+        display: 'none', alignItems: 'center', gap: '0.5rem',
+        padding: '0.5rem 1rem', borderRadius: '999px', border: '1px solid',
         borderColor:   hasActive ? 'var(--coragem-teal)' : 'var(--border)',
         background:    hasActive ? 'rgba(78,196,196,0.08)' : 'var(--bg-card)',
         color:         hasActive ? 'var(--coragem-teal)' : 'var(--text-secondary)',
-        fontFamily:    'var(--font-jost), sans-serif',
-        fontSize:      '0.72rem',
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-        cursor:        'pointer',
-        marginBottom:  '1rem',
-        transition:    'all 0.25s ease',
+        fontFamily:    'var(--font-jost), sans-serif', fontSize: '0.72rem',
+        letterSpacing: '0.08em', textTransform: 'uppercase',
+        cursor: 'pointer', marginBottom: '1rem', transition: 'all 0.25s ease',
       }}
     >
-      <svg
-        width="13" height="13" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor"
-        strokeWidth="2" strokeLinecap="round"
-      >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <line x1="4"  y1="6"  x2="20" y2="6"  />
         <line x1="8"  y1="12" x2="20" y2="12" />
         <line x1="12" y1="18" x2="20" y2="18" />
@@ -84,32 +74,30 @@ function MobileFilterToggle({
   );
 }
 
-/* ─── Main Component ─────────────────────────────────────────────── */
+/* ─── Main Component ── */
 export function CatalogClient({ categories, colors }: CatalogClientProps) {
   const [filters,    setFilters]    = useState<ActiveFilters>(DEFAULT_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Fetch único — todos los productos visibles
   const { products: allProducts, loading, error } = useProducts();
 
   const updateFilters = useCallback(
-    (next: Partial<ActiveFilters>) =>
-      setFilters((prev) => ({ ...prev, ...next })),
+    (next: Partial<ActiveFilters>) => setFilters((prev) => ({ ...prev, ...next })),
     []
   );
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
-  // Filtrado + ordenamiento 100% en cliente — sin latencia
+  // Filtrado por slug (category.slug / color.slug) — sin latencia
   const filteredProducts = useMemo(() => {
     const query = filters.search.toLowerCase().trim();
 
     const filtered = allProducts.filter((p) => {
-      if (query && !p.name.toLowerCase().includes(query))           return false;
+      if (query && !p.name.toLowerCase().includes(query))                   return false;
       if (filters.categories.length > 0 &&
-          !filters.categories.includes(p.category))                 return false;
+          !filters.categories.includes(p.category.slug))                    return false;
       if (filters.colors.length > 0 &&
-          !filters.colors.includes(p.color))                        return false;
-      if (p.price < filters.priceMin || p.price > filters.priceMax) return false;
+          !filters.colors.includes(p.color.slug))                           return false;
+      if (p.price < filters.priceMin || p.price > filters.priceMax)         return false;
       return true;
     });
 
@@ -117,9 +105,9 @@ export function CatalogClient({ categories, colors }: CatalogClientProps) {
   }, [allProducts, filters]);
 
   const hasActiveFilters =
-    filters.categories.length > 0   ||
-    filters.colors.length     > 0   ||
-    filters.priceMin > PRICE_MIN     ||
+    filters.categories.length > 0 ||
+    filters.colors.length     > 0 ||
+    filters.priceMin > PRICE_MIN   ||
     filters.priceMax < PRICE_MAX;
 
   return (
@@ -134,10 +122,7 @@ export function CatalogClient({ categories, colors }: CatalogClientProps) {
         onChange={updateFilters}
       />
 
-      <MobileFilterToggle
-        onClick={() => setDrawerOpen(true)}
-        hasActive={hasActiveFilters}
-      />
+      <MobileFilterToggle onClick={() => setDrawerOpen(true)} hasActive={hasActiveFilters} />
 
       <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
         <div className="desktop-aside">

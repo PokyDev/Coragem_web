@@ -4,26 +4,21 @@
  * src/components/admin/dashboard/ProductFormModal.tsx
  *
  * Modal unificado para crear y editar productos.
- *
- * Flujo de imagen:
- *   · Si el producto tiene imagen existente, se previsualiza.
- *   · Al hacer click en el área de imagen se abre ImagePickerModal.
- *   · Al seleccionar un asset, se muestra la nueva previsualización
- *     con un badge animado "Nueva imagen".
- *   · imageUrl + imagePublicId se envían en el submit si hay imagen nueva.
+ * Categorías y colores se obtienen de useCatalog (API dinámica)
+ * en lugar de archivos JSON estáticos.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import type { ProductRow } from "@/types/admin";
 import type { CloudinaryAsset } from "@/hooks/admin/cloudinary/useCloudinaryImages";
-import { useProductForm }     from "@/hooks/admin/products/useProductForm";
-import { ImagePickerModal }   from "@/components/admin/images/ImagePickerModal";
-import categories from "@/data/categories.json";
-import colors     from "@/data/colors.json";
+import { useProductForm }   from "@/hooks/admin/products/useProductForm";
+import { useCatalog }       from "@/hooks/shared/useCatalog";
+import { ImagePickerModal } from "@/components/admin/images/ImagePickerModal";
 import styles from "./ProductFormModal.module.css";
 
 /* ─── SweetAlert2 lazy ───────────────────────────────────────────── */
+
 async function getSwal() {
   const Swal = (await import("sweetalert2")).default;
   return Swal;
@@ -37,6 +32,7 @@ const SWAL_THEME = {
 } as const;
 
 /* ─── Props ─────────────────────────────────────────────────────── */
+
 interface ProductFormModalProps {
   isOpen:   boolean;
   product:  ProductRow | null;
@@ -45,6 +41,7 @@ interface ProductFormModalProps {
 }
 
 /* ─── Área de imagen ─────────────────────────────────────────────── */
+
 interface ImageAreaProps {
   imageUrl:   string;
   isNewImage: boolean;
@@ -71,8 +68,6 @@ function ImageArea({ imageUrl, isNewImage, onClick }: ImageAreaProps) {
             className={styles.imagePreview}
             priority={false}
           />
-
-          {/* Overlay animado al hacer hover */}
           <div className={styles.imageOverlay} aria-hidden="true">
             <div className={styles.imageOverlayIcon}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -82,8 +77,6 @@ function ImageArea({ imageUrl, isNewImage, onClick }: ImageAreaProps) {
             </div>
             <span className={styles.imageOverlayText}>Cambiar imagen</span>
           </div>
-
-          {/* Badge "Nueva imagen" — solo si se eligió en esta sesión */}
           {isNewImage && (
             <div className={styles.imageNewBadge} aria-label="Nueva imagen seleccionada">
               <span className={styles.imageNewBadgeDot} />
@@ -92,7 +85,6 @@ function ImageArea({ imageUrl, isNewImage, onClick }: ImageAreaProps) {
           )}
         </>
       ) : (
-        /* Placeholder sin imagen */
         <div className={styles.imagePlaceholder} aria-hidden="true">
           <div className={styles.imagePlaceholderIcon}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
@@ -110,13 +102,16 @@ function ImageArea({ imageUrl, isNewImage, onClick }: ImageAreaProps) {
 }
 
 /* ─── Component ─────────────────────────────────────────────────── */
+
 export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductFormModalProps) {
-  const [visible,      setVisible]      = useState(false);
-  const [pickerOpen,   setPickerOpen]   = useState(false);
-  const [isNewImage,   setIsNewImage]   = useState(false);
+  const [visible,    setVisible]    = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [isNewImage, setIsNewImage] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const isEdit   = product !== null;
   const mode     = isEdit ? "edit" : "new";
+
+  const { categories, colors } = useCatalog();
 
   const {
     formData, errors, isSubmitting, apiError,
@@ -147,7 +142,7 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
 
   /* ── Cerrar al hacer click fuera del panel ── */
   const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (pickerOpen) return;  // el picker gestiona su propio backdrop
+    if (pickerOpen) return;
     if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
       handleCancelWithConfirm();
     }
@@ -218,7 +213,7 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
   }, [formData, handleCancel]);
 
   /* Color hex para el dot del select */
-  const selectedColorHex = colors.find((c) => c.id === formData.color)?.hex ?? null;
+  const selectedColorHex = colors.find((c) => c.id === formData.colorId)?.hex ?? null;
 
   if (!isOpen) return null;
 
@@ -261,7 +256,7 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
           {/* ── Body ── */}
           <div className={styles.body}>
 
-            {/* Imagen — preview clickeable */}
+            {/* Imagen */}
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel}>Imagen</label>
               <ImageArea
@@ -339,20 +334,20 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
               </label>
               <div className={styles.selectWrapper}>
                 <select
-                  className={`${styles.fieldSelect} ${errors.category ? styles.fieldSelectError : ""}`}
-                  value={formData.category}
-                  onChange={handleFieldChange("category")}
+                  className={`${styles.fieldSelect} ${errors.categoryId ? styles.fieldSelectError : ""}`}
+                  value={formData.categoryId}
+                  onChange={handleFieldChange("categoryId")}
                 >
                   <option value="" disabled>Seleccionar categoría…</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
                 <svg className={styles.selectArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </div>
-              {errors.category && <span className={styles.fieldError}>{errors.category}</span>}
+              {errors.categoryId && <span className={styles.fieldError}>{errors.categoryId}</span>}
             </div>
 
             {/* Color */}
@@ -367,20 +362,20 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
                   </div>
                 )}
                 <select
-                  className={`${styles.fieldSelect} ${errors.color ? styles.fieldSelectError : ""} ${selectedColorHex ? styles.fieldSelectWithDot : ""}`}
-                  value={formData.color}
-                  onChange={handleFieldChange("color")}
+                  className={`${styles.fieldSelect} ${errors.colorId ? styles.fieldSelectError : ""} ${selectedColorHex ? styles.fieldSelectWithDot : ""}`}
+                  value={formData.colorId}
+                  onChange={handleFieldChange("colorId")}
                 >
                   <option value="" disabled>Seleccionar color…</option>
                   {colors.map((c) => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
                 <svg className={styles.selectArrow} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </div>
-              {errors.color && <span className={styles.fieldError}>{errors.color}</span>}
+              {errors.colorId && <span className={styles.fieldError}>{errors.colorId}</span>}
             </div>
 
           </div>
@@ -421,7 +416,6 @@ export function ProductFormModal({ isOpen, product, onClose, onSaved }: ProductF
         </div>
       </div>
 
-      {/* ImagePickerModal — z-index 300, por encima del form (z-index 200) */}
       <ImagePickerModal
         isOpen={pickerOpen}
         onClose={() => setPickerOpen(false)}

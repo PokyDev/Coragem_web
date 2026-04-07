@@ -1,4 +1,20 @@
+/* ─── Catalog entities (from API) ───────────────────────────────────── */
+
+export interface CatalogCategory {
+  id:   string;
+  name: string;
+  slug: string;
+}
+
+export interface CatalogColor {
+  id:   string;
+  name: string;
+  slug: string;
+  hex:  string;
+}
+
 /* ─── Product image ──────────────────────────────────────────────────── */
+
 export interface ProductImage {
   id:     string;
   url:    string;
@@ -8,48 +24,26 @@ export interface ProductImage {
 }
 
 /* ─── Product ────────────────────────────────────────────────────────── */
+
 export interface Product {
-  id:     string;
-  name:   string;
-  price:  number;
-  images: ProductImage[];
-  stock:  number;
-  ventas: number;
-
-  category: {
-    id: string;
-    name: string;
-    slug: string;
-  };
-
-  color: {
-    id: string;
-    name: string;
-    slug: string;
-    hex: string;
-  };
-}
-
-/* ─── Category ───────────────────────────────────────────────────────── */
-export interface Category {
-  id: string;
-  label: string;
-}
-
-/* ─── Color ──────────────────────────────────────────────────────────── */
-export interface Color {
-  id: string;
-  label: string;
-  hex: string;
+  id:       string;
+  name:     string;
+  price:    number;
+  images:   ProductImage[];
+  stock:    number;
+  ventas:   number;
+  category: CatalogCategory;
+  color:    CatalogColor;
 }
 
 /* ─── Sort option ────────────────────────────────────────────────────── */
+
 export type SortKey =
-  | 'price_asc'
-  | 'price_desc'
-  | 'name_asc'
-  | 'name_desc'
-  | 'most_sold';
+  | "price_asc"
+  | "price_desc"
+  | "name_asc"
+  | "name_desc"
+  | "most_sold";
 
 export interface SortOption {
   key:   SortKey;
@@ -57,18 +51,19 @@ export interface SortOption {
 }
 
 export const SORT_OPTIONS: SortOption[] = [
-  { key: 'price_asc',  label: 'Precio: menor a mayor' },
-  { key: 'price_desc', label: 'Precio: mayor a menor' },
-  { key: 'name_asc',   label: 'A → Z'                },
-  { key: 'name_desc',  label: 'Z → A'                },
-  { key: 'most_sold',  label: 'Más vendido'           },
+  { key: "price_asc",  label: "Precio: menor a mayor" },
+  { key: "price_desc", label: "Precio: mayor a menor" },
+  { key: "name_asc",   label: "A → Z"                },
+  { key: "name_desc",  label: "Z → A"                },
+  { key: "most_sold",  label: "Más vendido"           },
 ];
 
 /* ─── Active filters ────────────────────────────────────────────────── */
+
 export interface ActiveFilters {
   search:     string;
-  categories: string[];
-  colors:     string[];
+  categories: string[];   // slugs de CatalogCategory
+  colors:     string[];   // slugs de CatalogColor
   priceMin:   number;
   priceMax:   number;
   sort:       SortKey;

@@ -555,8 +555,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               marginBottom: "1rem",
             }}
           >
-            <DetailItem label="Categoría" value={product.category} />
-            <DetailItem label="Color"     value={product.color}    />
+            <DetailItem label="Categoría" value={product.category.name} />
+            <DetailItem label="Color"     value={product.color.name}    />
             <DetailItem label="Ventas"    value={`${product.ventas} unidades`} />
             <DetailItem
               label="Disponibilidad"

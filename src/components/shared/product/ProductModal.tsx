@@ -461,8 +461,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
               <div style={{ height: "1px", background: "linear-gradient(90deg, var(--coragem-teal) 0%, transparent 80%)", opacity: 0.25, marginBottom: "1.2rem" }} />
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.85rem 1rem", marginBottom: "1.4rem" }}>
-                <DetailItem label="Categoría" value={product.category} />
-                <DetailItem label="Color"     value={product.color}    />
+                <DetailItem label="Categoría" value={product.category.name} />
+                <DetailItem label="Color"     value={product.color.name}    />
                 <DetailItem label="Ventas"    value={`${product.ventas} unidades`} />
                 <DetailItem
                   label="Disponibilidad"

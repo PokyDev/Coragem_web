@@ -9,14 +9,25 @@ export interface ProductImage {
 
 /* ─── Product ────────────────────────────────────────────────────────── */
 export interface Product {
-  id:       string;         // cuid() desde Prisma — era number con el JSON estático
-  name:     string;
-  price:    number;
-  images:   ProductImage[]; // reemplaza el antiguo campo `image: string`
-  stock:    number;
-  category: string;
-  color:    string;
-  ventas:   number;
+  id:     string;
+  name:   string;
+  price:  number;
+  images: ProductImage[];
+  stock:  number;
+  ventas: number;
+
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+
+  color: {
+    id: string;
+    name: string;
+    slug: string;
+    hex: string;
+  };
 }
 
 /* ─── Category ───────────────────────────────────────────────────────── */

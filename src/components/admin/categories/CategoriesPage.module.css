@@ -1,0 +1,180 @@
+/**
+ * app/(admin)/admin/dashboard/categories/css/CategoriesPage.module.css
+ */
+
+/* ── Root ─────────────────────────────────────────────────────── */
+
+.root {
+  display:        flex;
+  flex-direction: column;
+  gap:            1.5rem;
+  min-height:     calc(100dvh - 56px - 4rem);
+}
+
+/* ── Grid de dos columnas ─────────────────────────────────────── */
+
+.grid {
+  display:               grid;
+  grid-template-columns: 1fr 1fr;
+  gap:                   1.25rem;
+  align-items:           start;
+}
+
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* ── Panel (columna) ──────────────────────────────────────────── */
+
+.panel {
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 14px;
+  overflow:      hidden;
+}
+
+/* ── Header del panel ─────────────────────────────────────────── */
+
+.panelHeader {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         0.85rem 1.1rem;
+  border-bottom:   1px solid var(--admin-border);
+  background:      var(--admin-surface);
+}
+
+.panelTitle {
+  display:     flex;
+  align-items: center;
+  gap:         0.55rem;
+}
+
+.panelIcon {
+  font-size:  0.9rem;
+  color:      var(--admin-text-dim);
+  line-height: 1;
+}
+
+.panelName {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.78rem;
+  font-weight:    700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color:          var(--admin-text);
+}
+
+.panelCount {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.65rem;
+  font-weight:    600;
+  color:          var(--admin-text-dim);
+  background:     var(--admin-bg);
+  border:         1px solid var(--admin-border);
+  border-radius:  100px;
+  padding:        0.1rem 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+/* ── Botón añadir ─────────────────────────────────────────────── */
+
+.btnAdd {
+  display:     flex;
+  align-items: center;
+  gap:         0.3rem;
+  padding:     0.3rem 0.7rem;
+  background:  var(--admin-nav-active-bg);
+  border:      1px solid rgba(78, 196, 196, 0.2);
+  border-radius: 7px;
+  color:       var(--admin-accent);
+  font-family: var(--font-jost), sans-serif;
+  font-size:   0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor:      pointer;
+  transition:  opacity 0.15s ease;
+}
+
+.btnAdd:hover:not(:disabled) { opacity: 0.82; }
+.btnAdd:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Cuerpo del panel ─────────────────────────────────────────── */
+
+.panelBody {
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+/* ── Empty state dentro del panel ────────────────────────────── */
+
+.emptyPanel {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         2.5rem 1.5rem;
+  gap:             0.5rem;
+  text-align:      center;
+}
+
+.emptyPanelIcon {
+  font-size:     1.8rem;
+  color:         var(--admin-text-dim);
+  margin-bottom: 0.35rem;
+  animation:     emptyPulse 3s ease-in-out infinite;
+}
+
+@keyframes emptyPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.55; }
+}
+
+.emptyPanelTitle {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.8rem;
+  font-weight:    600;
+  color:          var(--admin-text-muted);
+}
+
+.emptyPanelDesc {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.02em;
+}
+
+/* ── API error inline ─────────────────────────────────────────── */
+
+.apiError {
+  display:        flex;
+  align-items:    center;
+  gap:            0.4rem;
+  padding:        0.55rem 0.75rem;
+  background:     var(--stock-out-bg);
+  border:         1px solid rgba(196, 122, 158, 0.2);
+  border-radius:  8px;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  color:          var(--admin-danger);
+  letter-spacing: 0.02em;
+  margin:         0 0.85rem 0.85rem;
+}
+
+/* ── Loading global ───────────────────────────────────────────── */
+
+.loadingWrap {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         4rem 1.5rem;
+}
+
+.loadingText {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.85rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.06em;
+}

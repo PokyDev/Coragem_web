@@ -7,6 +7,10 @@
  * Usa un caché en módulo (singleton) para que múltiples componentes
  * que monten este hook no disparen requests duplicados.
  *
+ * `catalogCache` se exporta para que los hooks admin de mutación
+ * (useCategoryActions, etc.) puedan invalidar entradas específicas
+ * tras operaciones CRUD, forzando un refetch en el próximo montaje.
+ *
  * Endpoints:
  *   GET /api/categories  → { categories: Category[] }
  *   GET /api/colors      → { colors: Color[] }
@@ -23,7 +27,7 @@ interface CatalogCache {
   colors:     CatalogColor[]    | null;
 }
 
-const cache: CatalogCache = { categories: null, colors: null };
+export const catalogCache: CatalogCache = { categories: null, colors: null };
 
 /* ── Tipos de respuesta ────────────────────────────────────────── */
 
@@ -42,14 +46,14 @@ export interface UseCatalogReturn {
 /* ── Hook ──────────────────────────────────────────────────────── */
 
 export function useCatalog(): UseCatalogReturn {
-  const [categories, setCategories] = useState<CatalogCategory[]>(cache.categories ?? []);
-  const [colors,     setColors]     = useState<CatalogColor[]>(cache.colors ?? []);
-  const [loading,    setLoading]    = useState(!cache.categories || !cache.colors);
+  const [categories, setCategories] = useState<CatalogCategory[]>(catalogCache.categories ?? []);
+  const [colors,     setColors]     = useState<CatalogColor[]>(catalogCache.colors ?? []);
+  const [loading,    setLoading]    = useState(!catalogCache.categories || !catalogCache.colors);
   const [error,      setError]      = useState<string | null>(null);
 
   useEffect(() => {
     // Ambos ya están en caché — nada que hacer
-    if (cache.categories && cache.colors) return;
+    if (catalogCache.categories && catalogCache.colors) return;
 
     let cancelled = false;
 
@@ -58,8 +62,8 @@ export function useCatalog(): UseCatalogReturn {
       setError(null);
 
       const [catsRes, colsRes] = await Promise.all([
-        cache.categories ? null : api.get<CategoriesResponse>("/api/categories"),
-        cache.colors     ? null : api.get<ColorsResponse>("/api/colors"),
+        catalogCache.categories ? null : api.get<CategoriesResponse>("/api/categories"),
+        catalogCache.colors     ? null : api.get<ColorsResponse>("/api/colors"),
       ]);
 
       if (cancelled) return;
@@ -77,12 +81,12 @@ export function useCatalog(): UseCatalogReturn {
       }
 
       if (catsRes?.data) {
-        cache.categories = catsRes.data.categories;
+        catalogCache.categories = catsRes.data.categories;
         setCategories(catsRes.data.categories);
       }
 
       if (colsRes?.data) {
-        cache.colors = colsRes.data.colors;
+        catalogCache.colors = colsRes.data.colors;
         setColors(colsRes.data.colors);
       }
 

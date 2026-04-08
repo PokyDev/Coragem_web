@@ -11,7 +11,7 @@ import { useCategoryActions } from "@/hooks/admin/categories/useCategoryActions"
 import { CategoryCard } from "@/components/admin/categories/CategoryCard";
 import { NewCategoryCard } from "@/components/admin/categories/NewCategoryCard";
 import { DevelopmentState } from "@/components/admin/ui/DevelopmentState";
-import styles from "./css/CategoriesPage.module.css";
+import styles from "./CategoriesPage.module.css";
 
 /* ── SweetAlert lazy ─────────────────────────────────────────── */
 

@@ -1,0 +1,235 @@
+/**
+ * src/components/admin/categories/ColorCard.module.css
+ */
+
+/* ── Grid de tarjetas (3 por fila) ────────────────────────────── */
+
+.colorsGrid {
+  display:               grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:                   0.5rem;
+}
+
+@media (max-width: 640px) {
+  .colorsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Tarjeta base ─────────────────────────────────────────────── */
+
+.card {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.55rem;
+  padding:        0.75rem 0.8rem;
+  background:     var(--admin-bg-card);
+  border:         1px solid var(--admin-border);
+  border-radius:  10px;
+  transition:     border-color 0.18s ease, box-shadow 0.18s ease;
+  animation:      cardIn 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  position:       relative;
+}
+
+.card:hover {
+  border-color: rgba(78, 196, 196, 0.22);
+  box-shadow:   0 0 0 1px rgba(78, 196, 196, 0.06);
+}
+
+.cardEditing {
+  border-color: rgba(78, 196, 196, 0.35);
+  box-shadow:   0 0 0 2px rgba(78, 196, 196, 0.08);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Fila superior: swatch + nombre ──────────────────────────── */
+
+.cardTop {
+  display:     flex;
+  align-items: center;
+  gap:         0.6rem;
+}
+
+/* ── Círculo de color ─────────────────────────────────────────── */
+
+.swatch {
+  width:         2rem;
+  height:        2rem;
+  border-radius: 50%;
+  border:        2px solid rgba(255, 255, 255, 0.12);
+  flex-shrink:   0;
+  transition:    border-color 0.18s ease, transform 0.15s ease;
+}
+
+/* En modo edición el swatch es clickeable para activar el picker */
+.swatchClickable {
+  cursor:  pointer;
+  position: relative;
+}
+
+.swatchClickable:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  transform:    scale(1.08);
+}
+
+/* Input nativo oculto — activado por click en el swatch */
+.colorPickerInput {
+  position: absolute;
+  width:    1px;
+  height:   1px;
+  opacity:  0;
+  pointer-events: none;
+}
+
+/* ── Nombre del color ─────────────────────────────────────────── */
+
+.name {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.8rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+  white-space:    nowrap;
+  overflow:       hidden;
+  text-overflow:  ellipsis;
+  flex:           1;
+  min-width:      0;
+}
+
+.count {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.62rem;
+  font-weight:    500;
+  color:          var(--admin-text-dim);
+  letter-spacing: 0.04em;
+  white-space:    nowrap;
+}
+
+/* ── Inputs de edición ────────────────────────────────────────── */
+
+.inputName {
+  flex:          1;
+  min-width:     0;
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-accent);
+  border-radius: 6px;
+  color:         var(--admin-text);
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.78rem;
+  font-weight:   600;
+  padding:       0.28rem 0.5rem;
+  outline:       none;
+  box-shadow:    0 0 0 2px rgba(78, 196, 196, 0.12);
+}
+
+.inputName:disabled { opacity: 0.6; }
+
+/* Fila del picker: swatch grande + input hex */
+.pickerRow {
+  display:     flex;
+  align-items: center;
+  gap:         0.5rem;
+}
+
+.inputHex {
+  flex:          1;
+  min-width:     0;
+  background:    var(--admin-surface);
+  border:        1px solid var(--admin-border);
+  border-radius: 6px;
+  color:         var(--admin-text);
+  font-family:   "DM Mono", monospace;
+  font-size:     0.72rem;
+  font-weight:   500;
+  padding:       0.28rem 0.5rem;
+  outline:       none;
+  letter-spacing: 0.04em;
+  transition:    border-color 0.15s ease;
+}
+
+.inputHex:focus  { border-color: var(--admin-accent); }
+.inputHex.hexInvalid { border-color: var(--admin-danger); }
+.inputHex:disabled   { opacity: 0.6; }
+
+/* ── Acciones ─────────────────────────────────────────────────── */
+
+.actions {
+  display:     flex;
+  align-items: center;
+  gap:         0.25rem;
+  flex-wrap:   wrap;
+}
+
+.btn {
+  display:        flex;
+  align-items:    center;
+  gap:            0.25rem;
+  padding:        0.25rem 0.55rem;
+  border-radius:  6px;
+  border:         none;
+  background:     none;
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.65rem;
+  font-weight:    600;
+  letter-spacing: 0.03em;
+  cursor:         pointer;
+  transition:     background 0.15s ease, color 0.15s ease, opacity 0.15s;
+  white-space:    nowrap;
+}
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnEdit   { color: var(--admin-accent); }
+.btnEdit:hover:not(:disabled)   { background: var(--admin-nav-active-bg); }
+
+.btnDelete { color: var(--admin-danger); }
+.btnDelete:hover:not(:disabled) { background: var(--stock-out-bg); }
+
+.btnSave {
+  color:      var(--stock-ok-color);
+  background: var(--stock-ok-bg);
+  border:     1px solid rgba(78, 196, 196, 0.2);
+}
+.btnSave:hover:not(:disabled) { opacity: 0.88; }
+
+.btnCancel {
+  color:      var(--admin-text-muted);
+  background: var(--admin-hover-bg);
+  border:     1px solid var(--admin-border);
+}
+.btnCancel:hover:not(:disabled) { color: var(--admin-text); }
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+
+.spinner {
+  display:          inline-block;
+  width:            9px;
+  height:           9px;
+  border:           2px solid rgba(78, 196, 196, 0.25);
+  border-top-color: var(--admin-accent);
+  border-radius:    50%;
+  animation:        spin 0.6s linear infinite;
+  flex-shrink:      0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Acciones visibles solo en hover (puntero) ────────────────── */
+
+@media (hover: hover) {
+  .actions {
+    opacity:        0;
+    pointer-events: none;
+    transition:     opacity 0.15s ease;
+  }
+
+  .card:hover .actions,
+  .cardEditing .actions {
+    opacity:        1;
+    pointer-events: auto;
+  }
+}

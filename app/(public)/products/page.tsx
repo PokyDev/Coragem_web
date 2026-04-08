@@ -1,46 +1,12 @@
 import type { Metadata } from 'next';
 import { CatalogClient } from '@/components/user/catalog/CatalogClient';
-import type { CatalogCategory, CatalogColor } from '@/types/catalog';
 
 export const metadata: Metadata = {
   title: 'Catálogo — Coragem Accessories',
   description: 'Explora nuestra colección completa de bisutería en rodio.',
 };
 
-/* ── Fetch en servidor — sin credenciales, datos públicos ────────── */
-
-async function fetchCategories(): Promise<CatalogCategory[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.categories ?? [];
-  } catch {
-    return [];
-  }
-}
-
-async function fetchColors(): Promise<CatalogColor[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/colors`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.colors ?? [];
-  } catch {
-    return [];
-  }
-}
-
-export default async function ProductsPage() {
-  const [categories, colors] = await Promise.all([
-    fetchCategories(),
-    fetchColors(),
-  ]);
-
+export default function ProductsPage() {
   return (
     <main style={{ minHeight: 'calc(100dvh - 72px)', backgroundColor: 'var(--bg)', transition: 'background-color 0.3s ease', paddingBottom: '5rem' }}>
 
@@ -68,7 +34,7 @@ export default async function ProductsPage() {
 
       {/* ── Catalog body ── */}
       <section style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem' }}>
-        <CatalogClient categories={categories} colors={colors} />
+        <CatalogClient />
       </section>
     </main>
   );

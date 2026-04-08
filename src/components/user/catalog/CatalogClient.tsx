@@ -3,9 +3,9 @@
 /**
  * src/components/user/catalog/CatalogClient.tsx
  *
- * Recibe categories y colors desde el Server Component (ya fetchados).
- * Los filtros de categoría y color comparan contra slugs para coincidir
- * con los parámetros que acepta la API pública.
+ * Fetcha categorías y colores via useCatalog (caché en módulo, un solo
+ * request por sesión). Los productos se obtienen via useProducts.
+ * Filtrado y ordenamiento son client-side sobre el resultado completo.
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -15,12 +15,8 @@ import { CatalogGrid        } from '@/components/user/catalog/CatalogGrid';
 import { MobileFilterDrawer } from '@/components/user/catalog/MobileFilterDrawer';
 import { LoadMoreButton     } from '@/components/shared/ui/LoadMoreButton';
 import { useProducts        } from '@/hooks/shared/useProducts';
-import type { CatalogCategory, CatalogColor, ActiveFilters, Product, SortKey } from '@/types/catalog';
-
-interface CatalogClientProps {
-  categories: CatalogCategory[];
-  colors:     CatalogColor[];
-}
+import { useCatalog         } from '@/hooks/shared/useCatalog';
+import type { ActiveFilters, Product, SortKey } from '@/types/catalog';
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 100000;
@@ -47,7 +43,7 @@ function sortProducts(products: Product[], sort: SortKey): Product[] {
   }
 }
 
-/* ─── Mobile toggle ── */
+/* ─── Mobile filter toggle ── */
 function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasActive: boolean }) {
   return (
     <button
@@ -75,11 +71,12 @@ function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasAc
 }
 
 /* ─── Main Component ── */
-export function CatalogClient({ categories, colors }: CatalogClientProps) {
+export function CatalogClient() {
   const [filters,    setFilters]    = useState<ActiveFilters>(DEFAULT_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { products: allProducts, loading, error } = useProducts();
+  const { products: allProducts, loading: productsLoading, error: productsError } = useProducts();
+  const { categories, colors } = useCatalog();
 
   const updateFilters = useCallback(
     (next: Partial<ActiveFilters>) => setFilters((prev) => ({ ...prev, ...next })),
@@ -87,7 +84,6 @@ export function CatalogClient({ categories, colors }: CatalogClientProps) {
   );
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
-  // Filtrado por slug (category.slug / color.slug) — sin latencia
   const filteredProducts = useMemo(() => {
     const query = filters.search.toLowerCase().trim();
 
@@ -143,8 +139,8 @@ export function CatalogClient({ categories, colors }: CatalogClientProps) {
           />
           <CatalogGrid
             products={filteredProducts}
-            loading={loading}
-            error={error}
+            loading={productsLoading}
+            error={productsError}
           />
           <LoadMoreButton variant="catalog" />
         </div>

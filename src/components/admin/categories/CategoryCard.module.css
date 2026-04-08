@@ -156,3 +156,19 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Acciones — visibles solo en hover (solo dispositivos con puntero) ── */
+
+@media (hover: hover) {
+  .actions {
+    opacity:        0;
+    pointer-events: none;
+    transition:     opacity 0.15s ease;
+  }
+
+  .card:hover .actions,
+  .cardEditing .actions {
+    opacity:        1;
+    pointer-events: auto;
+  }
+}

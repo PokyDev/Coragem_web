@@ -1,21 +1,8 @@
 "use client";
 
-/**
- * src/components/admin/categories/CategoryCard.tsx
- *
- * Tarjeta de categoría con dos modos:
- *   - display  → muestra el nombre + botones Editar / Eliminar
- *   - editing  → input inline enfocado + botón Guardar / Cancelar (Escape)
- *
- * Las confirmaciones se delegan al padre mediante onUpdate / onDelete,
- * que ya muestran SweetAlert antes de llamar a la API.
- */
-
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import type { CatalogCategory } from "@/types/catalog";
 import styles from "./CategoryCard.module.css";
-
-/* ── Props ──────────────────────────────────────────────────────── */
 
 interface CategoryCardProps {
   category:  CatalogCategory;
@@ -24,14 +11,11 @@ interface CategoryCardProps {
   onDelete:  (category: CatalogCategory) => Promise<void>;
 }
 
-/* ── Component ──────────────────────────────────────────────────── */
-
 export function CategoryCard({ category, isLoading, onUpdate, onDelete }: CategoryCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(category.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  /* Enfocar el input al entrar en modo edición */
   useEffect(() => {
     if (isEditing) {
       inputRef.current?.focus();
@@ -64,17 +48,14 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
     if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
   }, [handleSave, cancelEdit]);
 
-  /* Conteo de productos */
   const productCount = (category as CatalogCategory & { _count?: { products: number } })
     ._count?.products ?? null;
 
   return (
     <article className={`${styles.card} ${isEditing ? styles.cardEditing : ""}`}>
 
-      {/* ── Ícono decorativo ── */}
       <span className={styles.icon} aria-hidden="true">◎</span>
 
-      {/* ── Nombre o input ── */}
       <div className={styles.content}>
         {isEditing ? (
           <input
@@ -93,14 +74,16 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
             <span className={styles.name}>{category.name}</span>
             {productCount !== null && (
               <span className={styles.count}>
-                {productCount} producto{productCount !== 1 ? "s" : ""}
+                {productCount}
+                <span className={styles.countWord}>
+                  {" "}producto{productCount !== 1 ? "s" : ""}
+                </span>
               </span>
             )}
           </>
         )}
       </div>
 
-      {/* ── Acciones ── */}
       <div className={styles.actions}>
         {isEditing ? (
           <>
@@ -118,7 +101,7 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
-              Guardar
+              <span className={styles.btnLabel}>Guardar</span>
             </button>
             <button
               className={`${styles.btn} ${styles.btnCancel}`}
@@ -127,7 +110,7 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
               disabled={isLoading}
               aria-label="Cancelar edición"
             >
-              Cancelar
+              <span className={styles.btnLabel}>Cancelar</span>
             </button>
           </>
         ) : (
@@ -143,7 +126,7 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
-              Editar
+              <span className={styles.btnLabel}>Editar</span>
             </button>
             <button
               className={`${styles.btn} ${styles.btnDelete}`}
@@ -158,7 +141,7 @@ export function CategoryCard({ category, isLoading, onUpdate, onDelete }: Catego
                 <path d="M10 11v6M14 11v6" />
                 <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
               </svg>
-              Eliminar
+              <span className={styles.btnLabel}>Eliminar</span>
             </button>
           </>
         )}

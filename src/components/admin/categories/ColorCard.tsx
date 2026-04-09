@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * src/components/admin/categories/ColorCard.tsx
- *
- * Tarjeta de color con dos modos:
- *   - display  → círculo de color + nombre + count + botones Editar/Eliminar
- *   - editing  → input nombre + swatch clickeable (abre picker nativo) +
- *                input hex manual — todos sincronizados bidireccionalmente
- *
- * Las confirmaciones se delegan al padre mediante onUpdate / onDelete.
- */
-
 import {
   useState,
   useRef,
@@ -22,17 +11,12 @@ import {
 import type { CatalogColor } from "@/types/catalog";
 import styles from "./ColorCard.module.css";
 
-/* ── Helpers ────────────────────────────────────────────────────── */
-
 const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 
-/** Normaliza texto a hex válido: añade '#' si falta, fuerza mayúsculas. */
 function normalizeHex(value: string): string {
   const trimmed = value.trim();
   return trimmed.startsWith("#") ? trimmed.toUpperCase() : `#${trimmed}`.toUpperCase();
 }
-
-/* ── Props ──────────────────────────────────────────────────────── */
 
 interface ColorCardProps {
   color:     CatalogColor;
@@ -40,8 +24,6 @@ interface ColorCardProps {
   onUpdate:  (id: string, name: string, hex: string) => Promise<void>;
   onDelete:  (color: CatalogColor) => Promise<void>;
 }
-
-/* ── Component ──────────────────────────────────────────────────── */
 
 export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardProps) {
   const [isEditing,  setIsEditing]  = useState(false);
@@ -52,7 +34,6 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
   const nameInputRef  = useRef<HTMLInputElement>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
-  /* Enfocar nombre al entrar en edición */
   useEffect(() => {
     if (isEditing) nameInputRef.current?.focus();
   }, [isEditing]);
@@ -71,18 +52,15 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
     setIsEditing(false);
   }, [color]);
 
-  /* Picker nativo → actualiza hex text */
   const handlePickerChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase();
     setEditHex(val);
     setHexInvalid(false);
   }, []);
 
-  /* Input hex manual → valida y actualiza picker */
   const handleHexChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     setEditHex(raw);
-
     const normalized = normalizeHex(raw);
     setHexInvalid(raw.length > 0 && !HEX_PATTERN.test(normalized));
   }, []);
@@ -118,15 +96,12 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
     if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
   }, [handleSave, cancelEdit]);
 
-  /* Valor seguro para el picker nativo (solo hex válido) */
   const pickerValue = HEX_PATTERN.test(normalizeHex(editHex))
     ? normalizeHex(editHex)
     : color.hex;
 
   const productCount = (color as CatalogColor & { _count?: { products: number } })
     ._count?.products ?? null;
-
-  /* ── Display mode ─────────────────────────────────────────────── */
 
   if (!isEditing) {
     return (
@@ -139,9 +114,7 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
           />
           <span className={styles.name}>{color.name}</span>
           {productCount !== null && (
-            <span className={styles.count}>
-              {productCount}p
-            </span>
+            <span className={styles.count}>{productCount}p</span>
           )}
         </div>
 
@@ -157,7 +130,7 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            Editar
+            <span className={styles.btnLabel}>Editar</span>
           </button>
           <button
             className={`${styles.btn} ${styles.btnDelete}`}
@@ -172,19 +145,16 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
               <path d="M10 11v6M14 11v6" />
               <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
             </svg>
-            Eliminar
+            <span className={styles.btnLabel}>Eliminar</span>
           </button>
         </div>
       </article>
     );
   }
 
-  /* ── Editing mode ─────────────────────────────────────────────── */
-
   return (
     <article className={`${styles.card} ${styles.cardEditing}`}>
 
-      {/* Nombre */}
       <div className={styles.cardTop}>
         <input
           ref={nameInputRef}
@@ -200,9 +170,7 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
         />
       </div>
 
-      {/* Picker + hex */}
       <div className={styles.pickerRow}>
-        {/* Swatch clickeable — abre el picker nativo */}
         <span
           className={`${styles.swatch} ${styles.swatchClickable}`}
           style={{ background: pickerValue }}
@@ -224,7 +192,6 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
           />
         </span>
 
-        {/* Hex manual */}
         <input
           className={`${styles.inputHex} ${hexInvalid ? styles.hexInvalid : ""}`}
           type="text"
@@ -239,7 +206,6 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
         />
       </div>
 
-      {/* Acciones */}
       <div className={styles.actions}>
         <button
           className={`${styles.btn} ${styles.btnSave}`}
@@ -255,7 +221,7 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
-          Guardar
+          <span className={styles.btnLabel}>Guardar</span>
         </button>
         <button
           className={`${styles.btn} ${styles.btnCancel}`}
@@ -264,7 +230,7 @@ export function ColorCard({ color, isLoading, onUpdate, onDelete }: ColorCardPro
           disabled={isLoading}
           aria-label="Cancelar edición"
         >
-          Cancelar
+          <span className={styles.btnLabel}>Cancelar</span>
         </button>
       </div>
 

@@ -20,8 +20,8 @@
   align-items:           start;
 }
 
-@media (max-width: 860px) {
-  .grid { grid-template-columns: 1fr; }
+@media (max-width: 1400px) {
+  .colorsGrid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Panel (columna) ──────────────────────────────────────────── */

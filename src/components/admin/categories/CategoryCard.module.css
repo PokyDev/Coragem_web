@@ -172,3 +172,15 @@
     pointer-events: auto;
   }
 }
+
+/* ── Responsivo ≤ 1400px ──────────────────────────────────────── */
+
+@media (max-width: 1400px) {
+  .btnLabel  { display: none; }
+  .countWord { display: none; }
+
+  /* Con solo el ícono, reducir padding del botón a cuadrado */
+  .btn {
+    padding: 0.3rem 0.45rem;
+  }
+}

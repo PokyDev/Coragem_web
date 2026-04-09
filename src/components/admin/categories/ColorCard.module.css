@@ -233,3 +233,13 @@
     pointer-events: auto;
   }
 }
+
+/* ── Responsivo ≤ 1400px ──────────────────────────────────────── */
+
+@media (max-width: 1400px) {
+  .btnLabel { display: none; }
+
+  .btn {
+    padding: 0.25rem 0.4rem;
+  }
+}

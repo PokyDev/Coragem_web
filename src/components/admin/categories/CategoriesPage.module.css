@@ -21,7 +21,7 @@
 }
 
 @media (max-width: 1400px) {
-  .colorsGrid { grid-template-columns: repeat(2, 1fr); }
+  .grid { grid-template-columns: 1fr; }
 }
 
 /* ── Panel (columna) ──────────────────────────────────────────── */

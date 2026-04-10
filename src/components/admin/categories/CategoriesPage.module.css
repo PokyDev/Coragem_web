@@ -9,6 +9,7 @@
   flex-direction: column;
   gap:            1.5rem;
   min-height:     calc(100dvh - 56px - 4rem);
+  container-type: inline-size;
 }
 
 /* ── Grid de dos columnas ─────────────────────────────────────── */
@@ -20,7 +21,7 @@
   align-items:           start;
 }
 
-@media (max-width: 1400px) {
+@container (max-width: 900px) {
   .grid { grid-template-columns: 1fr; }
 }
 

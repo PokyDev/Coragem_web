@@ -109,16 +109,18 @@
   gap: 0.45rem;
 }
 
-/* ── Grid de colores (3 columnas) ─────────────────────────────── */
+/* ── Grid de colores (responsivo por container query) ─────────── */
+/*                                                                 */
+/*  auto-fill + minmax: cada tarjeta tiene un mínimo de 140px;    */
+/*  el grid calcula cuántas caben y ajusta automáticamente.        */
+/*  align-items: start aísla el crecimiento vertical de cada      */
+/*  tarjeta en modo edición sin desplazar las adyacentes.          */
 
 .colorsGrid {
   display:               grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap:                   0.5rem;
-}
-
-@media (max-width: 640px) {
-  .colorsGrid { grid-template-columns: repeat(2, 1fr); }
+  align-items:           start;
 }
 
 /* ── Empty state dentro del panel ────────────────────────────── */

@@ -33,7 +33,7 @@
 
 /* ── Marco del QR ── */
 .qrFrame {
-  background:    #0d1520;
+  background:    #ffffff;
   border-radius: 12px;
   padding:       12px;
   display:       inline-flex;

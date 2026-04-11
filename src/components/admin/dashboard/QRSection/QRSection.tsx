@@ -60,12 +60,12 @@ export function QRSection() {
             size={160}
             level="H"
             marginSize={0}
-            fgColor="#4ec4c4"          // teal de marca en lugar de negro
+            fgColor="#000000"
             bgColor="#ffffff"
             imageSettings={{
-              src: "/favicon.ico",     // o la ruta .png que tengas
-              width: 32,
-              height: 32,
+              src:      "/favicon.ico",
+              width:    40,
+              height:   40,
               excavate: true,
             }}
           />

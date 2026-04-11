@@ -1,0 +1,98 @@
+/**
+ * src/components/admin/dashboard/QRSection/QRSection.module.css
+ */
+
+/* ── Contenedor de sección ── */
+.section {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.875rem;
+}
+
+.sectionTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.15rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+}
+
+/* ── Card del QR ── */
+.card {
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 14px;
+  padding:       1.5rem 1.25rem;
+  display:       flex;
+  flex-direction: column;
+  align-items:   center;
+  gap:           1.1rem;
+}
+
+/* ── Marco del QR ── */
+.qrFrame {
+  background:    #ffffff;
+  border-radius: 12px;
+  padding:       12px;
+  display:       inline-flex;
+  box-shadow:    0 2px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* ── URL debajo del QR ── */
+.urlLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.04em;
+  text-align:     center;
+}
+
+.urlValue {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.8rem;
+  font-weight:    600;
+  color:          var(--admin-accent);
+  letter-spacing: 0.02em;
+}
+
+/* ── Botón de descarga ── */
+.downloadBtn {
+  display:        flex;
+  align-items:    center;
+  gap:            0.45rem;
+  padding:        0.52rem 1.25rem;
+  border-radius:  8px;
+  border:         1px solid rgba(78, 196, 196, 0.28);
+  background:     var(--stock-ok-bg);
+  color:          var(--admin-accent);
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.74rem;
+  font-weight:    700;
+  letter-spacing: 0.05em;
+  cursor:         pointer;
+  transition:     background 0.18s ease, border-color 0.18s ease, transform 0.14s ease;
+  width:          100%;
+  justify-content: center;
+}
+
+.downloadBtn:hover {
+  background:   rgba(78, 196, 196, 0.18);
+  border-color: rgba(78, 196, 196, 0.45);
+  transform:    translateY(-1px);
+}
+
+.downloadBtn:active { transform: translateY(0); }
+
+/* ── Skeleton ── */
+.skeleton {
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 14px;
+  height:        280px;
+  animation:     shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}

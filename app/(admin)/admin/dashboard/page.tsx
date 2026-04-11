@@ -1,143 +1,39 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
-import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
-import { StatsCards }       from "@/components/admin/shared/StatsCards";
-import { ProductsTable }    from "@/components/admin/dashboard/ProductsTable";
-import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
-import { useDashboardSearch, useDashboardActions } from "@/components/admin/layout/AdminShell";
-import { computeStats, filterProductRows } from "@/lib/dashboard";
-import { useProducts } from "@/hooks/shared/useProducts";
-import { api } from "@/lib/api";
+/**
+ * app/(admin)/admin/dashboard/page.tsx
+ *
+ * Dashboard principal del panel administrativo.
+ * Muestra tres widgets:
+ *   1. TopProducts  — 5 productos más vendidos
+ *   2. VisitStats   — gráfica de visitas con toggle diario/semanal/mensual
+ *   3. QRSection    — QR del sitio con descarga PNG
+ *
+ * Los datos se obtienen de hooks con mocks por ahora.
+ * Ver cada hook para instrucciones de integración con el backend.
+ */
+
+import { TopProducts } from "@/components/admin/dashboard/TopProducts/TopProducts";
+import { VisitStats }  from "@/components/admin/dashboard/VisitStats/VisitStats";
+import { QRSection }   from "@/components/admin/dashboard/QRSection/QRSection";
+import { useTopProducts } from "@/hooks/admin/dashboard/useTopProducts";
+import { useVisitStats }  from "@/hooks/admin/dashboard/useVisitStats";
 import styles from "./css/DashboardPage.module.css";
 
-async function getSwal() {
-  const Swal = (await import("sweetalert2")).default;
-  return Swal;
-}
-
 export default function DashboardPage() {
-  const { searchQuery }              = useDashboardSearch();
-  const { registerNewProductAction } = useDashboardActions();
-
-  const { products: allProducts, loading, error, refetch } = useProducts({ adminMode: true });
-
-  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
-  const [modalState,  setModalState]  = useState<ProductModalState>({
-    isOpen: false, product: null,
-  });
-
-  const openNewModal  = useCallback(() => setModalState({ isOpen: true,  product: null }), []);
-  const openEditModal = useCallback((product: ProductRow) => setModalState({ isOpen: true, product }), []);
-  const closeModal    = useCallback(() => setModalState((prev) => ({ ...prev, isOpen: false })), []);
-
-  useEffect(() => {
-    registerNewProductAction(openNewModal);
-  }, [registerNewProductAction, openNewModal]);
-
-  const handleStockFilter = useCallback((next: StockFilter) => {
-    setStockFilter((prev) => (prev === next ? "all" : next));
-  }, []);
-
-  const stats = useMemo(() => computeStats(allProducts), [allProducts]);
-
-  const filteredRows = useMemo(() => {
-    const bySearch = filterProductRows(allProducts, searchQuery);
-    if (stockFilter === "all") return bySearch;
-    return bySearch.filter((p) => p.stockStatus === stockFilter);
-  }, [allProducts, searchQuery, stockFilter]);
-
-  const handleSaved = useCallback((_mode: "new" | "edit") => {
-    refetch();
-  }, [refetch]);
-
-  const handleDelete = useCallback(async (product: ProductRow) => {
-    const Swal = await getSwal();
-
-    const { isConfirmed } = await Swal.fire({
-      title: "¿Eliminar producto?",
-      html:  `<span style="color:#94a3b8">Se eliminará permanentemente <strong style="color:#e2e8f0">${product.name}</strong>.</span>`,
-      icon:  "warning",
-      showCancelButton:   true,
-      confirmButtonText:  "Sí, eliminar",
-      cancelButtonText:   "Cancelar",
-      confirmButtonColor: "#c47a9e",
-      cancelButtonColor:  "#1e2d3d",
-      background:         "#111827",
-      color:              "#e2e8f0",
-    });
-
-    if (!isConfirmed) return;
-
-    const { error: deleteError } = await api.delete(`/api/admin/products/${product.id}`);
-
-    if (deleteError) {
-      await Swal.fire({
-        title:              "Error al eliminar",
-        text:               deleteError,
-        icon:               "error",
-        confirmButtonText:  "Aceptar",
-        confirmButtonColor: "#4ec4c4",
-        background:         "#111827",
-        color:              "#e2e8f0",
-      });
-      return;
-    }
-
-    refetch();
-
-    await Swal.fire({
-      title:              "Producto eliminado",
-      text:               `"${product.name}" fue eliminado del catálogo.`,
-      icon:               "success",
-      confirmButtonText:  "Aceptar",
-      confirmButtonColor: "#4ec4c4",
-      timer:              2200,
-      timerProgressBar:   true,
-      background:         "#111827",
-      color:              "#e2e8f0",
-    });
-  }, [refetch]);
-
-  if (loading) return (
-    <div className={styles.root} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
-      <span style={{ color: "var(--admin-text-muted)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.85rem", letterSpacing: "0.06em" }}>
-        Cargando productos…
-      </span>
-    </div>
-  );
-
-  if (error) return (
-    <div className={styles.root} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
-      <span style={{ color: "var(--admin-danger)", fontFamily: "var(--font-jost), sans-serif", fontSize: "0.85rem" }}>
-        {error}
-      </span>
-    </div>
-  );
+  const { products, loading: loadingProducts } = useTopProducts();
+  const { stats,    loading: loadingStats }    = useVisitStats();
 
   return (
-    <>
-      <div className={styles.root}>
-        <StatsCards
-          stats={stats}
-          activeFilter={stockFilter}
-          onFilterChange={handleStockFilter}
-        />
-        <ProductsTable
-          products={filteredRows}
-          searchQuery={searchQuery}
-          stockFilter={stockFilter}
-          onEdit={openEditModal}
-          onDelete={handleDelete}
-        />
-      </div>
+    <div className={styles.root}>
+      {/* ── Top 5 productos más vendidos ── */}
+      <TopProducts products={products} loading={loadingProducts} />
 
-      <ProductFormModal
-        isOpen={modalState.isOpen}
-        product={modalState.product}
-        onClose={closeModal}
-        onSaved={handleSaved}
-      />
-    </>
+      {/* ── Fila inferior: visitas + QR ── */}
+      <div className={styles.bottomRow}>
+        <VisitStats stats={stats} loading={loadingStats} />
+        <QRSection />
+      </div>
+    </div>
   );
 }

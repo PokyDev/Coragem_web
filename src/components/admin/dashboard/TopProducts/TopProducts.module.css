@@ -1,0 +1,207 @@
+/**
+ * src/components/admin/dashboard/TopProducts/TopProducts.module.css
+ */
+
+/* ── Contenedor de sección ── */
+.section {
+  display:        flex;
+  flex-direction: column;
+  gap:            0.875rem;
+}
+
+.sectionHeader {
+  display:     flex;
+  align-items: baseline;
+  gap:         0.6rem;
+}
+
+.sectionTitle {
+  font-family:    var(--font-cormorant), serif;
+  font-size:      1.15rem;
+  font-weight:    600;
+  color:          var(--admin-text);
+  letter-spacing: 0.01em;
+}
+
+.sectionCount {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.68rem;
+  font-weight:    700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+}
+
+/* ── Lista de cards ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Card individual ── */
+.card {
+  display:       flex;
+  align-items:   center;
+  gap:           0.875rem;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  border-radius: 12px;
+  padding:       0.75rem 1rem;
+  transition:    border-color 0.18s ease, box-shadow 0.18s ease;
+  animation:     cardIn 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.card:hover {
+  border-color: rgba(78, 196, 196, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(78, 196, 196, 0.06),
+    0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Ranking ── */
+.rank {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.7rem;
+  font-weight:    700;
+  letter-spacing: 0.06em;
+  color:          var(--admin-text-dim);
+  width:          18px;
+  text-align:     center;
+  flex-shrink:    0;
+}
+
+.rankFirst  { color: #c49a6c; }
+.rankSecond { color: #94a3b8; }
+.rankThird  { color: #c47a9e; }
+
+/* ── Thumbnail ── */
+.thumb {
+  position:        relative;
+  width:           44px;
+  height:          44px;
+  border-radius:   9px;
+  background:      var(--admin-surface);
+  border:          1px solid var(--admin-border);
+  overflow:        hidden;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+}
+
+.thumbImg         { border-radius: 8px; object-fit: cover; }
+.thumbPlaceholder { font-size: 1.1rem; color: var(--admin-text-dim); }
+
+/* ── Info ── */
+.info {
+  flex:       1;
+  min-width:  0;
+  display:    flex;
+  flex-direction: column;
+  gap:        2px;
+}
+
+.name {
+  font-family:   var(--font-jost), sans-serif;
+  font-size:     0.82rem;
+  font-weight:   600;
+  color:         var(--admin-text);
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.price {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.72rem;
+  color:          var(--admin-text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── Métricas a la derecha ── */
+.metrics {
+  display:        flex;
+  align-items:    center;
+  gap:            1.25rem;
+  flex-shrink:    0;
+}
+
+.metric {
+  display:        flex;
+  flex-direction: column;
+  align-items:    flex-end;
+  gap:            1px;
+}
+
+.metricValue {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.9rem;
+  font-weight:    700;
+  letter-spacing: -0.01em;
+  color:          var(--admin-text);
+}
+
+.metricLabel {
+  font-family:    var(--font-jost), sans-serif;
+  font-size:      0.58rem;
+  font-weight:    700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--admin-text-dim);
+}
+
+.metricSales { color: var(--admin-accent); }
+.stockOk     { color: var(--stock-ok-color); }
+.stockLow    { color: var(--stock-low-color); }
+.stockOut    { color: var(--stock-out-color); }
+
+/* ── Bar de ventas (visual relativo al #1) ── */
+.barWrap {
+  width:         56px;
+  height:        4px;
+  border-radius: 2px;
+  background:    var(--admin-surface);
+  overflow:      hidden;
+  flex-shrink:   0;
+}
+
+.bar {
+  height:        100%;
+  border-radius: 2px;
+  background:    var(--admin-accent);
+  opacity:       0.7;
+  transition:    width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Skeleton loader ── */
+.skeleton {
+  display:     flex;
+  flex-direction: column;
+  gap:         0.5rem;
+}
+
+.skeletonCard {
+  height:        64px;
+  border-radius: 12px;
+  background:    var(--admin-bg-card);
+  border:        1px solid var(--admin-border);
+  animation:     shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .metrics { gap: 0.875rem; }
+  .barWrap { display: none; }
+  .metric:last-child { display: none; }
+}

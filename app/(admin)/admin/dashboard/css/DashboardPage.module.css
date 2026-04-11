@@ -1,26 +1,41 @@
 /**
  * app/(admin)/admin/dashboard/css/DashboardPage.module.css
  *
- * Layout de la página principal del dashboard.
- * Ocupa todo el espacio del main con dos secciones:
- *   1. StatsCards  — altura fija (auto)
- *   2. ProductsTable — crece para llenar el espacio restante
+ * Layout del nuevo dashboard de métricas.
  *
- * El main de AdminShell tiene overflow-y: auto para casos donde
- * el contenido total supere la pantalla (pantallas muy pequeñas).
- * En pantallas normales la tabla gestiona su propio scroll interno.
+ * Estructura:
+ *   ┌────────────────────────────────────┐
+ *   │  TopProducts (lista vertical)      │
+ *   ├──────────────────┬─────────────────┤
+ *   │  VisitStats      │  QRSection      │
+ *   │  (gráfica)       │  (QR + descarga)│
+ *   └──────────────────┴─────────────────┘
  */
 
+/* ── Root — ocupa el espacio disponible del main ── */
 .root {
   display:        flex;
   flex-direction: column;
-  gap:            1.25rem;
-  user-select: none;
+  gap:            1.5rem;
+  min-height:     calc(100dvh - 56px - 4rem);
+  user-select:    none;
+}
 
-  /*
-   * min-height: hace que el root llene al menos el área visible
-   * del main para que la tabla pueda crecer con flex: 1.
-   * calc considera el padding del .main (2rem top + 2rem bottom).
-   */
-  min-height: calc(100dvh - 56px - 4rem);
+/* ── Fila inferior: gráfica + QR ── */
+.bottomRow {
+  display:               grid;
+  grid-template-columns: 1fr 260px;
+  gap:                   1.25rem;
+  align-items:           start;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .bottomRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .root { gap: 1.25rem; }
 }

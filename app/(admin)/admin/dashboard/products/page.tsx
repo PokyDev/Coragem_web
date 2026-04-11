@@ -19,7 +19,7 @@ import { useMemo, useState, useCallback, useEffect } from "react";
 import type { StockFilter, ProductRow, ProductModalState } from "@/types/admin";
 import { StatsCards }       from "@/components/admin/shared/StatsCards";
 import { ProductCard }      from "@/components/admin/products/ProductCard";
-import { ProductFormModal } from "@/components/admin/dashboard/ProductFormModal";
+import { ProductFormModal } from "@/components/admin/products/ProductFormModal";
 import {
   useDashboardSearch,
   useDashboardActions,

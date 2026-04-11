@@ -9,6 +9,9 @@
  *   - Se muestra el botón hamburguesa (oculto en desktop).
  *   - El botón "+ Nuevo Producto" colapsa a solo el ícono "+" en móvil.
  *   - El campo de búsqueda se comprime o se oculta según espacio.
+ *
+ * Rutas con controles de producto (search + "+ Nuevo"):
+ *   Solo /admin/dashboard/products — el dashboard principal ya no los muestra.
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -101,7 +104,6 @@ function HamburgerIcon() {
 interface AdminTopbarProps {
   userName?:       string;
   onSearchChange?: (query: string) => void;
-  /** Abre el AdminMobileMenu — invocado desde el botón hamburguesa */
   onMenuOpen?:     () => void;
 }
 
@@ -112,10 +114,14 @@ export function AdminTopbar({
   onSearchChange,
   onMenuOpen,
 }: AdminTopbarProps) {
-  const pathname    = usePathname();
-  const pageTitle   = resolvePageTitle(pathname);
+  const pathname  = usePathname();
+  const pageTitle = resolvePageTitle(pathname);
+
+  /*
+   * Solo /admin/dashboard/products muestra search y "+ Nuevo Producto".
+   * El dashboard principal (/admin/dashboard) queda solo con título y avatar.
+   */
   const PRODUCT_CONTROL_ROUTES = new Set([
-    "/admin/dashboard",
     "/admin/dashboard/products",
   ]);
   const showProductControls = PRODUCT_CONTROL_ROUTES.has(pathname);
@@ -196,7 +202,6 @@ export function AdminTopbar({
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            {/* El texto se oculta en móvil via CSS, queda solo el ícono */}
             <span className={styles.btnNewProductLabel}>Nuevo Producto</span>
           </button>
         )}

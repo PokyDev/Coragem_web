@@ -60,13 +60,14 @@ export function QRSection() {
             size={160}
             level="H"
             marginSize={0}
-            /*
-             * fgColor en negro puro para máximo contraste sobre
-             * el fondo blanco del frame — garantiza lectura en
-             * todos los escáneres.
-             */
-            fgColor="#000000"
+            fgColor="#4ec4c4"          // teal de marca en lugar de negro
             bgColor="#ffffff"
+            imageSettings={{
+              src: "/favicon.ico",     // o la ruta .png que tengas
+              width: 32,
+              height: 32,
+              excavate: true,
+            }}
           />
         </div>
 

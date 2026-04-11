@@ -36,7 +36,7 @@ const QR_URL = "https://coragem.shop";
 const QR_OPTIONS = {
   width:  180,
   height: 180,
-  type:   "svg" as const,
+  type:   "canvas" as const,       // canvas aplica los estilos más fielmente que svg
   data:   QR_URL,
   image:  "/favicon.ico",
   qrOptions: {
@@ -49,15 +49,15 @@ const QR_OPTIONS = {
     crossOrigin:        "anonymous",
   },
   dotsOptions: {
-    type:  "rounded" as const,
+    type:  "dots" as const,          // círculos puros — diferencia muy visible
     color: "#000000",
   },
   cornersSquareOptions: {
-    type:  "extra-rounded" as const,
+    type:  "extra-rounded" as const, // esquinas de posicionamiento redondeadas
     color: "#000000",
   },
   cornersDotOptions: {
-    type:  "dot" as const,
+    type:  "dot" as const,           // punto interior circular
     color: "#000000",
   },
   backgroundOptions: {

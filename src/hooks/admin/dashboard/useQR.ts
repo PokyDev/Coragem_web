@@ -1,43 +1,97 @@
+// src/hooks/admin/dashboard/useQR.ts
 "use client";
 
 /**
  * src/hooks/admin/dashboard/useQR.ts
  *
- * Gestiona la URL del QR y la descarga como imagen PNG.
+ * Gestiona el QR estilizado del sitio y su descarga como PNG.
  *
- * Estado actual: URL fija (coragem.shop).
- * Integración futura: leer la URL desde AppConfig via
+ * Usa qr-code-styling (en vez de qrcode.react) para permitir
+ * dots redondeados, esquinas suavizadas y logo central.
+ *
+ * La instancia de QRCodeStyling se crea una sola vez via useRef
+ * y se inyecta en el DOM via qrInstance.append(containerRef.current).
+ *
+ * API pública:
+ *   - containerRef  → ref del <div> donde se monta el SVG
+ *   - qrUrl         → URL codificada (para mostrar en el label)
+ *   - download      → descarga el QR como PNG
+ *
+ * Integración futura: leer qrUrl desde AppConfig via
  *   GET /api/admin/config/qr-url
- * y permitir edición con PATCH /api/admin/config/qr-url.
- * El hook ya recibe `qrUrl` como parámetro para facilitar ese cambio.
  */
 
-import { useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
+import type { RefObject } from "react";
+import type QRCodeStylingType from "qr-code-styling";
 
 export interface UseQRReturn {
-  /** URL codificada en el QR */
-  qrUrl:    string;
-  /** Descarga el canvas SVG/PNG renderizado por la librería QR */
-  download: (canvasId: string) => void;
+  containerRef: RefObject<HTMLDivElement | null>;
+  qrUrl:        string;
+  download:     () => void;
 }
 
-/*
- * TODO: cuando AppConfig exponga la URL del QR, recibir el valor
- * dinámico desde el componente padre (ya sea via prop o context)
- * y eliminar esta constante.
- */
 const QR_URL = "https://coragem.shop";
 
-export function useQR(): UseQRReturn {
-  const download = useCallback((canvasId: string) => {
-    const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null;
-    if (!canvas) return;
+const QR_OPTIONS = {
+  width:  180,
+  height: 180,
+  type:   "svg" as const,
+  data:   QR_URL,
+  image:  "/favicon.ico",
+  qrOptions: {
+    errorCorrectionLevel: "H" as const,
+  },
+  imageOptions: {
+    hideBackgroundDots: true,
+    imageSize:          0.32,
+    margin:             6,
+    crossOrigin:        "anonymous",
+  },
+  dotsOptions: {
+    type:  "rounded" as const,
+    color: "#000000",
+  },
+  cornersSquareOptions: {
+    type:  "extra-rounded" as const,
+    color: "#000000",
+  },
+  cornersDotOptions: {
+    type:  "dot" as const,
+    color: "#000000",
+  },
+  backgroundOptions: {
+    color: "#ffffff",
+  },
+} as const;
 
-    const link      = document.createElement("a");
-    link.download   = "coragem-qr.png";
-    link.href       = canvas.toDataURL("image/png");
-    link.click();
+export function useQR(): UseQRReturn {
+  const containerRef  = useRef<HTMLDivElement | null>(null);
+  const qrInstanceRef = useRef<QRCodeStylingType | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    import("qr-code-styling").then((mod) => {
+      if (cancelled || !containerRef.current) return;
+
+      const QRCodeStyling = mod.default;
+      const instance = new QRCodeStyling(QR_OPTIONS);
+
+      // Limpiar el contenedor antes de inyectar (strict mode / HMR)
+      containerRef.current.innerHTML = "";
+      instance.append(containerRef.current);
+      qrInstanceRef.current = instance;
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  return { qrUrl: QR_URL, download };
+  const download = useCallback(() => {
+    qrInstanceRef.current?.download({ name: "coragem-qr", extension: "png" });
+  }, []);
+
+  return { containerRef, qrUrl: QR_URL, download };
 }

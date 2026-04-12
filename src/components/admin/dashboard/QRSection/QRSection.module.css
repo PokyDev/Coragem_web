@@ -59,31 +59,48 @@
 
 /* ── Botón de descarga ── */
 .downloadBtn {
-  display:        flex;
-  align-items:    center;
-  gap:            0.45rem;
-  padding:        0.52rem 1.25rem;
-  border-radius:  8px;
-  border:         1px solid rgba(78, 196, 196, 0.28);
-  background:     var(--stock-ok-bg);
-  color:          var(--admin-accent);
-  font-family:    var(--font-jost), sans-serif;
-  font-size:      0.74rem;
-  font-weight:    700;
-  letter-spacing: 0.05em;
-  cursor:         pointer;
-  transition:     background 0.18s ease, border-color 0.18s ease, transform 0.14s ease;
-  width:          100%;
+  display:         flex;
+  align-items:     center;
+  gap:             0.45rem;
+  padding:         0.52rem 1.25rem;
+  border-radius:   8px;
+  border:          1px solid rgba(78, 196, 196, 0.28);
+  background:      var(--stock-ok-bg);
+  color:           var(--admin-accent);
+  font-family:     var(--font-jost), sans-serif;
+  font-size:       0.74rem;
+  font-weight:     700;
+  letter-spacing:  0.05em;
+  cursor:          pointer;
+  transition:      background 0.18s ease, border-color 0.18s ease,
+                   transform 0.14s ease, opacity 0.15s ease;
+  width:           100%;
   justify-content: center;
 }
 
-.downloadBtn:hover {
+.downloadBtn:hover:not(:disabled) {
   background:   rgba(78, 196, 196, 0.18);
   border-color: rgba(78, 196, 196, 0.45);
   transform:    translateY(-1px);
 }
 
-.downloadBtn:active { transform: translateY(0); }
+.downloadBtn:active:not(:disabled) { transform: translateY(0); }
+
+.downloadBtn:disabled {
+  opacity: 0.65;
+  cursor:  not-allowed;
+}
+
+/* ── Spinner ── */
+.spinner {
+  animation: spin 0.9s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
 
 /* ── Skeleton ── */
 .skeleton {

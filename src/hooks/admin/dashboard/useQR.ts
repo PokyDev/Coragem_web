@@ -36,7 +36,7 @@ const QR_URL = "https://coragem.shop";
 const QR_OPTIONS = {
   width:  180,
   height: 180,
-  type:   "canvas" as const,       // canvas aplica los estilos más fielmente que svg
+  type:   "svg" as const,       // Evitar pixelación en pantallas HiDPI
   data:   QR_URL,
   image:  "/favicon.ico",
   qrOptions: {

@@ -200,14 +200,15 @@ export async function buildQRPdf({ qrPngBuffer, qrUrl }: BuildQRPdfOptions): Pro
     opacity: 0.5,
   });
 
-  // Rombo central
-  page.drawText("◆", {
-    x:     (PAGE_W / 2) - 5,
-    y:     sepY - 4,
-    size:  9,
-    font:  fontRegular,
-    color: C_SAND,
-  });
+  // Rombo central — dibujado como figura geométrica (sin texto, evita límites WinAnsi)
+  const diamondCx = PAGE_W / 2;
+  const diamondCy = sepY;
+  const diamondR  = 4; // radio del rombo en puntos
+
+  page.drawLine({ start: { x: diamondCx,            y: diamondCy + diamondR }, end: { x: diamondCx + diamondR, y: diamondCy            }, thickness: 1, color: C_SAND });
+  page.drawLine({ start: { x: diamondCx + diamondR, y: diamondCy            }, end: { x: diamondCx,            y: diamondCy - diamondR }, thickness: 1, color: C_SAND });
+  page.drawLine({ start: { x: diamondCx,            y: diamondCy - diamondR }, end: { x: diamondCx - diamondR, y: diamondCy            }, thickness: 1, color: C_SAND });
+  page.drawLine({ start: { x: diamondCx - diamondR, y: diamondCy            }, end: { x: diamondCx,            y: diamondCy + diamondR }, thickness: 1, color: C_SAND });
 
   // Línea derecha (teal)
   page.drawLine({

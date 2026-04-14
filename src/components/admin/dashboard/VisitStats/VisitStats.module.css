@@ -106,8 +106,16 @@
 
 /* ── Área de la gráfica ── */
 .chartWrap {
-  width:  100%;
-  height: 180px;
+  position:   relative;
+  width:      100%;
+  flex:       1;
+  min-height: 180px;
+}
+
+/* Recharts requiere un contenedor con alto en píxeles; el div absoluto resuelve eso */
+.chartWrap > * {
+  position: absolute;
+  inset:    0;
 }
 
 /* ── Skeleton ── */

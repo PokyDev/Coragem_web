@@ -45,7 +45,7 @@ export function useTopProducts(): UseTopProductsReturn {
   useEffect(() => {
     let cancelled = false;
 
-    api.get<TopProduct[]>("/admin/products/top").then((res) => {
+    api.get<TopProduct[]>("/api/admin/products/top").then((res) => {
       if (cancelled) return;
       if (res.error || !res.data) {
         setError(res.error ?? "Error al cargar los productos");

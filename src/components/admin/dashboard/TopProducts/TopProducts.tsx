@@ -53,25 +53,43 @@ interface LightboxProps {
   onClose: () => void;
 }
 
+const LIGHTBOX_ANIM_MS = 160;
+
 function ImageLightbox({ url, alt, onClose }: LightboxProps) {
+  const [closing, setClosing] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setClosing(true);
+  }, []);
+
+  /* Espera a que termine la animación de salida antes de desmontar */
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (!closing) return;
+    const t = setTimeout(onClose, LIGHTBOX_ANIM_MS);
+    return () => clearTimeout(t);
+  }, [closing, onClose]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") handleClose(); };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  }, [handleClose]);
 
   return (
     <div
-      className={styles.overlay}
-      onClick={onClose}
+      className={`${styles.overlay} ${closing ? styles.overlayClosing : ""}`}
+      onClick={handleClose}
       role="dialog"
       aria-modal
       aria-label={`Imagen de ${alt}`}
     >
-      <div className={styles.lightboxContainer} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`${styles.lightboxContainer} ${closing ? styles.lightboxClosing : ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           className={styles.closeBtn}
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Cerrar imagen"
         >
           <X size={16} strokeWidth={2.5} />

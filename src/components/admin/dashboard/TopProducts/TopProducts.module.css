@@ -267,11 +267,20 @@
   to   { opacity: 1; }
 }
 
+.overlayClosing {
+  animation: overlayOut 0.16s ease forwards;
+}
+
+@keyframes overlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 .lightboxContainer {
   position:      relative;
   width:         min(500px, 92vw);
   height:        min(500px, 80vh);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow:      hidden;
   box-shadow:    0 32px 80px rgba(0, 0, 0, 0.55);
   animation:     lightboxIn 0.22s cubic-bezier(0.34, 1.46, 0.64, 1) both;
@@ -282,15 +291,27 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-.lightboxImg { object-fit: contain; }
+.lightboxClosing {
+  animation: lightboxOut 0.16s ease forwards;
+}
+
+@keyframes lightboxOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.88); }
+}
+
+.lightboxImg {
+  object-fit:    contain;
+  border-radius: 12px;
+}
 
 .closeBtn {
   position:        absolute;
-  top:             10px;
-  right:           10px;
+  top:             8px;
+  right:           8px;
   z-index:         10;
-  width:           32px;
-  height:          32px;
+  width:           30px;
+  height:          30px;
   display:         flex;
   align-items:     center;
   justify-content: center;

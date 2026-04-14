@@ -97,9 +97,11 @@ function ImageLightbox({ url, alt, onClose }: LightboxProps) {
         <Image
           src={url}
           alt={alt}
-          fill
-          sizes="(max-width: 768px) 90vw, 500px"
+          width={500}
+          height={500}
+          sizes="(max-width: 768px) 92vw, 500px"
           className={styles.lightboxImg}
+          style={{ width: "min(500px, 92vw)", height: "min(500px, 80vh)" }}
         />
       </div>
     </div>

@@ -9,7 +9,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
 import type { TopProduct } from "@/hooks/admin/dashboard/useTopProducts";
 import { getStockStatus } from "@/lib/dashboard";
 import styles from "./TopProducts.module.css";
@@ -87,13 +86,6 @@ function ImageLightbox({ url, alt, onClose }: LightboxProps) {
         className={`${styles.lightboxContainer} ${closing ? styles.lightboxClosing : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          className={styles.closeBtn}
-          onClick={handleClose}
-          aria-label="Cerrar imagen"
-        >
-          <X size={16} strokeWidth={2.5} />
-        </button>
         <Image
           src={url}
           alt={alt}

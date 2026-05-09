@@ -257,7 +257,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
       >
         {/* ── Handle zone ── */}
         <div style={{ flexShrink: 0 }}>
-          {/* Drag pill */}
+        {/*
+          -- Opcional: handle de arrastre visible (barra horizontal) --
           <div
             ref={dragHandleRef}
             onTouchStart={handleHandleTouchStart}
@@ -281,9 +282,10 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               }}
             />
           </div>
+        */}
 
           {/* Close button */}
-          <div style={{ display: "flex", justifyContent: "center", paddingBottom: "0.8rem" }}>
+          <div style={{ display: "flex", justifyContent: "center", padding: "0.75rem 1rem 0.8rem" }}>
             <button
               onClick={handleClose}
               aria-label="Cerrar panel"
@@ -328,7 +330,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            padding: "0 1rem 0.6rem",
+            padding: "0.75rem 1rem 0.6rem",
             gap: "0.75rem",
           }}
         >
@@ -337,6 +339,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               fontFamily: "var(--font-cormorant), serif",
               fontSize: "clamp(1.2rem, 5vw, 1.5rem)",
               fontWeight: 600,
+              textAlign: "center",
               lineHeight: 1.15,
               letterSpacing: "0.02em",
               color: "var(--text-primary)",

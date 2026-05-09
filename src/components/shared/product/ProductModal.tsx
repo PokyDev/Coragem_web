@@ -49,35 +49,24 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/**
- * Devuelve la URL de la primera imagen del producto.
- * Las imágenes provienen de Cloudinary y ya son URLs absolutas,
- * por lo que se usan directamente sin ningún prefijo de ruta local.
- */
 function getImageSrc(product: Product): string {
   return product.images[0]?.url ?? "/placeholder.jpg";
 }
 
 const ZOOM_SCALE = 2.5;
 
-/* ─── ZoomState ──────────────────────────────────────────────────── */
-interface ZoomState {
-  visible: boolean;
-  bgX: number;
-  bgY: number;
-}
-
 /* ─── ZoomOverlay (desktop) ──────────────────────────────────────── */
 interface ZoomOverlayProps {
   src: string;
   alt: string;
-  zoomState: ZoomState;
+  visible: boolean;
+  panelRef: React.RefObject<HTMLDivElement | null>;
 }
 
-function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
+function ZoomOverlay({ src, alt, visible, panelRef }: ZoomOverlayProps) {
   return (
     <div
-      className={`zoom-overlay ${zoomState.visible ? "zoom-overlay--visible" : ""}`}
+      className={`zoom-overlay ${visible ? "zoom-overlay--visible" : ""}`}
       aria-hidden="true"
       style={{
         position: "absolute",
@@ -99,6 +88,7 @@ function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
       }}
     >
       <div
+        ref={panelRef}
         style={{
           position: "relative",
           width: "100%",
@@ -107,7 +97,7 @@ function ZoomOverlay({ src, alt, zoomState }: ZoomOverlayProps) {
           overflow: "hidden",
           backgroundImage: `url(${src})`,
           backgroundSize: `${ZOOM_SCALE * 100}%`,
-          backgroundPosition: `${zoomState.bgX}% ${zoomState.bgY}%`,
+          backgroundPosition: "50% 50%",
           backgroundRepeat: "no-repeat",
           transition: "background-position 0.04s linear",
         }}
@@ -205,16 +195,24 @@ function DetailItem({
 
 /* ─── DesktopModal ───────────────────────────────────────────────── */
 function DesktopModal({ product, onClose }: ProductModalProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [closing, setClosing] = useState(false);
-  const [zoomState, setZoomState] = useState<ZoomState>({
-    visible: false,
-    bgX: 50,
-    bgY: 50,
-  });
+  const panelRef      = useRef<HTMLDivElement>(null);
+  const zoomPanelRef  = useRef<HTMLDivElement>(null);
+  const zoomVisibleRef = useRef(false);
+  const [mounted,     setMounted]     = useState(false);
+  const [closing,     setClosing]     = useState(false);
+  const [zoomVisible, setZoomVisible] = useState(false);
 
   const outOfStock = product?.stock === 0;
+  const imageSrc   = product ? getImageSrc(product) : "";
+
+  // Preload raw Cloudinary URL so the background-image in ZoomOverlay hits
+  // the browser cache instead of making a fresh network request on first hover.
+  // Next.js <Image> serves via /_next/image?..., which is a different cache entry.
+  useEffect(() => {
+    if (!imageSrc || imageSrc === "/placeholder.jpg") return;
+    const img = new window.Image();
+    img.src = imageSrc;
+  }, [imageSrc]);
 
   useEffect(() => {
     if (product) {
@@ -257,25 +255,34 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
     [handleClose]
   );
 
+  // Update background-position directly on the DOM node — no React re-render
+  // on every mousemove. Only toggle visibility (one re-render per enter/leave).
   const handleImageMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (outOfStock) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
       const y = ((e.clientY - rect.top) / rect.height) * 100;
-      setZoomState({ visible: true, bgX: x, bgY: y });
+
+      if (zoomPanelRef.current) {
+        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
+      }
+
+      if (!zoomVisibleRef.current) {
+        zoomVisibleRef.current = true;
+        setZoomVisible(true);
+      }
     },
     [outOfStock]
   );
 
   const handleImageMouseLeave = useCallback(() => {
-    setZoomState((prev) => ({ ...prev, visible: false }));
+    zoomVisibleRef.current = false;
+    setZoomVisible(false);
   }, []);
 
   if (!product) return null;
 
-  // URL directa de Cloudinary — sin prefijo local
-  const imageSrc = getImageSrc(product);
   const isVisible = mounted && !closing;
 
   return (
@@ -324,8 +331,8 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
             aria-label="Cerrar"
             className="dm-close-btn"
             style={{
-              opacity: zoomState.visible ? 0 : 1,
-              pointerEvents: zoomState.visible ? "none" : "auto",
+              opacity: zoomVisible ? 0 : 1,
+              pointerEvents: zoomVisible ? "none" : "auto",
               position: "absolute",
               top: "1rem",
               right: "1rem",
@@ -389,7 +396,7 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
 
                 {!outOfStock && (
                   <div
-                    className={`dm-zoom-hint ${zoomState.visible ? "dm-zoom-hint--hidden" : ""}`}
+                    className={`dm-zoom-hint ${zoomVisible ? "dm-zoom-hint--hidden" : ""}`}
                     style={{
                       position: "absolute",
                       bottom: "0.75rem",
@@ -424,9 +431,9 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
-                opacity: zoomState.visible ? 0 : 1,
+                opacity: zoomVisible ? 0 : 1,
                 transition: "opacity 0.25s ease",
-                pointerEvents: zoomState.visible ? "none" : "auto",
+                pointerEvents: zoomVisible ? "none" : "auto",
               }}
             >
               <h2
@@ -536,7 +543,12 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
             </div>
 
             {!outOfStock && (
-              <ZoomOverlay src={imageSrc} alt={product.name} zoomState={zoomState} />
+              <ZoomOverlay
+                src={imageSrc}
+                alt={product.name}
+                visible={zoomVisible}
+                panelRef={zoomPanelRef}
+              />
             )}
           </div>
         </div>

@@ -21,23 +21,11 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-/**
- * Devuelve la URL de la primera imagen del producto.
- * Las imágenes provienen de Cloudinary y ya son URLs absolutas,
- * por lo que se usan directamente sin ningún prefijo de ruta local.
- */
 function getImageSrc(product: Product): string {
   return product.images[0]?.url ?? "/placeholder.jpg";
 }
 
 const ZOOM_SCALE = 2.8;
-
-/* ─── ZoomState ──────────────────────────────────────────────────── */
-interface ZoomState {
-  active: boolean;
-  bgX: number;
-  bgY: number;
-}
 
 /* ─── DetailItem ─────────────────────────────────────────────────── */
 function DetailItem({
@@ -86,18 +74,30 @@ interface ProductMobileSheetProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps) {
-  const sheetRef     = useRef<HTMLDivElement>(null);
+  const sheetRef      = useRef<HTMLDivElement>(null);
   const dragHandleRef = useRef<HTMLDivElement>(null);
+  const zoomPanelRef  = useRef<HTMLDivElement>(null);
+  const zoomActiveRef = useRef(false);
 
-  const [mounted,  setMounted]  = useState(false);
-  const [closing,  setClosing]  = useState(false);
-  const [dragY,    setDragY]    = useState(0);
-  const [zoomState, setZoomState] = useState<ZoomState>({ active: false, bgX: 50, bgY: 50 });
+  const [mounted,    setMounted]    = useState(false);
+  const [closing,    setClosing]    = useState(false);
+  const [dragY,      setDragY]      = useState(0);
+  const [zoomActive, setZoomActive] = useState(false);
 
-  const dragStartY  = useRef(0);
-  const isDragging  = useRef(false);
+  const dragStartY = useRef(0);
+  const isDragging = useRef(false);
 
   const outOfStock = product?.stock === 0;
+  const imageSrc   = product ? getImageSrc(product) : "";
+
+  // Preload raw Cloudinary URL so the background-image hits the browser cache
+  // instead of making a fresh network request on first touch.
+  // Next.js <Image> serves via /_next/image?..., which is a different cache entry.
+  useEffect(() => {
+    if (!imageSrc || imageSrc === "/placeholder.jpg") return;
+    const img = new window.Image();
+    img.src = imageSrc;
+  }, [imageSrc]);
 
   /* ── Montar con animación ── */
   useEffect(() => {
@@ -164,6 +164,8 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
   }, [dragY, handleClose]);
 
   /* ── Zoom: touch sobre la imagen ── */
+  // Update background-position directly on the DOM node — no React re-render
+  // on every touchmove. Only toggle active state (one re-render per gesture).
   const handleImageTouchStart = useCallback(
     (e: React.TouchEvent<HTMLDivElement>) => {
       if (outOfStock) return;
@@ -171,33 +173,41 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
       const rect  = e.currentTarget.getBoundingClientRect();
       const x = ((touch.clientX - rect.left) / rect.width)  * 100;
       const y = ((touch.clientY - rect.top)  / rect.height) * 100;
-      setZoomState({ active: true, bgX: x, bgY: y });
+
+      if (zoomPanelRef.current) {
+        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
+      }
+
+      zoomActiveRef.current = true;
+      setZoomActive(true);
     },
     [outOfStock]
   );
 
   const handleImageTouchMove = useCallback(
     (e: React.TouchEvent<HTMLDivElement>) => {
-      if (outOfStock || !zoomState.active) return;
+      if (outOfStock || !zoomActiveRef.current) return;
       e.preventDefault();
       e.stopPropagation();
       const touch = e.touches[0];
       const rect  = e.currentTarget.getBoundingClientRect();
       const x = ((touch.clientX - rect.left) / rect.width)  * 100;
       const y = ((touch.clientY - rect.top)  / rect.height) * 100;
-      setZoomState({ active: true, bgX: x, bgY: y });
+
+      if (zoomPanelRef.current) {
+        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
+      }
     },
-    [outOfStock, zoomState.active]
+    [outOfStock]
   );
 
   const handleImageTouchEnd = useCallback(() => {
-    setZoomState((prev) => ({ ...prev, active: false }));
+    zoomActiveRef.current = false;
+    setZoomActive(false);
   }, []);
 
   if (!product) return null;
 
-  // URL directa de Cloudinary — sin prefijo local
-  const imageSrc  = getImageSrc(product);
   const isVisible = mounted && !closing;
 
   return (
@@ -337,7 +347,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
 
             {!outOfStock && (
               <div
-                className={`ms-zoom-hint ${zoomState.active ? "ms-zoom-hint--hidden" : ""}`}
+                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
                 style={{
                   position: "absolute",
                   bottom: "0.5rem",
@@ -382,7 +392,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               borderRadius: "12px",
               overflow: "hidden",
               backgroundColor: "var(--bg)",
-              border: `1px solid ${zoomState.active ? "rgba(78,196,196,0.35)" : "var(--border)"}`,
+              border: `1px solid ${zoomActive ? "rgba(78,196,196,0.35)" : "var(--border)"}`,
               transition: "border-color 0.25s ease",
             }}
           >
@@ -419,17 +429,20 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               </div>
             ) : (
               <>
+                {/* Always render with backgroundImage set — toggling to "none" forces
+                    a re-fetch. Visibility is controlled by opacity/transform only. */}
                 <div
+                  ref={zoomPanelRef}
                   style={{
                     position: "absolute",
                     inset: 0,
-                    backgroundImage: zoomState.active ? `url(${imageSrc})` : "none",
+                    backgroundImage: `url(${imageSrc})`,
                     backgroundSize: `${ZOOM_SCALE * 100}%`,
-                    backgroundPosition: `${zoomState.bgX}% ${zoomState.bgY}%`,
+                    backgroundPosition: "50% 50%",
                     backgroundRepeat: "no-repeat",
-                    opacity: zoomState.active ? 1 : 0,
-                    transform: zoomState.active ? "scale(1)" : "scale(1.04)",
-                    transition: "background-position 0.04s linear, opacity 0.22s ease, transform 0.22s ease",
+                    opacity: zoomActive ? 1 : 0,
+                    transform: zoomActive ? "scale(1)" : "scale(1.04)",
+                    transition: "opacity 0.22s ease, transform 0.22s ease",
                   }}
                   role="img"
                   aria-label={`Vista ampliada: ${product.name}`}
@@ -444,7 +457,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "0.45rem",
-                    opacity: zoomState.active ? 0 : 1,
+                    opacity: zoomActive ? 0 : 1,
                     transition: "opacity 0.2s ease",
                     pointerEvents: "none",
                   }}
@@ -485,7 +498,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                     backdropFilter: "blur(6px)",
                     zIndex: 2,
                     borderRadius: "12px 12px 0 0",
-                    opacity: zoomState.active ? 1 : 0,
+                    opacity: zoomActive ? 1 : 0,
                     transition: "opacity 0.2s ease",
                     pointerEvents: "none",
                   }}
@@ -520,7 +533,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             flex: 1,
             overflowY: "auto",
             padding: "0.9rem 1rem 2rem",
-            touchAction: zoomState.active ? "none" : "pan-y",
+            touchAction: zoomActive ? "none" : "pan-y",
           }}
         >
           <p

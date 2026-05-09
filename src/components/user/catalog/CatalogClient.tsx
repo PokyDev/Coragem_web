@@ -18,8 +18,8 @@ import { useProducts        } from '@/hooks/shared/useProducts';
 import { useCatalog         } from '@/hooks/shared/useCatalog';
 import type { ActiveFilters, Product, SortKey } from '@/types/catalog';
 
-const PRICE_MIN = 0;
-const PRICE_MAX = 100000;
+const PRICE_MIN = 5000;
+const PRICE_MAX = 40000;
 
 const DEFAULT_FILTERS: ActiveFilters = {
   search:     '',
@@ -27,7 +27,7 @@ const DEFAULT_FILTERS: ActiveFilters = {
   colors:     [],
   priceMin:   PRICE_MIN,
   priceMax:   PRICE_MAX,
-  sort:       'most_sold',
+  sort:       'name_asc',
 };
 
 /* ─── Sorting ── */

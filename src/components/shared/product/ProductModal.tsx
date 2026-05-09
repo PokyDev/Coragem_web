@@ -95,7 +95,7 @@ function ZoomOverlay({ src, alt, visible, panelRef }: ZoomOverlayProps) {
           aspectRatio: "1 / 1",
           borderRadius: "12px",
           overflow: "hidden",
-          backgroundImage: `url(${src})`,
+          backgroundImage: src ? `url(${src})` : "none",
           backgroundSize: `${ZOOM_SCALE * 100}%`,
           backgroundPosition: "50% 50%",
           backgroundRepeat: "no-repeat",
@@ -195,28 +195,23 @@ function DetailItem({
 
 /* ─── DesktopModal ───────────────────────────────────────────────── */
 function DesktopModal({ product, onClose }: ProductModalProps) {
-  const panelRef      = useRef<HTMLDivElement>(null);
-  const zoomPanelRef  = useRef<HTMLDivElement>(null);
+  const panelRef       = useRef<HTMLDivElement>(null);
+  const zoomPanelRef   = useRef<HTMLDivElement>(null);
   const zoomVisibleRef = useRef(false);
   const [mounted,     setMounted]     = useState(false);
   const [closing,     setClosing]     = useState(false);
   const [zoomVisible, setZoomVisible] = useState(false);
+  // currentSrc captured via onLoad — the exact /_next/image URL already in cache,
+  // so the ZoomOverlay background-image hits cache instantly with no network request.
+  const [zoomedSrc, setZoomedSrc] = useState<string>("");
 
   const outOfStock = product?.stock === 0;
   const imageSrc   = product ? getImageSrc(product) : "";
 
-  // Preload raw Cloudinary URL so the background-image in ZoomOverlay hits
-  // the browser cache instead of making a fresh network request on first hover.
-  // Next.js <Image> serves via /_next/image?..., which is a different cache entry.
-  useEffect(() => {
-    if (!imageSrc || imageSrc === "/placeholder.jpg") return;
-    const img = new window.Image();
-    img.src = imageSrc;
-  }, [imageSrc]);
-
   useEffect(() => {
     if (product) {
       setClosing(false);
+      setZoomedSrc("");
       requestAnimationFrame(() => setMounted(true));
     } else {
       setMounted(false);
@@ -391,6 +386,7 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
                     opacity: outOfStock ? 0.55 : 1,
                   }}
                   priority
+                  onLoad={(e) => setZoomedSrc((e.target as HTMLImageElement).currentSrc)}
                 />
                 {outOfStock && <NoStockRibbon />}
 
@@ -544,7 +540,7 @@ function DesktopModal({ product, onClose }: ProductModalProps) {
 
             {!outOfStock && (
               <ZoomOverlay
-                src={imageSrc}
+                src={zoomedSrc}
                 alt={product.name}
                 visible={zoomVisible}
                 panelRef={zoomPanelRef}

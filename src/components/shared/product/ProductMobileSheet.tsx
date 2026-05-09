@@ -255,31 +255,71 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           overflow: "hidden",
         }}
       >
-        {/* ── Drag handle ── */}
+        {/* ── Handle zone ── */}
+        <div style={{ flexShrink: 0 }}>
+          {/* Drag pill */}
+          <div
+            ref={dragHandleRef}
+            onTouchStart={handleHandleTouchStart}
+            onTouchMove={handleHandleTouchMove}
+            onTouchEnd={handleHandleTouchEnd}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "1rem 0 0.65rem",
+              cursor: "grab",
+              touchAction: "none",
+            }}
+          >
+            <div
+              style={{
+                width: "44px",
+                height: "5px",
+                borderRadius: "999px",
+                background: "var(--border)",
+              }}
+            />
+          </div>
+
+          {/* Close button */}
+          <div style={{ display: "flex", justifyContent: "center", paddingBottom: "0.8rem" }}>
+            <button
+              onClick={handleClose}
+              aria-label="Cerrar panel"
+              className="ms-close-btn"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                border: "1.5px solid var(--coragem-teal)",
+                background: "rgba(78,196,196,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                padding: 0,
+                color: "var(--coragem-teal)",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Separator ── */}
         <div
-          ref={dragHandleRef}
-          onTouchStart={handleHandleTouchStart}
-          onTouchMove={handleHandleTouchMove}
-          onTouchEnd={handleHandleTouchEnd}
           style={{
             flexShrink: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "0.75rem 0 0.5rem",
-            cursor: "grab",
-            touchAction: "none",
+            height: "1px",
+            margin: "0 1rem",
+            background: "linear-gradient(90deg, transparent 0%, var(--coragem-teal) 30%, var(--coragem-pink) 70%, transparent 100%)",
+            opacity: 0.3,
           }}
-        >
-          <div
-            style={{
-              width: "36px",
-              height: "4px",
-              borderRadius: "999px",
-              background: "var(--border)",
-            }}
-          />
-        </div>
+        />
 
         {/* ── Header: nombre ── */}
         <div
@@ -469,19 +509,25 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               backgroundColor: "var(--bg)",
               cursor: outOfStock ? "default" : "crosshair",
               touchAction: outOfStock ? "auto" : "none",
+              WebkitTouchCallout: "none",
+              userSelect: "none",
             }}
             onTouchStart={handleImageTouchStart}
             onTouchMove={handleImageTouchMove}
             onTouchEnd={handleImageTouchEnd}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <Image
               src={imageSrc}
               alt={product.name}
               fill
               sizes="45vw"
+              draggable={false}
               style={{
                 objectFit: "cover",
                 opacity: outOfStock ? 0.55 : 1,
+                WebkitTouchCallout: "none",
+                userSelect: "none",
               }}
               priority
             />
@@ -658,6 +704,16 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           opacity: 0 !important;
           pointer-events: none !important;
         }
+        @keyframes ms-close-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(78,196,196,0.45); }
+          50%       { box-shadow: 0 0 0 8px rgba(78,196,196,0); }
+        }
+        .ms-close-btn {
+          animation: ms-close-pulse 2s ease-in-out 0.5s 3;
+          transition: background 0.18s ease, transform 0.15s ease;
+        }
+        .ms-close-btn:hover  { background: rgba(78,196,196,0.18) !important; transform: scale(1.08); }
+        .ms-close-btn:active { transform: scale(0.94); }
         .ms-info-scroll::-webkit-scrollbar        { width: 3px; }
         .ms-info-scroll::-webkit-scrollbar-track  { background: transparent; }
         .ms-info-scroll::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 999px; }

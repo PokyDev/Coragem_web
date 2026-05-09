@@ -317,72 +317,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             padding: "0 0.75rem",
           }}
         >
-          {/* Imagen original */}
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              borderRadius: "12px",
-              overflow: "hidden",
-              backgroundColor: "var(--bg)",
-              cursor: outOfStock ? "default" : "crosshair",
-              touchAction: outOfStock ? "auto" : "none",
-            }}
-            onTouchStart={handleImageTouchStart}
-            onTouchMove={handleImageTouchMove}
-            onTouchEnd={handleImageTouchEnd}
-          >
-            <Image
-              src={imageSrc}
-              alt={product.name}
-              fill
-              sizes="45vw"
-              style={{
-                objectFit: "cover",
-                opacity: outOfStock ? 0.55 : 1,
-              }}
-              priority
-            />
-            {outOfStock && <NoStockRibbon />}
-
-            {!outOfStock && (
-              <div
-                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
-                style={{
-                  position: "absolute",
-                  bottom: "0.5rem",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  zIndex: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "999px",
-                  background: "rgba(0,0,0,0.5)",
-                  backdropFilter: "blur(6px)",
-                  whiteSpace: "nowrap",
-                  transition: "opacity 0.25s ease",
-                }}
-              >
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <span
-                  style={{
-                    fontFamily: "var(--font-jost), sans-serif",
-                    fontSize: "0.48rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.8)",
-                  }}
-                >
-                  Toca para zoom
-                </span>
-              </div>
-            )}
-          </div>
 
           {/* Panel de zoom */}
           <div
@@ -480,7 +414,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                       lineHeight: 1.5,
                     }}
                   >
-                    Toca la imagen para ampliar
+                    Arrastra tu dedo sobre la imagen original para obtener una vista ampliada
                   </span>
                 </div>
 
@@ -524,6 +458,74 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               </>
             )}
           </div>
+
+          {/* Imagen original */}
+          <div
+            style={{
+              position: "relative",
+              aspectRatio: "1 / 1",
+              borderRadius: "12px",
+              overflow: "hidden",
+              backgroundColor: "var(--bg)",
+              cursor: outOfStock ? "default" : "crosshair",
+              touchAction: outOfStock ? "auto" : "none",
+            }}
+            onTouchStart={handleImageTouchStart}
+            onTouchMove={handleImageTouchMove}
+            onTouchEnd={handleImageTouchEnd}
+          >
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              sizes="45vw"
+              style={{
+                objectFit: "cover",
+                opacity: outOfStock ? 0.55 : 1,
+              }}
+              priority
+            />
+            {outOfStock && <NoStockRibbon />}
+
+            {!outOfStock && (
+              <div
+                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
+                style={{
+                  position: "absolute",
+                  bottom: "0.5rem",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 3,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "999px",
+                  background: "rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(6px)",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 0.25s ease",
+                }}
+              >
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: "var(--font-jost), sans-serif",
+                    fontSize: "0.38rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.8)",
+                  }}
+                >
+                  Arrastra tu dedo y amplia
+                </span>
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* ── Info scrollable ── */}

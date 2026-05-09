@@ -74,15 +74,23 @@ interface ProductMobileSheetProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps) {
-  const sheetRef      = useRef<HTMLDivElement>(null);
-  const dragHandleRef = useRef<HTMLDivElement>(null);
-  const zoomPanelRef  = useRef<HTMLDivElement>(null);
-  const zoomActiveRef = useRef(false);
+  const sheetRef          = useRef<HTMLDivElement>(null);
+  const dragHandleRef     = useRef<HTMLDivElement>(null);
+  const zoomPanelRef      = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const zoomActiveRef     = useRef(false);
+  // Cached on touchstart — avoids getBoundingClientRect() reflow on every touchmove
+  const imageBoundsRef    = useRef<DOMRect | null>(null);
+  // Throttles DOM writes to display refresh rate
+  const rafIdRef          = useRef<number | null>(null);
 
   const [mounted,    setMounted]    = useState(false);
   const [closing,    setClosing]    = useState(false);
   const [dragY,      setDragY]      = useState(0);
   const [zoomActive, setZoomActive] = useState(false);
+  // currentSrc from onLoad: the /_next/image URL already in browser cache,
+  // so backgroundImage never needs a separate network request.
+  const [zoomedSrc,  setZoomedSrc]  = useState<string>("");
 
   const dragStartY = useRef(0);
   const isDragging = useRef(false);
@@ -90,20 +98,12 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
   const outOfStock = product?.stock === 0;
   const imageSrc   = product ? getImageSrc(product) : "";
 
-  // Preload raw Cloudinary URL so the background-image hits the browser cache
-  // instead of making a fresh network request on first touch.
-  // Next.js <Image> serves via /_next/image?..., which is a different cache entry.
-  useEffect(() => {
-    if (!imageSrc || imageSrc === "/placeholder.jpg") return;
-    const img = new window.Image();
-    img.src = imageSrc;
-  }, [imageSrc]);
-
   /* ── Montar con animación ── */
   useEffect(() => {
     if (product) {
       setClosing(false);
       setDragY(0);
+      setZoomedSrc("");
       requestAnimationFrame(() => setMounted(true));
     } else {
       setMounted(false);
@@ -123,6 +123,77 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* ── Zoom: listeners nativos para el panel de imagen ────────────────
+   * Se usan addEventListener nativo en vez de onTouchX de React por dos razones:
+   *   1. { passive: false } en touchmove permite que preventDefault() funcione
+   *      realmente — React registra sus listeners como passive por defecto,
+   *      lo que hace que el browser scroll interfiera con el zoom.
+   *   2. El rect se cachea en touchstart (una sola vez) y se reutiliza en
+   *      touchmove, evitando forzar un layout reflow en cada frame.
+   * ────────────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (outOfStock || !imageSrc) return;
+    const el = imageContainerRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      // Cache rect once per gesture — no reflow on every move
+      imageBoundsRef.current = el.getBoundingClientRect();
+      const touch = e.touches[0];
+      const { left, top, width, height } = imageBoundsRef.current;
+      const x = ((touch.clientX - left) / width)  * 100;
+      const y = ((touch.clientY - top)  / height) * 100;
+      if (zoomPanelRef.current) {
+        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
+      }
+      zoomActiveRef.current = true;
+      setZoomActive(true);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!zoomActiveRef.current || !imageBoundsRef.current) return;
+      // Prevent browser scroll/pan from interfering with zoom
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const { left, top, width, height } = imageBoundsRef.current;
+      const x = ((touch.clientX - left) / width)  * 100;
+      const y = ((touch.clientY - top)  / height) * 100;
+
+      // Throttle DOM writes to the display refresh rate
+      if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = requestAnimationFrame(() => {
+        if (zoomPanelRef.current) {
+          zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
+        }
+        rafIdRef.current = null;
+      });
+    };
+
+    const onTouchEnd = () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      imageBoundsRef.current = null;
+      zoomActiveRef.current  = false;
+      setZoomActive(false);
+    };
+
+    // touchstart passive: true — safe, we don't call preventDefault here
+    // touchmove passive: false — required so preventDefault() stops page scroll
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove",  onTouchMove,  { passive: false });
+    el.addEventListener("touchend",   onTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove",  onTouchMove);
+      el.removeEventListener("touchend",   onTouchEnd);
+      if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [imageSrc, outOfStock]);
 
   /* ── Cerrar con animación de salida ── */
   const handleClose = useCallback(() => {
@@ -162,49 +233,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
     if (dragY > 100) handleClose();
     else setDragY(0);
   }, [dragY, handleClose]);
-
-  /* ── Zoom: touch sobre la imagen ── */
-  // Update background-position directly on the DOM node — no React re-render
-  // on every touchmove. Only toggle active state (one re-render per gesture).
-  const handleImageTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      if (outOfStock) return;
-      const touch = e.touches[0];
-      const rect  = e.currentTarget.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width)  * 100;
-      const y = ((touch.clientY - rect.top)  / rect.height) * 100;
-
-      if (zoomPanelRef.current) {
-        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
-      }
-
-      zoomActiveRef.current = true;
-      setZoomActive(true);
-    },
-    [outOfStock]
-  );
-
-  const handleImageTouchMove = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      if (outOfStock || !zoomActiveRef.current) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const touch = e.touches[0];
-      const rect  = e.currentTarget.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width)  * 100;
-      const y = ((touch.clientY - rect.top)  / rect.height) * 100;
-
-      if (zoomPanelRef.current) {
-        zoomPanelRef.current.style.backgroundPosition = `${x}% ${y}%`;
-      }
-    },
-    [outOfStock]
-  );
-
-  const handleImageTouchEnd = useCallback(() => {
-    zoomActiveRef.current = false;
-    setZoomActive(false);
-  }, []);
 
   if (!product) return null;
 
@@ -255,73 +283,31 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           overflow: "hidden",
         }}
       >
-        {/* ── Handle zone ── */}
-        <div style={{ flexShrink: 0 }}>
-        {/*
-          -- Opcional: handle de arrastre visible (barra horizontal) --
-          <div
-            ref={dragHandleRef}
-            onTouchStart={handleHandleTouchStart}
-            onTouchMove={handleHandleTouchMove}
-            onTouchEnd={handleHandleTouchEnd}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: "1rem 0 0.65rem",
-              cursor: "grab",
-              touchAction: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "44px",
-                height: "5px",
-                borderRadius: "999px",
-                background: "var(--border)",
-              }}
-            />
-          </div>
-        */}
-
-          {/* Close button */}
-          <div style={{ display: "flex", justifyContent: "center", padding: "0.75rem 1rem 0.8rem" }}>
-            <button
-              onClick={handleClose}
-              aria-label="Cerrar panel"
-              className="ms-close-btn"
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                border: "1.5px solid var(--coragem-teal)",
-                background: "rgba(78,196,196,0.08)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                padding: 0,
-                color: "var(--coragem-teal)",
-                flexShrink: 0,
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* ── Separator ── */}
+        {/* ── Drag handle ── */}
         <div
+          ref={dragHandleRef}
+          onTouchStart={handleHandleTouchStart}
+          onTouchMove={handleHandleTouchMove}
+          onTouchEnd={handleHandleTouchEnd}
           style={{
             flexShrink: 0,
-            height: "1px",
-            margin: "0 1rem",
-            background: "linear-gradient(90deg, transparent 0%, var(--coragem-teal) 30%, var(--coragem-pink) 70%, transparent 100%)",
-            opacity: 0.3,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "0.75rem 0 0.5rem",
+            cursor: "grab",
+            touchAction: "none",
           }}
-        />
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "4px",
+              borderRadius: "999px",
+              background: "var(--border)",
+            }}
+          />
+        </div>
 
         {/* ── Header: nombre ── */}
         <div
@@ -330,7 +316,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            padding: "0.75rem 1rem 0.6rem",
+            padding: "0 1rem 0.6rem",
             gap: "0.75rem",
           }}
         >
@@ -339,7 +325,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               fontFamily: "var(--font-cormorant), serif",
               fontSize: "clamp(1.2rem, 5vw, 1.5rem)",
               fontWeight: 600,
-              textAlign: "center",
               lineHeight: 1.15,
               letterSpacing: "0.02em",
               color: "var(--text-primary)",
@@ -360,6 +345,73 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             padding: "0 0.75rem",
           }}
         >
+          {/* Imagen original — listeners nativos adjuntados via useEffect */}
+          <div
+            ref={imageContainerRef}
+            style={{
+              position: "relative",
+              aspectRatio: "1 / 1",
+              borderRadius: "12px",
+              overflow: "hidden",
+              backgroundColor: "var(--bg)",
+              cursor: outOfStock ? "default" : "crosshair",
+              // touch-action: none delega todo control táctil a JavaScript,
+              // evitando que el browser haga scroll/pan mientras se hace zoom.
+              touchAction: outOfStock ? "auto" : "none",
+            }}
+          >
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              sizes="90vw"
+              style={{
+                objectFit: "cover",
+                opacity: outOfStock ? 0.55 : 1,
+              }}
+              priority
+              onLoad={(e) => setZoomedSrc((e.target as HTMLImageElement).currentSrc)}
+            />
+            {outOfStock && <NoStockRibbon />}
+
+            {!outOfStock && (
+              <div
+                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
+                style={{
+                  position: "absolute",
+                  bottom: "0.5rem",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 3,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "999px",
+                  background: "rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(6px)",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 0.25s ease",
+                }}
+              >
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: "var(--font-jost), sans-serif",
+                    fontSize: "0.48rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.8)",
+                  }}
+                >
+                  Toca para zoom
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Panel de zoom */}
           <div
@@ -406,17 +458,20 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               </div>
             ) : (
               <>
-                {/* Always render with backgroundImage set — toggling to "none" forces
-                    a re-fetch. Visibility is controlled by opacity/transform only. */}
+                {/* backgroundImage se establece solo cuando currentSrc ya está
+                    en caché (via onLoad), así no hay petición de red adicional.
+                    will-change indica al browser que prepare el elemento para
+                    actualizaciones frecuentes de background-position. */}
                 <div
                   ref={zoomPanelRef}
                   style={{
                     position: "absolute",
                     inset: 0,
-                    backgroundImage: `url(${imageSrc})`,
+                    backgroundImage: zoomedSrc ? `url(${zoomedSrc})` : "none",
                     backgroundSize: `${ZOOM_SCALE * 100}%`,
                     backgroundPosition: "50% 50%",
                     backgroundRepeat: "no-repeat",
+                    willChange: "background-position",
                     opacity: zoomActive ? 1 : 0,
                     transform: zoomActive ? "scale(1)" : "scale(1.04)",
                     transition: "opacity 0.22s ease, transform 0.22s ease",
@@ -457,7 +512,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                       lineHeight: 1.5,
                     }}
                   >
-                    Arrastra tu dedo sobre la imagen original para obtener una vista ampliada
+                    Toca la imagen para ampliar
                   </span>
                 </div>
 
@@ -501,80 +556,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               </>
             )}
           </div>
-
-          {/* Imagen original */}
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              borderRadius: "12px",
-              overflow: "hidden",
-              backgroundColor: "var(--bg)",
-              cursor: outOfStock ? "default" : "crosshair",
-              touchAction: outOfStock ? "auto" : "none",
-              WebkitTouchCallout: "none",
-              userSelect: "none",
-            }}
-            onTouchStart={handleImageTouchStart}
-            onTouchMove={handleImageTouchMove}
-            onTouchEnd={handleImageTouchEnd}
-            onContextMenu={(e) => e.preventDefault()}
-          >
-            <Image
-              src={imageSrc}
-              alt={product.name}
-              fill
-              sizes="45vw"
-              draggable={false}
-              style={{
-                objectFit: "cover",
-                opacity: outOfStock ? 0.55 : 1,
-                WebkitTouchCallout: "none",
-                userSelect: "none",
-              }}
-              priority
-            />
-            {outOfStock && <NoStockRibbon />}
-
-            {!outOfStock && (
-              <div
-                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
-                style={{
-                  position: "absolute",
-                  bottom: "0.5rem",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  zIndex: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "999px",
-                  background: "rgba(0,0,0,0.5)",
-                  backdropFilter: "blur(6px)",
-                  whiteSpace: "nowrap",
-                  transition: "opacity 0.25s ease",
-                }}
-              >
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <span
-                  style={{
-                    fontFamily: "var(--font-jost), sans-serif",
-                    fontSize: "0.38rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.8)",
-                  }}
-                >
-                  Arrastra tu dedo y amplia
-                </span>
-              </div>
-            )}
-          </div>
-
         </div>
 
         {/* ── Info scrollable ── */}
@@ -707,16 +688,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           opacity: 0 !important;
           pointer-events: none !important;
         }
-        @keyframes ms-close-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(78,196,196,0.45); }
-          50%       { box-shadow: 0 0 0 8px rgba(78,196,196,0); }
-        }
-        .ms-close-btn {
-          animation: ms-close-pulse 2s ease-in-out 0.5s 3;
-          transition: background 0.18s ease, transform 0.15s ease;
-        }
-        .ms-close-btn:hover  { background: rgba(78,196,196,0.18) !important; transform: scale(1.08); }
-        .ms-close-btn:active { transform: scale(0.94); }
         .ms-info-scroll::-webkit-scrollbar        { width: 3px; }
         .ms-info-scroll::-webkit-scrollbar-track  { background: transparent; }
         .ms-info-scroll::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 999px; }

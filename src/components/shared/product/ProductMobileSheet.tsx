@@ -75,7 +75,6 @@ interface ProductMobileSheetProps {
 /* ─── Component ──────────────────────────────────────────────────── */
 export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps) {
   const sheetRef          = useRef<HTMLDivElement>(null);
-  const dragHandleRef     = useRef<HTMLDivElement>(null);
   const zoomPanelRef      = useRef<HTMLDivElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const zoomActiveRef     = useRef(false);
@@ -92,7 +91,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
   // so backgroundImage never needs a separate network request.
   const [zoomedSrc,  setZoomedSrc]  = useState<string>("");
 
-  const dragStartY = useRef(0);
   const isDragging = useRef(false);
 
   const outOfStock = product?.stock === 0;
@@ -216,24 +214,6 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
     [handleClose]
   );
 
-  /* ── Swipe-to-dismiss ── */
-  const handleHandleTouchStart = useCallback((e: React.TouchEvent) => {
-    isDragging.current = true;
-    dragStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const handleHandleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging.current) return;
-    const delta = e.touches[0].clientY - dragStartY.current;
-    if (delta > 0) setDragY(delta);
-  }, []);
-
-  const handleHandleTouchEnd = useCallback(() => {
-    isDragging.current = false;
-    if (dragY > 100) handleClose();
-    else setDragY(0);
-  }, [dragY, handleClose]);
-
   if (!product) return null;
 
   const isVisible = mounted && !closing;
@@ -283,31 +263,69 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           overflow: "hidden",
         }}
       >
-        {/* ── Drag handle ── */}
+        {/* ── Handle zone ── */}
+        <div style={{ flexShrink: 0 }}>
+          {/*
+            -- Opcional: handle de arrastre visible (barra horizontal) --
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "1rem 0 0.65rem",
+                cursor: "grab",
+                touchAction: "none",
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "5px",
+                  borderRadius: "999px",
+                  background: "var(--border)",
+                }}
+              />
+            </div>
+          */}
+
+          {/* Close button */}
+          <div style={{ display: "flex", justifyContent: "center", padding: "0.75rem 1rem 0.8rem" }}>
+            <button
+              onClick={handleClose}
+              aria-label="Cerrar panel"
+              className="ms-close-btn"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                border: "1.5px solid var(--coragem-teal)",
+                background: "rgba(78,196,196,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                padding: 0,
+                color: "var(--coragem-teal)",
+                flexShrink: 0,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Separator ── */}
         <div
-          ref={dragHandleRef}
-          onTouchStart={handleHandleTouchStart}
-          onTouchMove={handleHandleTouchMove}
-          onTouchEnd={handleHandleTouchEnd}
           style={{
             flexShrink: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "0.75rem 0 0.5rem",
-            cursor: "grab",
-            touchAction: "none",
+            height: "1px",
+            margin: "0 1rem",
+            background: "linear-gradient(90deg, transparent 0%, var(--coragem-teal) 30%, var(--coragem-pink) 70%, transparent 100%)",
+            opacity: 0.3,
           }}
-        >
-          <div
-            style={{
-              width: "36px",
-              height: "4px",
-              borderRadius: "999px",
-              background: "var(--border)",
-            }}
-          />
-        </div>
+        />
 
         {/* ── Header: nombre ── */}
         <div
@@ -316,7 +334,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            padding: "0 1rem 0.6rem",
+            padding: "0.75rem 1rem 0.6rem",
             gap: "0.75rem",
           }}
         >
@@ -325,6 +343,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
               fontFamily: "var(--font-cormorant), serif",
               fontSize: "clamp(1.2rem, 5vw, 1.5rem)",
               fontWeight: 600,
+              textAlign: "center",
               lineHeight: 1.15,
               letterSpacing: "0.02em",
               color: "var(--text-primary)",
@@ -335,7 +354,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           </h2>
         </div>
 
-        {/* ── Imagen | Zoom (fila fija, 50/50) ── */}
+        {/* ── Zoom | Imagen (fila fija, 50/50) — zoom a la izquierda, imagen a la derecha ── */}
         <div
           style={{
             flexShrink: 0,
@@ -345,75 +364,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
             padding: "0 0.75rem",
           }}
         >
-          {/* Imagen original — listeners nativos adjuntados via useEffect */}
-          <div
-            ref={imageContainerRef}
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              borderRadius: "12px",
-              overflow: "hidden",
-              backgroundColor: "var(--bg)",
-              cursor: outOfStock ? "default" : "crosshair",
-              // touch-action: none delega todo control táctil a JavaScript,
-              // evitando que el browser haga scroll/pan mientras se hace zoom.
-              touchAction: outOfStock ? "auto" : "none",
-            }}
-          >
-            <Image
-              src={imageSrc}
-              alt={product.name}
-              fill
-              sizes="90vw"
-              style={{
-                objectFit: "cover",
-                opacity: outOfStock ? 0.55 : 1,
-              }}
-              priority
-              onLoad={(e) => setZoomedSrc((e.target as HTMLImageElement).currentSrc)}
-            />
-            {outOfStock && <NoStockRibbon />}
-
-            {!outOfStock && (
-              <div
-                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
-                style={{
-                  position: "absolute",
-                  bottom: "0.5rem",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  zIndex: 3,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "999px",
-                  background: "rgba(0,0,0,0.5)",
-                  backdropFilter: "blur(6px)",
-                  whiteSpace: "nowrap",
-                  transition: "opacity 0.25s ease",
-                }}
-              >
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <span
-                  style={{
-                    fontFamily: "var(--font-jost), sans-serif",
-                    fontSize: "0.48rem",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.8)",
-                  }}
-                >
-                  Toca para zoom
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Panel de zoom */}
+          {/* Panel de zoom (izquierda) */}
           <div
             style={{
               position: "relative",
@@ -512,7 +463,7 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                       lineHeight: 1.5,
                     }}
                   >
-                    Toca la imagen para ampliar
+                    Arrastra tu dedo sobre la imagen original para obtener una vista ampliada
                   </span>
                 </div>
 
@@ -554,6 +505,80 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
                   </span>
                 </div>
               </>
+            )}
+          </div>
+
+          {/* Imagen original (derecha) — listeners nativos adjuntados via useEffect */}
+          <div
+            ref={imageContainerRef}
+            style={{
+              position: "relative",
+              aspectRatio: "1 / 1",
+              borderRadius: "12px",
+              overflow: "hidden",
+              backgroundColor: "var(--bg)",
+              cursor: outOfStock ? "default" : "crosshair",
+              // touch-action: none delega todo control táctil a JavaScript,
+              // evitando que el browser haga scroll/pan mientras se hace zoom.
+              touchAction: outOfStock ? "auto" : "none",
+              WebkitTouchCallout: "none",
+              userSelect: "none",
+            }}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              sizes="90vw"
+              draggable={false}
+              style={{
+                objectFit: "cover",
+                opacity: outOfStock ? 0.55 : 1,
+                WebkitTouchCallout: "none",
+                userSelect: "none",
+              }}
+              priority
+              onLoad={(e) => setZoomedSrc((e.target as HTMLImageElement).currentSrc)}
+            />
+            {outOfStock && <NoStockRibbon />}
+
+            {!outOfStock && (
+              <div
+                className={`ms-zoom-hint ${zoomActive ? "ms-zoom-hint--hidden" : ""}`}
+                style={{
+                  position: "absolute",
+                  bottom: "0.5rem",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 3,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "999px",
+                  background: "rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(6px)",
+                  whiteSpace: "nowrap",
+                  transition: "opacity 0.25s ease",
+                }}
+              >
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--coragem-teal)" strokeWidth="2.5" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: "var(--font-jost), sans-serif",
+                    fontSize: "0.38rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.8)",
+                  }}
+                >
+                  Arrastra tu dedo y amplia
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -688,6 +713,16 @@ export function ProductMobileSheet({ product, onClose }: ProductMobileSheetProps
           opacity: 0 !important;
           pointer-events: none !important;
         }
+        @keyframes ms-close-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(78,196,196,0.45); }
+          50%       { box-shadow: 0 0 0 8px rgba(78,196,196,0); }
+        }
+        .ms-close-btn {
+          animation: ms-close-pulse 2s ease-in-out 0.5s 3;
+          transition: background 0.18s ease, transform 0.15s ease;
+        }
+        .ms-close-btn:hover  { background: rgba(78,196,196,0.18) !important; transform: scale(1.08); }
+        .ms-close-btn:active { transform: scale(0.94); }
         .ms-info-scroll::-webkit-scrollbar        { width: 3px; }
         .ms-info-scroll::-webkit-scrollbar-track  { background: transparent; }
         .ms-info-scroll::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 999px; }

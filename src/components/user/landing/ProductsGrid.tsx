@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useProducts } from "@/hooks/shared/useProducts";
@@ -226,6 +226,17 @@ export function ProductsGrid() {
   const { products, loading, error } = useProducts({ limit: 8, sort: 'most_sold' });
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const limit = isMobile ? 4 : 8;
 
   return (
     <section
@@ -244,13 +255,13 @@ export function ProductsGrid() {
         }}
         className="products-grid"
       >
-        {loading && <ProductCardSkeleton count={8} delay={0.07} />}
+        {loading && <ProductCardSkeleton count={limit} delay={0.07} />}
 
         {!loading && error && <ErrorState message={error} />}
 
         {!loading &&
           !error &&
-          products.slice(0, 8).map((product, i) => (
+          products.slice(0, limit).map((product, i) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -290,9 +301,6 @@ export function ProductsGrid() {
           .products-grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 0.875rem !important;
-          }
-          .products-grid > *:nth-child(n+5) {
-            display: none;
           }
         }
         @media (max-width: 400px) {

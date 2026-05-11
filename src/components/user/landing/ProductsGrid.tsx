@@ -291,6 +291,9 @@ export function ProductsGrid() {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 0.875rem !important;
           }
+          .products-grid > *:nth-child(n+5) {
+            display: none;
+          }
         }
         @media (max-width: 400px) {
           .products-grid     { gap: 0.5rem !important; }

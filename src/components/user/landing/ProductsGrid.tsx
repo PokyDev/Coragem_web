@@ -223,7 +223,7 @@ function ProductCard({
 
 /* ─── Main Grid Component ───────────────────────────────────────── */
 export function ProductsGrid() {
-  const { products, loading, error } = useProducts();
+  const { products, loading, error } = useProducts({ limit: 8, sort: 'most_sold' });
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
@@ -250,7 +250,7 @@ export function ProductsGrid() {
 
         {!loading &&
           !error &&
-          products.slice(0, 8).map((product, i) => (
+          products.map((product, i) => (
             <ProductCard
               key={product.id}
               product={product}

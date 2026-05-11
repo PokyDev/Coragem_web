@@ -8,18 +8,18 @@
  * Filtrado y ordenamiento son client-side sobre el resultado completo.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { CatalogAside       } from '@/components/user/catalog/CatalogAside';
 import { CatalogToolbar     } from '@/components/user/catalog/CatalogToolbar';
 import { CatalogGrid        } from '@/components/user/catalog/CatalogGrid';
 import { MobileFilterDrawer } from '@/components/user/catalog/MobileFilterDrawer';
-import { LoadMoreButton     } from '@/components/shared/ui/LoadMoreButton';
 import { useProducts        } from '@/hooks/shared/useProducts';
 import { useCatalog         } from '@/hooks/shared/useCatalog';
 import type { ActiveFilters, Product, SortKey } from '@/types/catalog';
 
 const PRICE_MIN = 5000;
 const PRICE_MAX = 40000;
+const PAGE_SIZE = 24;
 
 const DEFAULT_FILTERS: ActiveFilters = {
   search:     '',
@@ -72,8 +72,10 @@ function MobileFilterToggle({ onClick, hasActive }: { onClick: () => void; hasAc
 
 /* ─── Main Component ── */
 export function CatalogClient() {
-  const [filters,    setFilters]    = useState<ActiveFilters>(DEFAULT_FILTERS);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filters,      setFilters]      = useState<ActiveFilters>(DEFAULT_FILTERS);
+  const [drawerOpen,   setDrawerOpen]   = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { products: allProducts, loading: productsLoading, error: productsError } = useProducts();
   const { categories, colors } = useCatalog();
@@ -99,6 +101,33 @@ export function CatalogClient() {
 
     return sortProducts(filtered, filters.sort);
   }, [allProducts, filters]);
+
+  // Al cambiar filtros, reiniciar cuántos productos se renderizan
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filters]);
+
+  const hasMore = visibleCount < filteredProducts.length;
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  }, []);
+
+  // IntersectionObserver: carga más cuando el sentinel entra al viewport
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
 
   const hasActiveFilters =
     filters.categories.length > 0 ||
@@ -138,11 +167,20 @@ export function CatalogClient() {
             onChange={updateFilters}
           />
           <CatalogGrid
-            products={filteredProducts}
+            products={visibleProducts}
             loading={productsLoading}
             error={productsError}
           />
-          <LoadMoreButton variant="catalog" />
+
+          {/* Sentinel: el IntersectionObserver lo vigila para cargar más */}
+          <div ref={sentinelRef} style={{ height: '1px' }} />
+
+          {/* Fin de lista */}
+          {!productsLoading && !productsError && !hasMore && filteredProducts.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0 0.5rem', fontFamily: 'var(--font-jost), sans-serif', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-secondary)', opacity: 0.6 }}>
+              ✦ &nbsp; Fin del catálogo
+            </div>
+          )}
         </div>
       </div>
 

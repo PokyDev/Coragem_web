@@ -52,7 +52,7 @@ function ProductCard({ product, index, onClick }: { product: Product; index: num
       onClick={() => onClick(product)}
       aria-label={`Ver ${product.name}`}
       className="catalog-card-btn"
-      style={{ display: 'flex', height: '100%', width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer', opacity: 0, animation: 'fadeInCard 0.45s ease forwards', animationDelay: `${index * 0.06}s` }}
+      style={{ display: 'flex', height: '100%', width: '100%', textAlign: 'left', background: 'none', border: 'none', padding: 0, cursor: 'pointer', opacity: 0, animation: 'fadeInCard 0.45s ease forwards', animationDelay: `${(index % 24) * 0.06}s` }}
     >
       <article
         className="catalog-card"

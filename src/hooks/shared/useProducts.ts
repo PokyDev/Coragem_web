@@ -22,6 +22,10 @@ interface UseProductsOptions {
    * Por defecto false (endpoint público).
    */
   adminMode?: boolean;
+  /** Limita cuántos productos devuelve el servidor (solo endpoint público). */
+  limit?: number;
+  /** Orden de los resultados: price_asc | price_desc | name_asc | name_desc | most_sold */
+  sort?: string;
 }
 
 interface UseProductsReturn {
@@ -35,7 +39,7 @@ interface ProductsResponse {
   products: Product[];
 }
 
-export function useProducts({ adminMode = false }: UseProductsOptions = {}): UseProductsReturn {
+export function useProducts({ adminMode = false, limit, sort }: UseProductsOptions = {}): UseProductsReturn {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
@@ -45,7 +49,16 @@ export function useProducts({ adminMode = false }: UseProductsOptions = {}): Use
 
   // Derivar el endpoint fuera del efecto y pasarlo como dependencia explícita
   // para que React lo capture correctamente en cada ejecución del efecto.
-  const endpoint = adminMode ? '/api/admin/products' : '/api/products';
+  let endpoint: string;
+  if (adminMode) {
+    endpoint = '/api/admin/products';
+  } else {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.set('limit', String(limit));
+    if (sort)                params.set('sort', sort);
+    const query = params.toString();
+    endpoint = `/api/products${query ? `?${query}` : ''}`;
+  }
 
   useEffect(() => {
     let cancelled = false;
